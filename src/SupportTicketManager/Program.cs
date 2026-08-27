@@ -1,47 +1,5 @@
-﻿Ticket firstTicket = new Ticket
-{
-    Id = 1,
-    Title = "Problem z logowaniem",
-    Description = "Użytkownik nie może zalogować się do panelu ",
-    Priority = 4,
-    Status = "Open"
-};
+﻿List<Ticket> tickets = CreateSampleTickets();
 
-
-Ticket secondTicket = new Ticket
-{
-    Id = 2,
-    Title = "Błąd płatności",
-    Description = "Płatność została pobrana, ale zamówienie nie powstało",
-    Priority = 5,
-    Status = "Open"
-};
-
-Ticket thirdTicket = new Ticket
-{
-    Id = 3,
-    Title = "Pytanie o fakturę",
-    Description = "Użytkownik prosi o kopię faktury",
-    Priority = 2,
-    Status = "InProgress"
-};
-Ticket fourthTicket = new Ticket
-{
-    Id = 4,
-    Title = "Reset hasła zakończony",
-    Description = "Użytkownik odzyskał dostęp do konta",
-    Priority = 3,
-    Status = "Closed"
-};
-
-
-List<Ticket> tickets = new List<Ticket>
-{
-    firstTicket,
-    secondTicket,
-    thirdTicket,
-    fourthTicket
-};
 
 Console.WriteLine($"Liczba zgłoszeń: {tickets.Count}");
 DisplayTickets(tickets);
@@ -54,13 +12,14 @@ bool hasCriticalTicket = HasCriticalTicket(tickets);
 
 Console.WriteLine($"Czy istnieje zgłoszenie krytyczne: {hasCriticalTicket}");
 
-int openTicketCount = tickets.Count(ticket => ticket.Status != "Closed");
+
+
+int openTicketCount = CountOpenTickets(tickets);
 
 Console.WriteLine($"Liczba otwartych zgłoszeń: {openTicketCount}");
 
-List<Ticket> ticketsByPriority = tickets
-.OrderByDescending(ticket => ticket.Priority)
-.ToList();
+
+List<Ticket> ticketsByPriority = SortTicketsByPriority(tickets);
 DisplayTickets(ticketsByPriority);
 
 
@@ -77,7 +36,7 @@ static void DisplayTickets(List<Ticket> ticketsToDisplay)
 static List<Ticket> GetUrgentTickets(List<Ticket> ticketsToFilter)
 {
     List<Ticket> filteredTickets = ticketsToFilter
-    .Where(ticket => ticket.Priority >= 4)
+    .Where(ticket => ticket.IsUrgent())
 .ToList();
     return filteredTickets;
 }
@@ -85,6 +44,68 @@ static List<Ticket> GetUrgentTickets(List<Ticket> ticketsToFilter)
 static bool HasCriticalTicket(List<Ticket> ticketsToCheck)
 {
     bool result = ticketsToCheck
-    .Any(ticket => ticket.Priority == 5);
+    .Any(ticket => ticket.IsCritical());
     return result;
+}
+
+static int CountOpenTickets(List<Ticket> ticketsToCheck)
+{
+    int openTicketCount = ticketsToCheck.Count(ticket => ticket.IsOpen());
+    return openTicketCount;
+}
+
+
+static List<Ticket> SortTicketsByPriority(List<Ticket> ticketsToSort)
+{
+    List<Ticket> ticketsByPriority = ticketsToSort.OrderByDescending(ticket => ticket.Priority)
+   .ToList();
+    return ticketsByPriority;
+}
+
+static List<Ticket> CreateSampleTickets()
+{
+    Ticket firstTicket = new Ticket(
+
+ id: 1,
+ title: "Problem z logowaniem",
+ description: "Użytkownik nie może zalogować się do panelu ",
+ priority: 4,
+  status: "Open"
+);
+
+
+    Ticket secondTicket = new Ticket(
+
+        2,
+        "Błąd płatności",
+        "Płatność została pobrana, ale zamówienie nie powstało",
+        5,
+        "Open"
+    );
+
+    Ticket thirdTicket = new Ticket(
+
+        3,
+        "Pytanie o fakturę",
+        "Użytkownik prosi o kopię faktury",
+        2,
+        "InProgress"
+    );
+    Ticket fourthTicket = new Ticket(
+        4,
+        "Reset hasła zakończony",
+       "Użytkownik odzyskał dostęp do konta",
+        3,
+        "Closed"
+    );
+
+
+    List<Ticket> sampleTickets = new List<Ticket>
+    {
+    firstTicket,
+    secondTicket,
+    thirdTicket,
+    fourthTicket
+    };
+    return sampleTickets;
 }
