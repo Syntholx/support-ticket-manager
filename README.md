@@ -53,6 +53,8 @@ Statusy: `Open`, `InProgress` i `Closed`.
 - zgłoszenie pilne ma `Priority >= 4`;
 - zgłoszenie krytyczne ma `Priority == 5`;
 - otwarte zgłoszenie ma status inny niż `Closed`;
+- zgłoszenie w toku ma status `InProgress`;
+- natychmiastowej reakcji wymaga zgłoszenie jednocześnie krytyczne i otwarte;
 - kolejka może być sortowana od najwyższego priorytetu.
 
 ## Poza zakresem pierwszego MVP
@@ -78,7 +80,11 @@ dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
 
 ## Status
 
-Rozpoczęto implementację pierwszego etapu MVP. Projekt zawiera model `Ticket`,
-przykładową kolejkę zgłoszeń, filtrowanie pilnych zgłoszeń, wykrywanie zgłoszenia
-krytycznego, liczenie otwartych zgłoszeń, sortowanie według priorytetu oraz
-wydzielone metody do wyświetlania i filtrowania danych.
+Ukończono odczytową część pierwszego etapu MVP. Projekt zawiera model `Ticket`,
+pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
+wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłoszeń,
+sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
+zgłoszenia krytycznego.
+
+Najbliższy krok to kontrolowana zmiana statusu zgłoszenia. Wprowadzanie danych
+przez użytkownika, baza danych i API nadal pozostają poza bieżącym etapem.
