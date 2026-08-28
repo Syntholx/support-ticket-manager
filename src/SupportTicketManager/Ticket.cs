@@ -34,4 +34,8 @@ public class Ticket
     {
         return Status != "Closed";
     }
+    public bool IsInProgress()
+    {
+        return Status == "InProgress";
+    }
 }
