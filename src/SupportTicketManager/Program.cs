@@ -27,6 +27,15 @@ List<Ticket> closedTicket = GetClosedTickets(tickets);
 
 Console.WriteLine($"Liczba zamkniętych zgłoszeń: {closedTicket.Count}");
 
+bool hasClosedTicket = HasClosedTicket(tickets);
+Console.WriteLine($"Czy istnieje zamknięte zgłoszenie: {hasClosedTicket}");
+
+bool hasTicketRequiringImmediateAttention = HasTicketRequiringImmediateAttention(tickets);
+Console.WriteLine($"Czy istnieje zgłoszenie wymagające natychmiastowej reakcji: {hasTicketRequiringImmediateAttention}");
+
+int countTicketsRequiringImmediateAttention = CountTicketsRequiringImmediateAttention(tickets);
+Console.WriteLine($"Liczba zgłoszeń wymagających natychmiastowej reakcji: {countTicketsRequiringImmediateAttention}");
+
 static void DisplayTickets(List<Ticket> ticketsToDisplay)
 {
     foreach (Ticket ticket in ticketsToDisplay)
@@ -80,7 +89,7 @@ static List<Ticket> CreateSampleTickets()
         "Błąd płatności",
         "Płatność została pobrana, ale zamówienie nie powstało",
         5,
-        "Open"
+        "Closed"
     );
 
     Ticket thirdTicket = new Ticket(
@@ -137,4 +146,25 @@ static List<Ticket> GetClosedTickets(List<Ticket> ticketsToFilter)
     .Where(ticket => !ticket.IsOpen())
     .ToList();
     return closedTicket;
+}
+
+static bool HasClosedTicket(List<Ticket> ticketsToFilter)
+{
+    bool result = ticketsToFilter
+    .Any(ticket => !ticket.IsOpen());
+    return result;
+}
+
+static bool HasTicketRequiringImmediateAttention(List<Ticket> ticketsToCheck)
+{
+    bool result = ticketsToCheck
+    .Any(ticket => ticket.RequiresImmediateAttention());
+    return result;
+}
+
+static int CountTicketsRequiringImmediateAttention(List<Ticket> ticketsToFilter)
+{
+    int countTickets = ticketsToFilter
+    .Count(ticket => ticket.RequiresImmediateAttention());
+    return countTickets;
 }

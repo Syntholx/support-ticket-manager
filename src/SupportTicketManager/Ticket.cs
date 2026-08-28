@@ -38,4 +38,8 @@ public class Ticket
     {
         return Status == "InProgress";
     }
+    public bool RequiresImmediateAttention()
+    {
+        return IsCritical() && IsOpen();
+    }
 }
