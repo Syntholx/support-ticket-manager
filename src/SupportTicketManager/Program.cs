@@ -36,6 +36,9 @@ Console.WriteLine($"Czy istnieje zgłoszenie wymagające natychmiastowej reakcji
 int countTicketsRequiringImmediateAttention = CountTicketsRequiringImmediateAttention(tickets);
 Console.WriteLine($"Liczba zgłoszeń wymagających natychmiastowej reakcji: {countTicketsRequiringImmediateAttention}");
 
+int countInProgressTickets = CountInProgressTickets(tickets);
+Console.WriteLine($"Zgłoszenia w toku: {countInProgressTickets}");
+
 static void DisplayTickets(List<Ticket> ticketsToDisplay)
 {
     foreach (Ticket ticket in ticketsToDisplay)
@@ -114,6 +117,7 @@ static List<Ticket> CreateSampleTickets()
     status: "Open"
     );
 
+
     List<Ticket> sampleTickets = new List<Ticket>
     {
     firstTicket,
@@ -124,6 +128,24 @@ static List<Ticket> CreateSampleTickets()
     };
     return sampleTickets;
 }
+
+bool wasFirstTicketClosed = tickets[0].TryClose();
+Console.WriteLine($"Zamknięcie otwartego zgłoszenia: {wasFirstTicketClosed}");
+Console.WriteLine($"Status: {tickets[0].Status}");
+bool wasSecondTicketClosed = tickets[1].TryClose();
+Console.WriteLine($"Ponowne zamknięcie zgłoszenia: {wasSecondTicketClosed}");
+Console.WriteLine($"Status: {tickets[1].Status}");
+
+int countOpenTicketsAfterChange = CountOpenTickets(tickets);
+Console.WriteLine($"Liczba otwartych zgłoszeń po zmianie: {countOpenTicketsAfterChange}");
+
+bool startOpenTickets = tickets[4].TryStartProgress();
+Console.WriteLine($"Rozpoczęcie obsługi otwartego zgłoszenia: {startOpenTickets}");
+Console.WriteLine($"Status: {tickets[4].Status}");
+
+bool startInProgressTickets = tickets[2].TryStartProgress();
+Console.WriteLine($"Ponowne rozpoczęcie obsługi: {startInProgressTickets}");
+Console.WriteLine($"Status: {tickets[2].Status}");
 
 static int CountUrgentTickets(List<Ticket> tickets)
 {
@@ -160,6 +182,13 @@ static bool HasTicketRequiringImmediateAttention(List<Ticket> ticketsToCheck)
     bool result = ticketsToCheck
     .Any(ticket => ticket.RequiresImmediateAttention());
     return result;
+}
+
+static int CountInProgressTickets(List<Ticket> ticketsToCheck)
+{
+    int countTickets = ticketsToCheck
+        .Count(ticket => ticket.IsInProgress());
+    return countTickets;
 }
 
 static int CountTicketsRequiringImmediateAttention(List<Ticket> ticketsToFilter)
