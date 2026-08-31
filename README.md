@@ -86,5 +86,11 @@ wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłos
 sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
 zgłoszenia krytycznego.
 
-Najbliższy krok to kontrolowana zmiana statusu zgłoszenia. Wprowadzanie danych
-przez użytkownika, baza danych i API nadal pozostają poza bieżącym etapem.
+Projekt obsługuje już kontrolowane zmiany stanu: rozpoczęcie obsługi wyłącznie
+dla zgłoszenia `Open` oraz zamknięcie zgłoszenia `Open` lub `InProgress`.
+Właściwość `Status` ma prywatny setter, dlatego kod zewnętrzny nie może wpisać
+dowolnego stanu z pominięciem reguł obiektu.
+
+Najbliższy krok to utrwalenie cyklu życia zgłoszenia i ochrona kolejnych reguł
+modelu. Wprowadzanie danych przez użytkownika, baza danych i API nadal pozostają
+poza bieżącym etapem.

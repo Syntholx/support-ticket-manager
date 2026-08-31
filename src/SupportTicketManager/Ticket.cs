@@ -1,12 +1,14 @@
 
 
+using System.Reflection.Metadata.Ecma335;
+
 public class Ticket
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public int Priority { get; set; }
-    public string Status { get; set; } = "";
+    public string Status { get; private set; } = "";
 
     public Ticket(
         int id,
@@ -42,4 +44,28 @@ public class Ticket
     {
         return IsCritical() && IsOpen();
     }
+    public bool TryClose()
+    {
+        if (!IsOpen())
+        {
+            return false;
+
+        }
+        Status = "Closed";
+
+        return true;
+
+    }
+    public bool TryStartProgress()
+    {
+        if (Status != "Open")
+        {
+            return false;
+        }
+        Status = "InProgress";
+
+        return true;
+
+    }
+
 }
