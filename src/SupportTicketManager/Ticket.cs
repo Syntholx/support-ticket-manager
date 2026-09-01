@@ -1,13 +1,10 @@
 
-
-using System.Reflection.Metadata.Ecma335;
-
 public class Ticket
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
-    public int Priority { get; set; }
+    public int Priority { get; private set; }
     public string Status { get; private set; } = "";
 
     public Ticket(
@@ -68,4 +65,24 @@ public class Ticket
 
     }
 
+    public bool TryReopen()
+    {
+        if (Status != "Closed")
+        {
+            return false;
+        }
+
+        Status = "Open";
+        return true;
+    }
+
+    public bool TryChangePriority(int newPriority)
+    {
+        if (newPriority < 1 || newPriority > 5)
+        {
+            return false;
+        }
+        Priority = newPriority;
+        return true;
+    }
 }

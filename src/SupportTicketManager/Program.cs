@@ -1,43 +1,18 @@
 ﻿List<Ticket> tickets = CreateSampleTickets();
-
-Console.WriteLine($"Liczba zgłoszeń: {tickets.Count}");
 DisplayTickets(tickets);
-
+Console.WriteLine($"Liczba zgłoszeń: {tickets.Count}");
 List<Ticket> urgentTickets = GetUrgentTickets(tickets);
-
-bool hasCriticalTicket = HasCriticalTicket(tickets);
-
-Console.WriteLine($"Czy istnieje zgłoszenie krytyczne: {hasCriticalTicket}");
-
-int openTicketCount = CountOpenTickets(tickets);
-
-Console.WriteLine($"Liczba otwartych zgłoszeń: {openTicketCount}");
-
-int countUrgentTickets = CountUrgentTickets(tickets);
-
-Console.WriteLine($"Liczba pilnych zgłoszeń: {countUrgentTickets}");
-
-bool hasInProgressTicket = HasInProgressTicket(tickets);
-Console.WriteLine($"Czy istnieje zgłoszenie w toku: {hasInProgressTicket}");
-
+Console.WriteLine($"Pilne zgłoszenia: {urgentTickets.Count}");
+DisplayTickets(urgentTickets);
 List<Ticket> ticketsByPriority = SortTicketsByPriority(tickets);
+
+Console.WriteLine($"Zgłoszenia według priorytetu:");
 DisplayTickets(ticketsByPriority);
 
-List<Ticket> closedTicket = GetClosedTickets(tickets);
 
-Console.WriteLine($"Liczba zamkniętych zgłoszeń: {closedTicket.Count}");
+DisplayBasicQueueSummary(tickets);
 
-bool hasClosedTicket = HasClosedTicket(tickets);
-Console.WriteLine($"Czy istnieje zamknięte zgłoszenie: {hasClosedTicket}");
-
-bool hasTicketRequiringImmediateAttention = HasTicketRequiringImmediateAttention(tickets);
-Console.WriteLine($"Czy istnieje zgłoszenie wymagające natychmiastowej reakcji: {hasTicketRequiringImmediateAttention}");
-
-int countTicketsRequiringImmediateAttention = CountTicketsRequiringImmediateAttention(tickets);
-Console.WriteLine($"Liczba zgłoszeń wymagających natychmiastowej reakcji: {countTicketsRequiringImmediateAttention}");
-
-int countInProgressTickets = CountInProgressTickets(tickets);
-Console.WriteLine($"Zgłoszenia w toku: {countInProgressTickets}");
+RunTicketStateDemo(tickets);
 
 static void DisplayTickets(List<Ticket> ticketsToDisplay)
 {
@@ -129,23 +104,6 @@ static List<Ticket> CreateSampleTickets()
     return sampleTickets;
 }
 
-bool wasFirstTicketClosed = tickets[0].TryClose();
-Console.WriteLine($"Zamknięcie otwartego zgłoszenia: {wasFirstTicketClosed}");
-Console.WriteLine($"Status: {tickets[0].Status}");
-bool wasSecondTicketClosed = tickets[1].TryClose();
-Console.WriteLine($"Ponowne zamknięcie zgłoszenia: {wasSecondTicketClosed}");
-Console.WriteLine($"Status: {tickets[1].Status}");
-
-int countOpenTicketsAfterChange = CountOpenTickets(tickets);
-Console.WriteLine($"Liczba otwartych zgłoszeń po zmianie: {countOpenTicketsAfterChange}");
-
-bool startOpenTickets = tickets[4].TryStartProgress();
-Console.WriteLine($"Rozpoczęcie obsługi otwartego zgłoszenia: {startOpenTickets}");
-Console.WriteLine($"Status: {tickets[4].Status}");
-
-bool startInProgressTickets = tickets[2].TryStartProgress();
-Console.WriteLine($"Ponowne rozpoczęcie obsługi: {startInProgressTickets}");
-Console.WriteLine($"Status: {tickets[2].Status}");
 
 static int CountUrgentTickets(List<Ticket> tickets)
 {
@@ -196,4 +154,74 @@ static int CountTicketsRequiringImmediateAttention(List<Ticket> ticketsToFilter)
     int countTickets = ticketsToFilter
     .Count(ticket => ticket.RequiresImmediateAttention());
     return countTickets;
+}
+
+static void RunTicketStateDemo(List<Ticket> ticketsToTest)
+{
+    bool wasFirstTicketClosed = ticketsToTest[0].TryClose();
+    Console.WriteLine($"Zamknięcie otwartego zgłoszenia: {wasFirstTicketClosed}");
+    Console.WriteLine($"Status: {ticketsToTest[0].Status}");
+    bool wasSecondTicketClosed = ticketsToTest[1].TryClose();
+    Console.WriteLine($"Ponowne zamknięcie zgłoszenia: {wasSecondTicketClosed}");
+    Console.WriteLine($"Status: {ticketsToTest[1].Status}");
+
+    int countOpenTicketsAfterChange = CountOpenTickets(ticketsToTest);
+    Console.WriteLine($"Liczba otwartych zgłoszeń po zmianie: {countOpenTicketsAfterChange}");
+
+    bool startOpenTickets = ticketsToTest[4].TryStartProgress();
+    Console.WriteLine($"Rozpoczęcie obsługi otwartego zgłoszenia: {startOpenTickets}");
+    Console.WriteLine($"Status: {ticketsToTest[4].Status}");
+
+    bool startInProgressTickets = ticketsToTest[2].TryStartProgress();
+    Console.WriteLine($"Ponowne rozpoczęcie obsługi: {startInProgressTickets}");
+    Console.WriteLine($"Status: {ticketsToTest[2].Status}");
+
+    bool reopenClosedTicket = ticketsToTest[1].TryReopen();
+    Console.WriteLine($"Ponowne otwarcie zamkniętego zgłoszenia: {reopenClosedTicket}");
+    Console.WriteLine($"Status: {ticketsToTest[1].Status}");
+
+    bool reopenInProgressTicket = ticketsToTest[2].TryReopen();
+    Console.WriteLine($"Ponowne otwarcie zgłoszenia w toku: {reopenInProgressTicket}");
+    Console.WriteLine($"Status: {ticketsToTest[2].Status}");
+
+    bool changePriority = ticketsToTest[4].TryChangePriority(3);
+    Console.WriteLine($"Zmiana priorytetu na 3: {changePriority}");
+    Console.WriteLine($"Priorytet: {ticketsToTest[4].Priority}");
+    bool changePriorityInvalid = ticketsToTest[4].TryChangePriority(6);
+    Console.WriteLine($"Zmiana priorytetu na 6: {changePriorityInvalid}");
+    Console.WriteLine($"Priorytet: {ticketsToTest[4].Priority}");
+}
+
+static void DisplayBasicQueueSummary(List<Ticket> ticketsToSummarize)
+{
+    bool hasCriticalTicket = HasCriticalTicket(ticketsToSummarize);
+
+    Console.WriteLine($"Czy istnieje zgłoszenie krytyczne: {hasCriticalTicket}");
+
+    int openTicketCount = CountOpenTickets(ticketsToSummarize);
+
+    Console.WriteLine($"Liczba otwartych zgłoszeń: {openTicketCount}");
+
+    int countUrgentTickets = CountUrgentTickets(ticketsToSummarize);
+
+    Console.WriteLine($"Liczba pilnych zgłoszeń: {countUrgentTickets}");
+
+    bool hasInProgressTicket = HasInProgressTicket(ticketsToSummarize);
+    Console.WriteLine($"Czy istnieje zgłoszenie w toku: {hasInProgressTicket}");
+
+    List<Ticket> closedTicket = GetClosedTickets(ticketsToSummarize);
+
+    Console.WriteLine($"Liczba zamkniętych zgłoszeń: {closedTicket.Count}");
+
+    bool hasClosedTicket = HasClosedTicket(ticketsToSummarize);
+    Console.WriteLine($"Czy istnieje zamknięte zgłoszenie: {hasClosedTicket}");
+
+    bool hasTicketRequiringImmediateAttention = HasTicketRequiringImmediateAttention(ticketsToSummarize);
+    Console.WriteLine($"Czy istnieje zgłoszenie wymagające natychmiastowej reakcji: {hasTicketRequiringImmediateAttention}");
+
+    int countTicketsRequiringImmediateAttention = CountTicketsRequiringImmediateAttention(ticketsToSummarize);
+    Console.WriteLine($"Liczba zgłoszeń wymagających natychmiastowej reakcji: {countTicketsRequiringImmediateAttention}");
+
+    int countInProgressTickets = CountInProgressTickets(ticketsToSummarize);
+    Console.WriteLine($"Zgłoszenia w toku: {countInProgressTickets}");
 }
