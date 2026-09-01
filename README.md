@@ -86,11 +86,15 @@ wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłos
 sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
 zgłoszenia krytycznego.
 
-Projekt obsługuje już kontrolowane zmiany stanu: rozpoczęcie obsługi wyłącznie
-dla zgłoszenia `Open` oraz zamknięcie zgłoszenia `Open` lub `InProgress`.
-Właściwość `Status` ma prywatny setter, dlatego kod zewnętrzny nie może wpisać
-dowolnego stanu z pominięciem reguł obiektu.
+Projekt obsługuje kontrolowane zmiany stanu: rozpoczęcie obsługi wyłącznie dla
+zgłoszenia `Open`, zamknięcie zgłoszenia `Open` lub `InProgress` oraz ponowne
+otwarcie wyłącznie zgłoszenia `Closed`. Pozwala również zmienić priorytet tylko
+na wartość od `1` do `5`. Właściwości `Status` i `Priority` mają prywatne
+settery, dlatego kod zewnętrzny nie może zmieniać ich z pominięciem metod
+obiektu.
 
-Najbliższy krok to utrwalenie cyklu życia zgłoszenia i ochrona kolejnych reguł
-modelu. Wprowadzanie danych przez użytkownika, baza danych i API nadal pozostają
-poza bieżącym etapem.
+Kod główny wyświetla pełną i pilną kolejkę, sortowanie według priorytetu,
+podsumowanie oraz demonstrację dozwolonych i odrzuconych zmian. Pierwsze MVP
+jest bliskie ukończenia. Pozostały walidacja danych początkowych konstruktora,
+testy graniczne i końcowe uporządkowanie. Wprowadzanie danych przez użytkownika,
+baza danych i API nadal pozostają poza bieżącym etapem.
