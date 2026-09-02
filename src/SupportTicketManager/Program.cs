@@ -1,19 +1,46 @@
 ﻿List<Ticket> tickets = CreateSampleTickets();
-DisplayTickets(tickets);
-Console.WriteLine($"Liczba zgłoszeń: {tickets.Count}");
-List<Ticket> urgentTickets = GetUrgentTickets(tickets);
-Console.WriteLine($"Pilne zgłoszenia: {urgentTickets.Count}");
-DisplayTickets(urgentTickets);
-List<Ticket> ticketsByPriority = SortTicketsByPriority(tickets);
+bool isProgramStillActive = true;
+while (isProgramStillActive)
+{
+    DisplayMainMenu();
+    string? optionInput = Console.ReadLine();
+    bool wasOptionParsed = int.TryParse(optionInput, out int selectedOption);
+    if (wasOptionParsed)
+    {
+        if (selectedOption == 0)
+        {
+            isProgramStillActive = false;
+            Console.WriteLine("Zamykanie programu...");
+        }
+        else
+        {
+            Console.WriteLine($"Wybrano opcję: {selectedOption}");
+        }
 
-Console.WriteLine($"Zgłoszenia według priorytetu:");
-DisplayTickets(ticketsByPriority);
+    }
+    else
+    {
+        Console.WriteLine("Nieprawidłowy numer opcji.");
+    }
 
 
-DisplayBasicQueueSummary(tickets);
 
-RunTicketStateDemo(tickets);
 
+
+}
+static void DisplayMainMenu()
+{
+    Console.WriteLine("--- Support Ticket Manager ---");
+    Console.WriteLine("1. Pokaż wszystkie zgłoszenia");
+    Console.WriteLine("2. Pokaż pilne zgłoszenia");
+    Console.WriteLine("3. Pokaż podsumowanie kolejki");
+    Console.WriteLine("4. Rozpocznij obsługę zgłoszenia");
+    Console.WriteLine("5. Zamknij zgłoszenie");
+    Console.WriteLine("6. Otwórz ponownie zgłoszenie");
+    Console.WriteLine("7. Zmień priorytet");
+    Console.WriteLine("0. Zakończ program");
+    Console.WriteLine("Wybierz operację:");
+}
 static void DisplayTickets(List<Ticket> ticketsToDisplay)
 {
     foreach (Ticket ticket in ticketsToDisplay)

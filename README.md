@@ -101,5 +101,15 @@ podsumowanie oraz demonstrację dozwolonych i odrzuconych zmian. Konstruktor
 odrzuca priorytet spoza zakresu `1–5` oraz status inny niż `Open`, `InProgress`
 lub `Closed`. Sprawdzono poprawne wartości graniczne oraz przypadki odrzucane.
 
-Następny etap projektu zostanie określony w zakresie MVP 2. Wprowadzanie danych
-przez użytkownika, baza danych i API nie należą do wersji `v0.1.0`.
+## MVP 2 — w trakcie
+
+Drugi etap rozwiązuje problem braku sterowania aplikacją przez pracownika
+wsparcia. Powstaje interaktywne menu konsolowe umożliwiające wyświetlanie
+kolejki i podsumowania oraz wybieranie operacji zmieniających zgłoszenie po `Id`.
+
+Zakres obejmuje odczyt przez `Console.ReadLine()`, konwersję przez `TryParse`,
+pętlę programu, wybór operacji przez `switch`, obsługę błędnego numeru i
+nieistniejącego `Id` oraz komunikaty o powodzeniu albo odrzuceniu zmiany.
+
+Dodawanie i usuwanie zgłoszeń, zapis do pliku lub bazy danych, API i frontend
+pozostają poza zakresem MVP 2.
