@@ -17,7 +17,15 @@ public class Ticket
         Id = id;
         Title = title;
         Description = description;
+        if (priority < 1 || priority > 5)
+        {
+            throw new ArgumentOutOfRangeException(nameof(priority));
+        }
         Priority = priority;
+        if (status != "Open" && status != "InProgress" && status != "Closed")
+        {
+            throw new ArgumentException("Status musi być jednym z: Open, InProgress, Closed", nameof(status));
+        }
         Status = status;
     }
 

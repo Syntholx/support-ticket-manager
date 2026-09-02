@@ -16,9 +16,9 @@ Pierwszym użytkownikiem aplikacji jest pracownik wsparcia. Potrzebuje szybko
 zobaczyć, które zgłoszenia wymagają najpilniejszej reakcji, bez ręcznego
 przeglądania całej kolejki.
 
-## Pierwsze MVP
+## MVP 1 — v0.1.0
 
-Pierwsza wersja będzie potrafiła:
+Pierwsza ukończona wersja potrafi:
 
 - przechowywać przykładowe zgłoszenia;
 - wyświetlać wszystkie zgłoszenia;
@@ -26,7 +26,10 @@ Pierwsza wersja będzie potrafiła:
 - sprawdzać, czy istnieje zgłoszenie krytyczne;
 - liczyć otwarte zgłoszenia;
 - sortować zgłoszenia od najwyższego priorytetu;
-- prezentować proste podsumowanie kolejki.
+- prezentować proste podsumowanie kolejki;
+- kontrolować rozpoczęcie obsługi, zamknięcie i ponowne otwarcie zgłoszenia;
+- bezpiecznie zmieniać priorytet;
+- odrzucać niepoprawny priorytet i status podczas tworzenia zgłoszenia.
 
 ## Model zgłoszenia
 
@@ -80,7 +83,7 @@ dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
 
 ## Status
 
-Ukończono odczytową część pierwszego etapu MVP. Projekt zawiera model `Ticket`,
+**MVP 1 ukończone — wersja `v0.1.0`.** Projekt zawiera model `Ticket`,
 pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
 wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłoszeń,
 sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
@@ -94,7 +97,9 @@ settery, dlatego kod zewnętrzny nie może zmieniać ich z pominięciem metod
 obiektu.
 
 Kod główny wyświetla pełną i pilną kolejkę, sortowanie według priorytetu,
-podsumowanie oraz demonstrację dozwolonych i odrzuconych zmian. Pierwsze MVP
-jest bliskie ukończenia. Pozostały walidacja danych początkowych konstruktora,
-testy graniczne i końcowe uporządkowanie. Wprowadzanie danych przez użytkownika,
-baza danych i API nadal pozostają poza bieżącym etapem.
+podsumowanie oraz demonstrację dozwolonych i odrzuconych zmian. Konstruktor
+odrzuca priorytet spoza zakresu `1–5` oraz status inny niż `Open`, `InProgress`
+lub `Closed`. Sprawdzono poprawne wartości graniczne oraz przypadki odrzucane.
+
+Następny etap projektu zostanie określony w zakresie MVP 2. Wprowadzanie danych
+przez użytkownika, baza danych i API nie należą do wersji `v0.1.0`.
