@@ -1,4 +1,8 @@
 ﻿List<Ticket> tickets = CreateSampleTickets();
+static Ticket? FindTicketById(List<Ticket> ticketsToSearch, int ticketId)
+{
+    return ticketsToSearch.FirstOrDefault(ticket => ticket.Id == ticketId);
+}
 bool isProgramStillActive = true;
 while (isProgramStillActive)
 {
@@ -14,7 +18,82 @@ while (isProgramStillActive)
         }
         else
         {
-            Console.WriteLine($"Wybrano opcję: {selectedOption}");
+            switch (selectedOption)
+            {
+                case 1:
+                    DisplayTickets(tickets);
+                    break;
+                case 2:
+                    List<Ticket> urgentTickets = GetUrgentTickets(tickets);
+                    DisplayTickets(urgentTickets);
+                    break;
+                case 3:
+                    DisplayBasicQueueSummary(tickets);
+                    break;
+                case 4:
+                    Console.WriteLine("Podaj ID zgłoszenia:");
+                    string? ticketIdInput = Console.ReadLine();
+                    bool wasTicketIdParsed = int.TryParse(ticketIdInput, out int ticketIdToStart);
+                    if (wasTicketIdParsed)
+                    {
+                        Ticket? ticketToStart = FindTicketById(tickets, ticketIdToStart);
+                        if (ticketToStart == null)
+                        {
+                            Console.WriteLine("Nie znaleziono zgłoszenia.");
+                        }
+                        else
+                        {
+                            bool wasStarted = ticketToStart.TryStartProgress();
+                            if (wasStarted)
+                            {
+                                Console.WriteLine("Rozpoczęto obsługę zgłoszenia.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nie można rozpocząć obsługi tego zgłoszenia.");
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nieprawidłowy numer zgłoszenia.");
+                    }
+                    break;
+                case 5:
+                    Console.WriteLine("Podaj ID zgłoszenia:");
+                    string? ticketIdInputToClose = Console.ReadLine();
+                    bool wasTicketIdParsedToClose = int.TryParse(ticketIdInputToClose, out int ticketIdToClose);
+                    if (wasTicketIdParsedToClose)
+                    {
+                        Ticket? ticketToClose = FindTicketById(tickets, ticketIdToClose);
+                        if (ticketToClose == null)
+                        {
+                            Console.WriteLine("Nie znaleziono zgłoszenia.");
+
+                        }
+                        else
+                        {
+                            bool wasClosed = ticketToClose.TryClose();
+                            if (wasClosed)
+                            {
+                                Console.WriteLine("Zamknięto zgłoszenie.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nie można zamknąć tego zgłoszenia.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nieprawidłowy numer zgłoszenia.");
+                    }
+                    break;
+                default:
+                    Console.WriteLine("Nieobsługiwana opcja.");
+                    break;
+            }
         }
 
     }
@@ -22,9 +101,6 @@ while (isProgramStillActive)
     {
         Console.WriteLine("Nieprawidłowy numer opcji.");
     }
-
-
-
 
 
 }
