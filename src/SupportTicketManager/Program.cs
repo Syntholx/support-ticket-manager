@@ -21,7 +21,8 @@ while (isProgramStillActive)
             switch (selectedOption)
             {
                 case 1:
-                    DisplayTickets(tickets);
+                    List<Ticket> sortedTickets = SortTicketsByPriority(tickets);
+                    DisplayTickets(sortedTickets);
                     break;
                 case 2:
                     List<Ticket> urgentTickets = GetUrgentTickets(tickets);
@@ -90,10 +91,88 @@ while (isProgramStillActive)
                         Console.WriteLine("Nieprawidłowy numer zgłoszenia.");
                     }
                     break;
+                case 6:
+                    Console.WriteLine("Podaj ID zgłoszenia:");
+                    string? ticketIdInputToReopen = Console.ReadLine();
+                    bool wasTicketIdParsedToReopen = int.TryParse(ticketIdInputToReopen, out int ticketIdToReopen);
+                    if (wasTicketIdParsedToReopen)
+                    {
+
+                        Ticket? ticketToReopen = FindTicketById(tickets, ticketIdToReopen);
+
+                        if (ticketToReopen == null)
+                        {
+                            Console.WriteLine("Nie znaleziono zgłoszenia.");
+
+                        }
+                        else
+                        {
+                            bool wasReopened = ticketToReopen.TryReopen();
+                            if (wasReopened)
+                            {
+                                Console.WriteLine("Ponownie otwarto zgłoszenie.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nie można ponownie otworzyć tego zgłoszenia.");
+                            }
+
+
+                        }
+
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nieprawidłowy numer zgłoszenia.");
+                    }
+                    break;
+                case 7:
+                    Console.WriteLine("Podaj ID zgłoszenia:");
+                    string? ticketIdInputToChangePriority = Console.ReadLine();
+                    bool wasTicketIdParsedToChangePriority = int.TryParse(ticketIdInputToChangePriority, out int ticketIdToChangePriority);
+                    if (wasTicketIdParsedToChangePriority)
+                    {
+                        Ticket? ticketToChangePriority = FindTicketById(tickets, ticketIdToChangePriority);
+                        if (ticketToChangePriority == null)
+                        {
+                            Console.WriteLine("Nie znaleziono zgłoszenia.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Podaj nowy priorytet (1-5)");
+                            string? newPriorityInput = Console.ReadLine();
+                            bool wasNewPriorityParsed = int.TryParse(newPriorityInput, out int newPriority);
+                            if (wasNewPriorityParsed)
+                            {
+                                bool wasPriorityChanged = ticketToChangePriority.TryChangePriority(newPriority);
+                                if (wasPriorityChanged)
+                                {
+                                    Console.WriteLine("Zmieniono priorytet zgłoszenia.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Priorytet musi mieścić się w zakresie 1-5, nie zmieniono priorytetu zgłoszenia.");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nieprawidłowy numer priorytetu.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nieprawidłowy numer zgłoszenia.");
+                    }
+                    break;
                 default:
                     Console.WriteLine("Nieobsługiwana opcja.");
                     break;
             }
+
+
+
         }
 
     }
@@ -101,8 +180,6 @@ while (isProgramStillActive)
     {
         Console.WriteLine("Nieprawidłowy numer opcji.");
     }
-
-
 }
 static void DisplayMainMenu()
 {
@@ -259,41 +336,6 @@ static int CountTicketsRequiringImmediateAttention(List<Ticket> ticketsToFilter)
     return countTickets;
 }
 
-static void RunTicketStateDemo(List<Ticket> ticketsToTest)
-{
-    bool wasFirstTicketClosed = ticketsToTest[0].TryClose();
-    Console.WriteLine($"Zamknięcie otwartego zgłoszenia: {wasFirstTicketClosed}");
-    Console.WriteLine($"Status: {ticketsToTest[0].Status}");
-    bool wasSecondTicketClosed = ticketsToTest[1].TryClose();
-    Console.WriteLine($"Ponowne zamknięcie zgłoszenia: {wasSecondTicketClosed}");
-    Console.WriteLine($"Status: {ticketsToTest[1].Status}");
-
-    int countOpenTicketsAfterChange = CountOpenTickets(ticketsToTest);
-    Console.WriteLine($"Liczba otwartych zgłoszeń po zmianie: {countOpenTicketsAfterChange}");
-
-    bool startOpenTickets = ticketsToTest[4].TryStartProgress();
-    Console.WriteLine($"Rozpoczęcie obsługi otwartego zgłoszenia: {startOpenTickets}");
-    Console.WriteLine($"Status: {ticketsToTest[4].Status}");
-
-    bool startInProgressTickets = ticketsToTest[2].TryStartProgress();
-    Console.WriteLine($"Ponowne rozpoczęcie obsługi: {startInProgressTickets}");
-    Console.WriteLine($"Status: {ticketsToTest[2].Status}");
-
-    bool reopenClosedTicket = ticketsToTest[1].TryReopen();
-    Console.WriteLine($"Ponowne otwarcie zamkniętego zgłoszenia: {reopenClosedTicket}");
-    Console.WriteLine($"Status: {ticketsToTest[1].Status}");
-
-    bool reopenInProgressTicket = ticketsToTest[2].TryReopen();
-    Console.WriteLine($"Ponowne otwarcie zgłoszenia w toku: {reopenInProgressTicket}");
-    Console.WriteLine($"Status: {ticketsToTest[2].Status}");
-
-    bool changePriority = ticketsToTest[4].TryChangePriority(3);
-    Console.WriteLine($"Zmiana priorytetu na 3: {changePriority}");
-    Console.WriteLine($"Priorytet: {ticketsToTest[4].Priority}");
-    bool changePriorityInvalid = ticketsToTest[4].TryChangePriority(6);
-    Console.WriteLine($"Zmiana priorytetu na 6: {changePriorityInvalid}");
-    Console.WriteLine($"Priorytet: {ticketsToTest[4].Priority}");
-}
 
 static void DisplayBasicQueueSummary(List<Ticket> ticketsToSummarize)
 {
@@ -327,4 +369,5 @@ static void DisplayBasicQueueSummary(List<Ticket> ticketsToSummarize)
 
     int countInProgressTickets = CountInProgressTickets(ticketsToSummarize);
     Console.WriteLine($"Zgłoszenia w toku: {countInProgressTickets}");
+
 }

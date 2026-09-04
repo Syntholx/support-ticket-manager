@@ -60,7 +60,25 @@ Statusy: `Open`, `InProgress` i `Closed`.
 - natychmiastowej reakcji wymaga zgłoszenie jednocześnie krytyczne i otwarte;
 - kolejka może być sortowana od najwyższego priorytetu.
 
-## Poza zakresem pierwszego MVP
+## MVP 2 — v0.2.0
+
+Druga ukończona wersja dodaje interaktywną obsługę aplikacji przez pracownika
+wsparcia. Menu pozwala:
+
+- wyświetlić wszystkie zgłoszenia posortowane od najwyższego priorytetu;
+- wyświetlić zgłoszenia pilne;
+- wyświetlić podsumowanie kolejki;
+- rozpocząć obsługę zgłoszenia wskazanego przez `Id`;
+- zamknąć albo ponownie otworzyć wskazane zgłoszenie;
+- zmienić priorytet zgłoszenia na wartość od `1` do `5`;
+- zakończyć program w kontrolowany sposób.
+
+Program rozróżnia błędny tekst, poprawną liczbę spoza menu, nieistniejące `Id`,
+niedozwoloną zmianę stanu oraz priorytet spoza zakresu. Wyszukiwanie jednego
+zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasie
+`Ticket`.
+
+## Poza zakresem MVP 2
 
 - wprowadzanie, edycja i usuwanie zgłoszeń przez użytkownika;
 - konta użytkowników i logowanie;
@@ -83,7 +101,7 @@ dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
 
 ## Status
 
-**MVP 1 ukończone — wersja `v0.1.0`.** Projekt zawiera model `Ticket`,
+**MVP 2 ukończone — wersja `v0.2.0`.** Projekt zawiera model `Ticket`,
 pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
 wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłoszeń,
 sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
@@ -96,20 +114,8 @@ na wartość od `1` do `5`. Właściwości `Status` i `Priority` mają prywatne
 settery, dlatego kod zewnętrzny nie może zmieniać ich z pominięciem metod
 obiektu.
 
-Kod główny wyświetla pełną i pilną kolejkę, sortowanie według priorytetu,
-podsumowanie oraz demonstrację dozwolonych i odrzuconych zmian. Konstruktor
+Interaktywne menu wyświetla pełną i pilną kolejkę, sortowanie według priorytetu
+oraz podsumowanie. Pozwala wyszukać zgłoszenie po `Id` i wykonać dozwoloną
+zmianę statusu albo priorytetu, pokazując wynik operacji. Konstruktor
 odrzuca priorytet spoza zakresu `1–5` oraz status inny niż `Open`, `InProgress`
 lub `Closed`. Sprawdzono poprawne wartości graniczne oraz przypadki odrzucane.
-
-## MVP 2 — w trakcie
-
-Drugi etap rozwiązuje problem braku sterowania aplikacją przez pracownika
-wsparcia. Powstaje interaktywne menu konsolowe umożliwiające wyświetlanie
-kolejki i podsumowania oraz wybieranie operacji zmieniających zgłoszenie po `Id`.
-
-Zakres obejmuje odczyt przez `Console.ReadLine()`, konwersję przez `TryParse`,
-pętlę programu, wybór operacji przez `switch`, obsługę błędnego numeru i
-nieistniejącego `Id` oraz komunikaty o powodzeniu albo odrzuceniu zmiany.
-
-Dodawanie i usuwanie zgłoszeń, zapis do pliku lub bazy danych, API i frontend
-pozostają poza zakresem MVP 2.
