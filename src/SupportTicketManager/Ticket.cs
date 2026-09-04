@@ -75,7 +75,7 @@ public class Ticket
 
     public bool TryReopen()
     {
-        if (Status != "Closed")
+        if (!CanBeReopened())
         {
             return false;
         }
@@ -92,5 +92,16 @@ public class Ticket
         }
         Priority = newPriority;
         return true;
+    }
+    public bool CanBeReopened()
+    {
+        if (Status != "Closed")
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }
