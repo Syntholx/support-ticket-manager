@@ -99,14 +99,26 @@ zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasi
 dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
 ```
 
+## MVP 3 — v0.3.0
+
+Trzecia ukończona wersja porządkuje odpowiedzialności aplikacji:
+
+- `Ticket` przechowuje dane i reguły pojedynczego zgłoszenia;
+- `TicketQueries` wyszukuje, filtruje, sortuje i liczy zgłoszenia;
+- `TicketConsoleView` odpowiada za menu i prezentowanie wyników;
+- `TicketConsoleApplication` steruje pętlą programu i obsługą operacji;
+- `SampleTicketData` tworzy dane demonstracyjne;
+- `Program.cs` tworzy potrzebne obiekty i uruchamia aplikację.
+
+Menu pozwala również wyświetlić zamknięte zgłoszenia oraz szczegóły jednego
+zgłoszenia wyszukanego po `Id`. Wyszukiwanie obsługuje poprawne `Id`, brak
+zgłoszenia oraz tekst, którego nie można zamienić na liczbę.
+
 ## Status
 
-**MVP 3 w trakcie (05.09.2026).** Ostatnie wydanie pozostaje v0.2.0.
-W bieżącym kodzie TicketQueries zawiera wyszukiwanie, filtrowanie, sortowanie
-i liczenie; nie przechowuje kolekcji, otrzymuje ją przez parametry.
-TicketConsoleView wyświetla listę, podsumowanie i menu oraz komunikat dla
-pustej listy. Program.cs nadal obsługuje pętlę, wejście i wybór operacji.
-Następny krok: wydzielenie sterowania aplikacją do osobnej klasy.
+**MVP 3 ukończone — wersja `v0.3.0` (05.09.2026).** Projekt kompiluje się bez
+błędów i ostrzeżeń. Ręcznie sprawdzono wszystkie opcje menu oraz przypadki
+niepoprawnego wejścia.
 
 **MVP 2 ukończone — wersja `v0.2.0`.** Projekt zawiera model `Ticket`,
 pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,

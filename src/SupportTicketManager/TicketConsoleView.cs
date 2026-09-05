@@ -36,8 +36,10 @@ public class TicketConsoleView
     }
     public void DisplayTickets(List<Ticket> ticketsToDisplay)
     {
+        Console.WriteLine($"Liczba wyświetlanych zgłoszeń: {ticketsToDisplay.Count}");
         foreach (Ticket ticket in ticketsToDisplay)
         {
+
             Console.WriteLine($"#{ticket.Id} | {ticket.Title} | Priority: {ticket.Priority} | {ticket.Status}");
         }
         if (ticketsToDisplay.Count == 0)
@@ -56,7 +58,14 @@ public class TicketConsoleView
         Console.WriteLine("5. Zamknij zgłoszenie");
         Console.WriteLine("6. Otwórz ponownie zgłoszenie");
         Console.WriteLine("7. Zmień priorytet");
+        Console.WriteLine("8. Pokaż zamknięte zgłoszenia");
+        Console.WriteLine("9. Pokaż zgłoszenie po ID");
         Console.WriteLine("0. Zakończ program");
         Console.WriteLine("Wybierz operację:");
+    }
+
+    public void DisplayTicketDetails(Ticket ticketToDisplay)
+    {
+        Console.WriteLine($"{ticketToDisplay.Id} | {ticketToDisplay.Title} | {ticketToDisplay.Description} | {ticketToDisplay.Priority} | {ticketToDisplay.Status}");
     }
 }
