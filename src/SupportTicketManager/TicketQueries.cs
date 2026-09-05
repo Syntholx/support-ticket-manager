@@ -8,7 +8,7 @@ public class TicketQueries
     public List<Ticket> GetUrgentTickets(List<Ticket> ticketsToFilter)
     {
         List<Ticket> filteredTickets = ticketsToFilter
-         .Where(ticket => ticket.IsUrgent())
+         .Where(ticket => ticket.IsUrgent() && ticket.IsOpen())
          .ToList();
         return filteredTickets;
     }
@@ -28,14 +28,14 @@ public class TicketQueries
     public bool HasCriticalTicket(List<Ticket> ticketsToCheck)
     {
         bool result = ticketsToCheck
-         .Any(ticket => ticket.IsCritical());
+         .Any(ticket => ticket.IsCritical() && ticket.IsOpen());
         return result;
     }
     public int CountUrgentTickets(List<Ticket> tickets)
     {
 
         int countUrgentTicket =
-         tickets.Count(ticket => ticket.IsUrgent());
+         tickets.Count(ticket => ticket.IsUrgent() && ticket.IsOpen());
         return countUrgentTicket;
     }
 
@@ -81,5 +81,20 @@ public class TicketQueries
         .Count(ticket => ticket.RequiresImmediateAttention());
         return countTickets;
     }
-
+    public int GetNextTicketId(List<Ticket> tickets)
+    {
+        if (tickets.Count == 0)
+        {
+            return 1;
+        }
+        int nextTicketId = tickets.Max(ticket => ticket.Id) + 1;
+        return nextTicketId;
+    }
+    public List<Ticket> GetActiveTickets(List<Ticket> ticketsActive)
+    {
+        List<Ticket> activeTickets = ticketsActive
+        .Where(ticket => ticket.IsOpen())
+        .ToList();
+        return activeTickets;
+    }
 }

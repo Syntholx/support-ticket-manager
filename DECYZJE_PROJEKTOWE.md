@@ -3,6 +3,24 @@
 Ten plik zapisuje istotne decyzje podjęte podczas rozwoju projektu. Nie jest
 dziennikiem każdej zmiany ani listą przyszłych funkcji.
 
+## MVP 4 — tworzenie zgłoszeń i archiwum wynikające ze statusu (05.09.2026)
+
+- **Problem:** użytkownik nie mógł dodawać zgłoszeń, a zamknięte elementy były
+  częścią pełnej kolejki.
+- **Decyzja:** opcja `10` pobiera tytuł, opis i priorytet, automatycznie wylicza
+  kolejne `Id`, tworzy `Ticket` ze statusem `Open` i dodaje go do kolekcji w
+  pamięci. `GetActiveTickets` zwraca tylko `Open` i `InProgress`.
+- **Walidacja:** `string.IsNullOrWhiteSpace` odrzuca brak tytułu i opisu, a
+  priorytet wymaga poprawnej konwersji oraz zakresu `1–5`. Konstruktor pozostaje
+  ostatnią ochroną poprawności obiektu.
+- **Archiwum:** `Closed` oznacza automatyczne archiwum. Ponowne otwarcie zmienia
+  status na `Open` i przywraca zgłoszenie do aktywnej kolejki. Nie dodano
+  `IsArchived`, ponieważ dublowałoby informację zapisaną w `Status`.
+- **Ochrona modelu:** wszystkie właściwości `Ticket` mają `private set`, dzięki
+  czemu kod zewnętrzny nie może ominąć konstruktora i metod kontrolujących stan.
+- **Ograniczenie:** kolekcja nadal istnieje tylko w pamięci; po ponownym
+  uruchomieniu dane tworzone przez użytkownika znikają.
+
 ## MVP 3 — rozdzielenie odpowiedzialności aplikacji (05.09.2026)
 
 - **Problem:** Program.cs łączył operacje kolekcji, prezentację i sterowanie.

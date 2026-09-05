@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 
 public class TicketConsoleApplication
 {
@@ -25,13 +26,15 @@ public class TicketConsoleApplication
                     switch (selectedOption)
                     {
                         case 1:
-                            List<Ticket> sortedTickets = ticketQueries.SortTicketsByPriority(tickets);
+                            List<Ticket> activeTickets = ticketQueries.GetActiveTickets(tickets);
+                            List<Ticket> sortedTickets = ticketQueries.SortTicketsByPriority(activeTickets);
                             ticketView.DisplayTickets(sortedTickets);
                             break;
                         case 2:
                             List<Ticket> urgentTickets = ticketQueries.GetUrgentTickets(tickets);
                             ticketView.DisplayTickets(urgentTickets);
                             break;
+
                         case 3:
                             ticketView.DisplayBasicQueueSummary(tickets, ticketQueries);
                             break;
@@ -53,6 +56,9 @@ public class TicketConsoleApplication
                             break;
                         case 9:
                             ShowTicketById(tickets, ticketQueries, ticketView);
+                            break;
+                        case 10:
+                            CreateNewTicket(tickets, ticketQueries);
                             break;
                         default:
                             Console.WriteLine("Nieobsługiwana opcja.");
@@ -246,5 +252,42 @@ public class TicketConsoleApplication
         }
 
     }
+    private void CreateNewTicket(
+        List<Ticket> tickets,
+        TicketQueries ticketQueries
+    )
+    {
+        Console.WriteLine("Podaj tytuł zgłoszenia:");
+        string? ticketToCreateNew = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(ticketToCreateNew))
+        {
+            Console.WriteLine("Tytuł nie może być pusty");
+            return;
+        }
+        Console.WriteLine("Podaj opis problemu:");
+        string? descriptionToCreateNew = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(descriptionToCreateNew))
+        {
+            Console.WriteLine("Opis nie może być pusty");
+            return;
+        }
+        Console.WriteLine("Podaj priorytet, zakres 1-5:");
+        string? priorityToCreateNew = Console.ReadLine();
+        bool wasPriorityPassed = int.TryParse(priorityToCreateNew, out int priorityPassed);
+        if (!wasPriorityPassed)
 
+        {
+            Console.WriteLine($"Nieprawidłowy numer priorytetu");
+            return;
+        }
+        if (priorityPassed < 1 || priorityPassed > 5)
+        {
+            Console.WriteLine("Priorytet musi mieścić się w zakresie 1-5");
+            return;
+        }
+        int nextTicketId = ticketQueries.GetNextTicketId(tickets);
+        Ticket newTicket = new Ticket(nextTicketId, ticketToCreateNew, descriptionToCreateNew, priorityPassed, "Open");
+        tickets.Add(newTicket);
+        Console.WriteLine($"Utworzono zgłoszenie o ID: {newTicket.Id}");
+    }
 }

@@ -58,8 +58,9 @@ public class TicketConsoleView
         Console.WriteLine("5. Zamknij zgłoszenie");
         Console.WriteLine("6. Otwórz ponownie zgłoszenie");
         Console.WriteLine("7. Zmień priorytet");
-        Console.WriteLine("8. Pokaż zamknięte zgłoszenia");
+        Console.WriteLine("8. Pokaż archiwum zgłoszeń");
         Console.WriteLine("9. Pokaż zgłoszenie po ID");
+        Console.WriteLine("10. Dodaj nowe zgłoszenie");
         Console.WriteLine("0. Zakończ program");
         Console.WriteLine("Wybierz operację:");
     }

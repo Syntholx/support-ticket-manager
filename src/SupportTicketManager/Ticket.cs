@@ -1,9 +1,9 @@
 
 public class Ticket
 {
-    public int Id { get; set; }
-    public string Title { get; set; } = "";
-    public string Description { get; set; } = "";
+    public int Id { get; private set; }
+    public string Title { get; private set; } = "";
+    public string Description { get; private set; } = "";
     public int Priority { get; private set; }
     public string Status { get; private set; } = "";
 
@@ -15,7 +15,15 @@ public class Ticket
         string status)
     {
         Id = id;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Tytuł nie może być pusty", nameof(title));
+        }
         Title = title;
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new ArgumentException("Opis nie może być pusty.", nameof(description));
+        }
         Description = description;
         if (priority < 1 || priority > 5)
         {

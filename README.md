@@ -114,11 +114,36 @@ Menu pozwala również wyświetlić zamknięte zgłoszenia oraz szczegóły jedn
 zgłoszenia wyszukanego po `Id`. Wyszukiwanie obsługuje poprawne `Id`, brak
 zgłoszenia oraz tekst, którego nie można zamienić na liczbę.
 
+## MVP 4 — v0.4.0
+
+Czwarta wersja pozwala pracownikowi utworzyć zgłoszenie podczas działania
+programu. Użytkownik podaje tytuł, opis i priorytet, a aplikacja:
+
+- odrzuca pusty tytuł, pusty opis i tekst złożony wyłącznie z białych znaków;
+- odrzuca niepoprawny numer priorytetu oraz wartość spoza zakresu `1–5`;
+- automatycznie nadaje kolejne unikalne `Id`;
+- tworzy zgłoszenie ze statusem `Open` i dodaje je do bieżącej kolekcji;
+- pokazuje identyfikator utworzonego zgłoszenia.
+
+Aktywna kolejka zawiera wyłącznie zgłoszenia `Open` i `InProgress`. Status
+`Closed` jest jednocześnie archiwum: zamknięcie usuwa zgłoszenie z aktywnej
+kolejki, a ponowne otwarcie automatycznie je do niej przywraca. Nie jest
+potrzebna osobna właściwość `IsArchived`, więc model zachowuje jedno źródło
+prawdy o stanie zgłoszenia.
+
+Właściwości `Id`, `Title`, `Description`, `Priority` i `Status` można odczytać,
+ale ich settery są prywatne. Dane pozostają przechowywane wyłącznie w pamięci
+podczas działania aplikacji.
+
 ## Status
 
-**MVP 3 ukończone — wersja `v0.3.0` (05.09.2026).** Projekt kompiluje się bez
-błędów i ostrzeżeń. Ręcznie sprawdzono wszystkie opcje menu oraz przypadki
-niepoprawnego wejścia.
+**MVP 4 ukończone — wersja `v0.4.0` (05.09.2026).** Pełny test regresji objął
+tworzenie poprawnych zgłoszeń, wszystkie błędne dane wejściowe, kolejne `Id`,
+aktywną kolejkę, pilne zgłoszenia, archiwum, zamknięcie i ponowne otwarcie.
+Projekt kompiluje się bez błędów i ostrzeżeń.
+
+**MVP 3 ukończone — wersja `v0.3.0`.** Rozdzielono odpowiedzialności aplikacji,
+a wydanie opublikowano wraz z kodem źródłowym i aktualizacją portfolio.
 
 **MVP 2 ukończone — wersja `v0.2.0`.** Projekt zawiera model `Ticket`,
 pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
