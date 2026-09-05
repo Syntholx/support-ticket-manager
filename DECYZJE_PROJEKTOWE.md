@@ -3,6 +3,22 @@
 Ten plik zapisuje istotne decyzje podjęte podczas rozwoju projektu. Nie jest
 dziennikiem każdej zmiany ani listą przyszłych funkcji.
 
+## MVP 3 — rozdzielenie odczytów i prezentacji (05.09.2026)
+
+- **Problem:** Program.cs łączył operacje kolekcji, prezentację i sterowanie.
+- **Decyzja:** TicketQueries grupuje 12 metod odczytujących przekazaną
+  kolekcję. TicketConsoleView prezentuje listę, podsumowanie i menu.
+  Reguły pojedynczego zgłoszenia pozostają w Ticket.
+- **Uzasadnienie:** łatwiej wskazać miejsce zmiany bez powielania reguł.
+  Zapytania otrzymują kolekcję przez parametry; widok otrzymuje obiekt zapytań
+  przy wywołaniu podsumowania.
+- **Alternatywa:** pozostawienie metod lokalnych lub statyczne narzędzia.
+  Metody instancji wybrano na tym etapie do nauki współpracy obiektów;
+  nie oznacza to, że operacje bez stanu zawsze wymagają instancji.
+- **Konsekwencje:** zachowano zachowanie menu, dodano komunikat dla pustej
+  listy. Sterowanie i tworzenie danych pozostają na razie w Program.cs.
+  Etap nie jest jeszcze ukończonym MVP 3 ani nowym wydaniem.
+
 ## Reguły biznesowe należą do klasy `Ticket`
 
 - **Problem:** kod interfejsu mógłby powtarzać warunki statusu i priorytetu.
