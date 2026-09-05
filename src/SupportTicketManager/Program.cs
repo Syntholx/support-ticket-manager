@@ -1,12 +1,10 @@
 ﻿List<Ticket> tickets = CreateSampleTickets();
-static Ticket? FindTicketById(List<Ticket> ticketsToSearch, int ticketId)
-{
-    return ticketsToSearch.FirstOrDefault(ticket => ticket.Id == ticketId);
-}
+TicketQueries ticketQueries = new TicketQueries();
+TicketConsoleView ticketView = new TicketConsoleView();
 bool isProgramStillActive = true;
 while (isProgramStillActive)
 {
-    DisplayMainMenu();
+    ticketView.DisplayMainMenu();
     string? optionInput = Console.ReadLine();
     bool wasOptionParsed = int.TryParse(optionInput, out int selectedOption);
     if (wasOptionParsed)
@@ -21,15 +19,15 @@ while (isProgramStillActive)
             switch (selectedOption)
             {
                 case 1:
-                    List<Ticket> sortedTickets = SortTicketsByPriority(tickets);
-                    DisplayTickets(sortedTickets);
+                    List<Ticket> sortedTickets = ticketQueries.SortTicketsByPriority(tickets);
+                    ticketView.DisplayTickets(sortedTickets);
                     break;
                 case 2:
-                    List<Ticket> urgentTickets = GetUrgentTickets(tickets);
-                    DisplayTickets(urgentTickets);
+                    List<Ticket> urgentTickets = ticketQueries.GetUrgentTickets(tickets);
+                    ticketView.DisplayTickets(urgentTickets);
                     break;
                 case 3:
-                    DisplayBasicQueueSummary(tickets);
+                    ticketView.DisplayBasicQueueSummary(tickets, ticketQueries);
                     break;
                 case 4:
                     Console.WriteLine("Podaj ID zgłoszenia:");
@@ -37,7 +35,7 @@ while (isProgramStillActive)
                     bool wasTicketIdParsed = int.TryParse(ticketIdInput, out int ticketIdToStart);
                     if (wasTicketIdParsed)
                     {
-                        Ticket? ticketToStart = FindTicketById(tickets, ticketIdToStart);
+                        Ticket? ticketToStart = ticketQueries.FindTicketById(tickets, ticketIdToStart);
                         if (ticketToStart == null)
                         {
                             Console.WriteLine("Nie znaleziono zgłoszenia.");
@@ -67,7 +65,7 @@ while (isProgramStillActive)
                     bool wasTicketIdParsedToClose = int.TryParse(ticketIdInputToClose, out int ticketIdToClose);
                     if (wasTicketIdParsedToClose)
                     {
-                        Ticket? ticketToClose = FindTicketById(tickets, ticketIdToClose);
+                        Ticket? ticketToClose = ticketQueries.FindTicketById(tickets, ticketIdToClose);
                         if (ticketToClose == null)
                         {
                             Console.WriteLine("Nie znaleziono zgłoszenia.");
@@ -98,7 +96,7 @@ while (isProgramStillActive)
                     if (wasTicketIdParsedToReopen)
                     {
 
-                        Ticket? ticketToReopen = FindTicketById(tickets, ticketIdToReopen);
+                        Ticket? ticketToReopen = ticketQueries.FindTicketById(tickets, ticketIdToReopen);
 
                         if (ticketToReopen == null)
                         {
@@ -133,7 +131,7 @@ while (isProgramStillActive)
                     bool wasTicketIdParsedToChangePriority = int.TryParse(ticketIdInputToChangePriority, out int ticketIdToChangePriority);
                     if (wasTicketIdParsedToChangePriority)
                     {
-                        Ticket? ticketToChangePriority = FindTicketById(tickets, ticketIdToChangePriority);
+                        Ticket? ticketToChangePriority = ticketQueries.FindTicketById(tickets, ticketIdToChangePriority);
                         if (ticketToChangePriority == null)
                         {
                             Console.WriteLine("Nie znaleziono zgłoszenia.");
@@ -181,56 +179,10 @@ while (isProgramStillActive)
         Console.WriteLine("Nieprawidłowy numer opcji.");
     }
 }
-static void DisplayMainMenu()
-{
-    Console.WriteLine("--- Support Ticket Manager ---");
-    Console.WriteLine("1. Pokaż wszystkie zgłoszenia");
-    Console.WriteLine("2. Pokaż pilne zgłoszenia");
-    Console.WriteLine("3. Pokaż podsumowanie kolejki");
-    Console.WriteLine("4. Rozpocznij obsługę zgłoszenia");
-    Console.WriteLine("5. Zamknij zgłoszenie");
-    Console.WriteLine("6. Otwórz ponownie zgłoszenie");
-    Console.WriteLine("7. Zmień priorytet");
-    Console.WriteLine("0. Zakończ program");
-    Console.WriteLine("Wybierz operację:");
-}
-static void DisplayTickets(List<Ticket> ticketsToDisplay)
-{
-    foreach (Ticket ticket in ticketsToDisplay)
-    {
-        Console.WriteLine($"#{ticket.Id} | {ticket.Title} | Priority: {ticket.Priority} | {ticket.Status}");
-    }
-}
 
-static List<Ticket> GetUrgentTickets(List<Ticket> ticketsToFilter)
-{
-    List<Ticket> filteredTickets = ticketsToFilter
-     .Where(ticket => ticket.IsUrgent())
-     .ToList();
-    return filteredTickets;
-}
 
-static bool HasCriticalTicket(List<Ticket> ticketsToCheck)
-{
-    bool result = ticketsToCheck
-     .Any(ticket => ticket.IsCritical());
-    return result;
-}
 
-static int CountOpenTickets(List<Ticket> ticketsToCheck)
-{
-    int openTicketCount =
-     ticketsToCheck.Count(ticket => ticket.IsOpen());
-    return openTicketCount;
-}
 
-static List<Ticket> SortTicketsByPriority(List<Ticket> ticketsToSort)
-{
-    List<Ticket> ticketsByPriority =
-     ticketsToSort.OrderByDescending(ticket => ticket.Priority)
-     .ToList();
-    return ticketsByPriority;
-}
 
 static List<Ticket> CreateSampleTickets()
 {
@@ -282,92 +234,4 @@ static List<Ticket> CreateSampleTickets()
     fifthTicket
     };
     return sampleTickets;
-}
-
-
-static int CountUrgentTickets(List<Ticket> tickets)
-{
-
-    int countUrgentTicket =
-     tickets.Count(ticket => ticket.IsUrgent());
-    return countUrgentTicket;
-}
-
-static bool HasInProgressTicket(List<Ticket> ticketsToCheck)
-{
-    bool result =
-    ticketsToCheck.Any(ticket => ticket.IsInProgress());
-    return result;
-}
-
-static List<Ticket> GetClosedTickets(List<Ticket> ticketsToFilter)
-{
-    List<Ticket> closedTicket = ticketsToFilter
-    .Where(ticket => !ticket.IsOpen())
-    .ToList();
-    return closedTicket;
-}
-
-static bool HasClosedTicket(List<Ticket> ticketsToFilter)
-{
-    bool result = ticketsToFilter
-    .Any(ticket => !ticket.IsOpen());
-    return result;
-}
-
-static bool HasTicketRequiringImmediateAttention(List<Ticket> ticketsToCheck)
-{
-    bool result = ticketsToCheck
-    .Any(ticket => ticket.RequiresImmediateAttention());
-    return result;
-}
-
-static int CountInProgressTickets(List<Ticket> ticketsToCheck)
-{
-    int countTickets = ticketsToCheck
-        .Count(ticket => ticket.IsInProgress());
-    return countTickets;
-}
-
-static int CountTicketsRequiringImmediateAttention(List<Ticket> ticketsToFilter)
-{
-    int countTickets = ticketsToFilter
-    .Count(ticket => ticket.RequiresImmediateAttention());
-    return countTickets;
-}
-
-
-static void DisplayBasicQueueSummary(List<Ticket> ticketsToSummarize)
-{
-    bool hasCriticalTicket = HasCriticalTicket(ticketsToSummarize);
-
-    Console.WriteLine($"Czy istnieje zgłoszenie krytyczne: {hasCriticalTicket}");
-
-    int openTicketCount = CountOpenTickets(ticketsToSummarize);
-
-    Console.WriteLine($"Liczba otwartych zgłoszeń: {openTicketCount}");
-
-    int countUrgentTickets = CountUrgentTickets(ticketsToSummarize);
-
-    Console.WriteLine($"Liczba pilnych zgłoszeń: {countUrgentTickets}");
-
-    bool hasInProgressTicket = HasInProgressTicket(ticketsToSummarize);
-    Console.WriteLine($"Czy istnieje zgłoszenie w toku: {hasInProgressTicket}");
-
-    List<Ticket> closedTicket = GetClosedTickets(ticketsToSummarize);
-
-    Console.WriteLine($"Liczba zamkniętych zgłoszeń: {closedTicket.Count}");
-
-    bool hasClosedTicket = HasClosedTicket(ticketsToSummarize);
-    Console.WriteLine($"Czy istnieje zamknięte zgłoszenie: {hasClosedTicket}");
-
-    bool hasTicketRequiringImmediateAttention = HasTicketRequiringImmediateAttention(ticketsToSummarize);
-    Console.WriteLine($"Czy istnieje zgłoszenie wymagające natychmiastowej reakcji: {hasTicketRequiringImmediateAttention}");
-
-    int countTicketsRequiringImmediateAttention = CountTicketsRequiringImmediateAttention(ticketsToSummarize);
-    Console.WriteLine($"Liczba zgłoszeń wymagających natychmiastowej reakcji: {countTicketsRequiringImmediateAttention}");
-
-    int countInProgressTickets = CountInProgressTickets(ticketsToSummarize);
-    Console.WriteLine($"Zgłoszenia w toku: {countInProgressTickets}");
-
 }

@@ -101,6 +101,13 @@ dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
 
 ## Status
 
+**MVP 3 w trakcie (05.09.2026).** Ostatnie wydanie pozostaje v0.2.0.
+W bieżącym kodzie TicketQueries zawiera wyszukiwanie, filtrowanie, sortowanie
+i liczenie; nie przechowuje kolekcji, otrzymuje ją przez parametry.
+TicketConsoleView wyświetla listę, podsumowanie i menu oraz komunikat dla
+pustej listy. Program.cs nadal obsługuje pętlę, wejście i wybór operacji.
+Następny krok: wydzielenie sterowania aplikacją do osobnej klasy.
+
 **MVP 2 ukończone — wersja `v0.2.0`.** Projekt zawiera model `Ticket`,
 pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
 wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłoszeń,
