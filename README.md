@@ -78,14 +78,6 @@ niedozwoloną zmianę stanu oraz priorytet spoza zakresu. Wyszukiwanie jednego
 zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasie
 `Ticket`.
 
-## Poza zakresem MVP 2
-
-- wprowadzanie, edycja i usuwanie zgłoszeń przez użytkownika;
-- konta użytkowników i logowanie;
-- zapis do pliku lub bazy danych;
-- API i frontend;
-- automatyczne obliczanie SLA.
-
 ## Technologie
 
 - C#
