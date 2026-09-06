@@ -6,7 +6,8 @@ public class TicketConsoleApplication
     public void Run(
         List<Ticket> tickets,
         TicketQueries ticketQueries,
-        TicketConsoleView ticketView)
+        TicketConsoleView ticketView,
+        TicketService ticketService)
     {
         bool isProgramStillActive = true;
         while (isProgramStillActive)
@@ -58,7 +59,7 @@ public class TicketConsoleApplication
                             ShowTicketById(tickets, ticketQueries, ticketView);
                             break;
                         case 10:
-                            CreateNewTicket(tickets, ticketQueries);
+                            CreateNewTicket(ticketService);
                             break;
                         default:
                             Console.WriteLine("Nieobsługiwana opcja.");
@@ -253,8 +254,7 @@ public class TicketConsoleApplication
 
     }
     private void CreateNewTicket(
-        List<Ticket> tickets,
-        TicketQueries ticketQueries
+        TicketService ticketService
     )
     {
         Console.WriteLine("Podaj tytuł zgłoszenia:");
@@ -285,9 +285,7 @@ public class TicketConsoleApplication
             Console.WriteLine("Priorytet musi mieścić się w zakresie 1-5");
             return;
         }
-        int nextTicketId = ticketQueries.GetNextTicketId(tickets);
-        Ticket newTicket = new Ticket(nextTicketId, ticketToCreateNew, descriptionToCreateNew, priorityPassed, "Open");
-        tickets.Add(newTicket);
+        Ticket newTicket = ticketService.CreateTicket(ticketToCreateNew, descriptionToCreateNew, priorityPassed);
         Console.WriteLine($"Utworzono zgłoszenie o ID: {newTicket.Id}");
     }
 }

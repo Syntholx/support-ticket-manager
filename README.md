@@ -91,6 +91,7 @@ zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasi
 - C#
 - .NET 10
 - LINQ
+- xUnit (testy jednostkowe)
 - Git i GitHub
 
 ## Uruchomienie
@@ -135,7 +136,50 @@ Właściwości `Id`, `Title`, `Description`, `Priority` i `Status` można odczyt
 ale ich settery są prywatne. Dane pozostają przechowywane wyłącznie w pamięci
 podczas działania aplikacji.
 
+## MVP 5 — v0.5.0
+
+Piąta wersja wprowadza statusy typu `TicketStatus` (`enum`) i klasę
+`TicketService`. Serwis zapamiętuje referencję do listy w polu `private readonly`,
+ustala następne ID, tworzy zgłoszenie, dodaje je do listy i zwraca obiekt.
+Opcja `10` przekazuje mu dane; odczyt i komunikaty pozostają w konsoli.
+Walidacja konstruktora `Ticket` nadal chroni model niezależnie od źródła danych.
+
+Projekt testowy `tests/SupportTicketManager.Tests` zawiera **22 testy xUnit**:
+
+- 9 testów serwisu: ID dla pustej i niepustej listy, tworzenie, kolejne ID,
+  odrzucanie błędnego priorytetu, tytułu i opisu oraz zachowanie istniejącej listy;
+- 13 testów `Ticket`: zamknięcie, rozpoczęcie i ponowne otwarcie dla wszystkich
+  trzech statusów początkowych oraz granice priorytetu `0`, `1`, `5`, `6`.
+
+Testy sprawdzają opisane przypadki, nie gwarantują poprawności całego programu.
+Podłączenie menu pozostaje sprawdzane ręcznie. Dane nadal istnieją tylko w pamięci;
+nie ma API, bazy danych ani interfejsu przeglądarkowego.
+
+## Budowanie i testy
+
+Wymagane: .NET SDK 10. Pierwsze uruchomienie pobiera pakiety z NuGet.
+Polecenia wykonaj w głównym folderze repozytorium:
+
+```powershell
+dotnet build SupportTicketManager.slnx
+dotnet test SupportTicketManager.slnx
+```
+
+Przed budowaniem zakończ uruchomioną konsolę opcją `0` lub `Ctrl+C`, aby proces
+nie blokował pliku wykonywalnego. Nowym zachowaniom towarzyszą potrzebne testy;
+po zmianie uruchamiany jest cały istniejący zestaw.
+
+Projekt jest rozwijany w ramach nauki z pomocą mentora AI przy wyjaśnieniach,
+przykładach, przeglądzie kodu i dokumentacji. Nie jest przedstawiany jako praca
+wykonana całkowicie bez pomocy.
+
 ## Status
+
+**MVP 5 ukończone — `v0.5.0` (06.09.2026).** 22 testy jednostkowe przechodzą.
+Po refaktoryzacji ręcznie sprawdzono tworzenie z menu, aktywną kolejkę,
+zamknięcie, archiwum, ponowne otwarcie i zakończenie programu.
+Następny etap: wprowadzenie HTTP i pierwszego odczytowego API, z dalszą
+aktywną praktyką testowania. Poniższe informacje opisują wcześniejsze wydania.
 
 **MVP 4 ukończone — wersja `v0.4.0` (05.09.2026).** Pełny test regresji objął
 tworzenie poprawnych zgłoszeń, wszystkie błędne dane wejściowe, kolejne `Id`,

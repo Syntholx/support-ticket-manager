@@ -7,7 +7,7 @@ public class SampleTicketData
      title: "Problem z logowaniem",
      description: "Użytkownik nie może zalogować się do panelu ",
      priority: 4,
-      status: "Open"
+      status: TicketStatus.Open
     );
 
         Ticket secondTicket = new Ticket(
@@ -15,7 +15,7 @@ public class SampleTicketData
             "Błąd płatności",
             "Płatność została pobrana, ale zamówienie nie powstało",
             5,
-            "Closed"
+            TicketStatus.Closed
         );
 
         Ticket thirdTicket = new Ticket(
@@ -23,21 +23,21 @@ public class SampleTicketData
             "Pytanie o fakturę",
             "Użytkownik prosi o kopię faktury",
             2,
-            "InProgress"
+            TicketStatus.InProgress
         );
         Ticket fourthTicket = new Ticket(
             4,
             "Reset hasła zakończony",
            "Użytkownik odzyskał dostęp do konta",
             3,
-            "Closed"
+           TicketStatus.Closed
         );
         Ticket fifthTicket = new Ticket(
         id: 5,
         title: "Problem z adresem dostawy",
         description: "Użytkownik chce poprawić adres przed wysyłką",
         priority: 1,
-        status: "Open"
+        status: TicketStatus.Open
         );
 
 

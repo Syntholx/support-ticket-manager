@@ -81,15 +81,6 @@ public class TicketQueries
         .Count(ticket => ticket.RequiresImmediateAttention());
         return countTickets;
     }
-    public int GetNextTicketId(List<Ticket> tickets)
-    {
-        if (tickets.Count == 0)
-        {
-            return 1;
-        }
-        int nextTicketId = tickets.Max(ticket => ticket.Id) + 1;
-        return nextTicketId;
-    }
     public List<Ticket> GetActiveTickets(List<Ticket> ticketsActive)
     {
         List<Ticket> activeTickets = ticketsActive

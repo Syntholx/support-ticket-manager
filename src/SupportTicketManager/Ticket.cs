@@ -5,14 +5,14 @@ public class Ticket
     public string Title { get; private set; } = "";
     public string Description { get; private set; } = "";
     public int Priority { get; private set; }
-    public string Status { get; private set; } = "";
+    public TicketStatus Status { get; private set; }
 
     public Ticket(
         int id,
         string title,
         string description,
         int priority,
-        string status)
+        TicketStatus status)
     {
         Id = id;
         if (string.IsNullOrWhiteSpace(title))
@@ -30,7 +30,7 @@ public class Ticket
             throw new ArgumentOutOfRangeException(nameof(priority));
         }
         Priority = priority;
-        if (status != "Open" && status != "InProgress" && status != "Closed")
+        if (status != TicketStatus.Open && status != TicketStatus.InProgress && status != TicketStatus.Closed)
         {
             throw new ArgumentException("Status musi być jednym z: Open, InProgress, Closed", nameof(status));
         }
@@ -47,11 +47,11 @@ public class Ticket
     }
     public bool IsOpen()
     {
-        return Status != "Closed";
+        return Status != TicketStatus.Closed;
     }
     public bool IsInProgress()
     {
-        return Status == "InProgress";
+        return Status == TicketStatus.InProgress;
     }
     public bool RequiresImmediateAttention()
     {
@@ -64,18 +64,18 @@ public class Ticket
             return false;
 
         }
-        Status = "Closed";
+        Status = TicketStatus.Closed;
 
         return true;
 
     }
     public bool TryStartProgress()
     {
-        if (Status != "Open")
+        if (Status != TicketStatus.Open)
         {
             return false;
         }
-        Status = "InProgress";
+        Status = TicketStatus.InProgress;
 
         return true;
 
@@ -88,7 +88,7 @@ public class Ticket
             return false;
         }
 
-        Status = "Open";
+        Status = TicketStatus.Open;
         return true;
     }
 
@@ -103,7 +103,7 @@ public class Ticket
     }
     public bool CanBeReopened()
     {
-        if (Status != "Closed")
+        if (Status != TicketStatus.Closed)
         {
             return false;
         }

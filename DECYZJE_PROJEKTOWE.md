@@ -3,6 +3,27 @@
 Ten plik zapisuje istotne decyzje podjęte podczas rozwoju projektu. Nie jest
 dziennikiem każdej zmiany ani listą przyszłych funkcji.
 
+## MVP 5 — typ statusu, serwis i testy (06.09.2026)
+
+- **Problem:** status był tekstem, tworzenie zgłoszenia należało do kodu konsoli,
+  a sprawdzenia reguł wymagały ręcznego powtarzania.
+- **Decyzja:** `TicketStatus` nazywa statusy; konstruktor nadal waliduje wartość.
+  `TicketService` otrzymuje istniejącą listę przez konstruktor, nadaje ID i tworzy
+  zgłoszenia. Menu i serwis współdzielą listę. `readonly` blokuje podmianę pola,
+  nie modyfikację zawartości listy. `TicketQueries` zachowuje odczyty kolekcji.
+- **Walidacja:** konsola daje komunikaty wejścia, a konstruktor chroni model także
+  przy bezpośrednim wywołaniu serwisu. Obiekt jest dodawany dopiero po poprawnym
+  skonstruowaniu; odrzucenie nie powinno zmieniać istniejącej kolekcji.
+- **Testy:** osobny projekt xUnit z odwołaniem do aplikacji, 9 testów serwisu
+  i 13 testów obiektu. Każdy test przygotowuje własne dane. Wymagania określają
+  wynik, stan i przypadki graniczne; sama liczba zaliczonych testów nie wystarcza.
+- **Alternatywy:** pozostawienie tworzenia w konsoli lub duża przebudowa wszystkich
+  operacji. Wybrano małe wydzielenie, które można wykorzystać później w API.
+- **Ograniczenia:** lista jest w pamięci, brak obsługi współbieżnego tworzenia
+  i trwałego ID. Testy jednostkowe nie potwierdzają podłączenia menu.
+- **Dalsza praca:** małe zachowanie -> potrzebne testy -> cały zestaw -> kolejna
+  zmiana. Nie odkładamy testowania do końca kolejnego MVP.
+
 ## MVP 4 — tworzenie zgłoszeń i archiwum wynikające ze statusu (05.09.2026)
 
 - **Problem:** użytkownik nie mógł dodawać zgłoszeń, a zamknięte elementy były

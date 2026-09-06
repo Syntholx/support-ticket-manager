@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/SupportTicketManager/SupportTicketManager.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SupportTicketManager.Tests/SupportTicketManager.Tests.csproj" />
+  </Folder>
 </Solution>
