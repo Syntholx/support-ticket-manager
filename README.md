@@ -1,7 +1,35 @@
 # Support Ticket Manager
 
-Konsolowa aplikacja C#/.NET do obsługi zgłoszeń wsparcia. Projekt powstaje
+Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z konsolą i rozwijanym API. Projekt powstaje
 etapami jako pierwszy projekt backendowy w portfolio.
+
+## Wersja rozwojowa — MVP 6 (`0.6.0-dev`)
+
+Ostatnie ukończone wydanie to `v0.5.0`. Bieżąca gałąź dodaje odczytowe API
+ASP.NET Core i wspólną bibliotekę `SupportTicketManager.Core`. Konsola i API
+korzystają z tych samych klas, ale uruchomione osobno nie współdzielą pamięci.
+
+Uruchomienie lokalnego API z katalogu repozytorium:
+
+```powershell
+dotnet run --project src/SupportTicketManager.Api/SupportTicketManager.Api.csproj --launch-profile http
+```
+
+Adres: `http://localhost:5231`.
+
+- `GET /api/tickets` — aktywne zgłoszenia, malejąco według priorytetu;
+- `GET /api/tickets/archived` — zamknięte zgłoszenia;
+- `GET /api/tickets/{id:int}` — szczegóły (200) lub 404 z komunikatem zawierającym ID;
+- `/api/status` i `/api/name` — pomocnicze endpointy z lekcji.
+
+Status zgłoszenia w JSON jest tekstem; we wspólnej logice pozostaje enumem.
+Przykładowe dane API: ID 1 Open, ID 2 Closed, ID 3 InProgress. Aktywna kolejka
+zwraca ID 3 przed ID 1. Dane są wyłącznie w pamięci, bez trwałego zapisu.
+
+Stan weryfikacji: 24 testy jednostkowe oraz ręczne sprawdzenie HTTP przez autora.
+Testy jednostkowe nie sprawdzają podłączenia endpointów. Przed zamknięciem MVP 6
+pozostają dalsza weryfikacja, lokalne HTTPS i przegląd dokumentacji.
+Tworzenie i zmiany zgłoszeń przez API, baza danych i frontend są poza tym etapem.
 
 ## Cel
 

@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SupportTicketManager\SupportTicketManager.csproj" />
+    <ProjectReference Include="..\..\src\SupportTicketManager.Core\SupportTicketManager.Core.csproj" />
   </ItemGroup>
 
 </Project>
