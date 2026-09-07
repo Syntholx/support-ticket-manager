@@ -61,6 +61,19 @@ dziennikiem każdej zmiany ani listą przyszłych funkcji.
   listy, listę zamkniętych zgłoszeń i podgląd szczegółów zgłoszenia po Id.
   MVP 3 zostało ukończone jako wersja v0.3.0.
 
+## MVP 6 — wspólny kod i odczytowe API (07.09.2026)
+
+- Problem: udostępnić odczyty przez HTTP bez powielania reguł konsoli.
+- Decyzja: Core zawiera wspólne klasy; API mapuje żądania na istniejące zapytania.
+  Konsola i API są osobnymi procesami i mają osobne listy w pamięci.
+- Alternatywa: kopiowanie klas do API; odrzucono z powodu duplikacji reguł.
+- Kontrakt: aktywna kolejka posortowana, archiwum, szczegóły; 200 z pustą listą
+  dla braku elementów kolekcji, 404 dla nieistniejącego pojedynczego zgłoszenia.
+  Statusy w JSON są tekstem, ale wewnętrznie pozostają enumem.
+- Zakres: lokalne HTTP/HTTPS, bez zmian danych przez API, bazy i frontendu.
+  HTTPS zabezpiecza transmisję, nie zastępuje uwierzytelniania ani walidacji.
+- Publikacja: GitHub v0.6.0; aktualizacja portfolio odroczona przez autora.
+
 ## Reguły biznesowe należą do klasy `Ticket`
 
 - **Problem:** kod interfejsu mógłby powtarzać warunki statusu i priorytetu.

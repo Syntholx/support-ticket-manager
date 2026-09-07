@@ -3,19 +3,25 @@
 Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z konsolą i rozwijanym API. Projekt powstaje
 etapami jako pierwszy projekt backendowy w portfolio.
 
-## Wersja rozwojowa — MVP 6 (`0.6.0-dev`)
+## MVP 6 — v0.6.0 (07.09.2026)
 
-Ostatnie ukończone wydanie to `v0.5.0`. Bieżąca gałąź dodaje odczytowe API
+Wydanie dodaje odczytowe API
 ASP.NET Core i wspólną bibliotekę `SupportTicketManager.Core`. Konsola i API
 korzystają z tych samych klas, ale uruchomione osobno nie współdzielą pamięci.
 
-Uruchomienie lokalnego API z katalogu repozytorium:
+Uruchomienie lokalnego API z katalogu repozytorium (.NET SDK 10):
 
 ```powershell
-dotnet run --project src/SupportTicketManager.Api/SupportTicketManager.Api.csproj --launch-profile http
+dotnet dev-certs https --check --trust
+dotnet run --project src/SupportTicketManager.Api/SupportTicketManager.Api.csproj --launch-profile https
 ```
 
-Adres: `http://localhost:5231`.
+Adres: `https://localhost:7280`.
+Jeśli sprawdzenie nie znajdzie zaufanego certyfikatu, wykonaj
+`dotnet dev-certs https --trust` i zaakceptuj zaufanie do lokalnego certyfikatu
+deweloperskiego. Nie jest to certyfikat do publicznego wdrożenia.
+Profil `https` udostępnia także HTTP pod `http://localhost:5231`; nie wymusza
+przekierowania HTTP na HTTPS. Profil `http` uruchamia tylko ten drugi adres.
 
 - `GET /api/tickets` — aktywne zgłoszenia, malejąco według priorytetu;
 - `GET /api/tickets/archived` — zamknięte zgłoszenia;
@@ -26,10 +32,18 @@ Status zgłoszenia w JSON jest tekstem; we wspólnej logice pozostaje enumem.
 Przykładowe dane API: ID 1 Open, ID 2 Closed, ID 3 InProgress. Aktywna kolejka
 zwraca ID 3 przed ID 1. Dane są wyłącznie w pamięci, bez trwałego zapisu.
 
-Stan weryfikacji: 24 testy jednostkowe oraz ręczne sprawdzenie HTTP przez autora.
-Testy jednostkowe nie sprawdzają podłączenia endpointów. Przed zamknięciem MVP 6
-pozostają dalsza weryfikacja, lokalne HTTPS i przegląd dokumentacji.
+Stan weryfikacji: 29 testów jednostkowych oraz ręczne sprawdzenie HTTP i HTTPS
+przez autora. Testy jednostkowe nie sprawdzają podłączenia endpointów.
+Pusta aktywna kolejka zwraca 200 i `[]`. Brak liczbowego ID zwraca 404 z JSON,
+a `/api/tickets/abc` nie pasuje do trasy i zwraca 404 bez komunikatu endpointu.
 Tworzenie i zmiany zgłoszeń przez API, baza danych i frontend są poza tym etapem.
+API działa lokalnie, bez uwierzytelniania i publicznego hostingu. Publikacja
+kodu na GitHubie nie uruchamia serwera dostępnego przez internet.
+
+Podział projektów: `SupportTicketManager.Core` — wspólne reguły i zapytania;
+`SupportTicketManager` — interaktywna konsola; `SupportTicketManager.Api` — HTTP;
+`SupportTicketManager.Tests` — testy logiki. API ma 3 własne przykładowe zgłoszenia,
+konsola 5. Dodanie zgłoszenia w konsoli nie zmienia listy osobnego procesu API.
 
 ## Cel
 
@@ -110,11 +124,12 @@ zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasi
 
 - C#
 - .NET 10
+- ASP.NET Core Minimal API i JSON
 - LINQ
 - xUnit (testy jednostkowe)
 - Git i GitHub
 
-## Uruchomienie
+## Uruchomienie konsoli
 
 ```powershell
 dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
@@ -164,7 +179,7 @@ ustala następne ID, tworzy zgłoszenie, dodaje je do listy i zwraca obiekt.
 Opcja `10` przekazuje mu dane; odczyt i komunikaty pozostają w konsoli.
 Walidacja konstruktora `Ticket` nadal chroni model niezależnie od źródła danych.
 
-Projekt testowy `tests/SupportTicketManager.Tests` zawiera **22 testy xUnit**:
+W wydaniu MVP 5 projekt testowy zawierał **22 testy xUnit**:
 
 - 9 testów serwisu: ID dla pustej i niepustej listy, tworzenie, kolejne ID,
   odrzucanie błędnego priorytetu, tytułu i opisu oraz zachowanie istniejącej listy;
@@ -173,7 +188,7 @@ Projekt testowy `tests/SupportTicketManager.Tests` zawiera **22 testy xUnit**:
 
 Testy sprawdzają opisane przypadki, nie gwarantują poprawności całego programu.
 Podłączenie menu pozostaje sprawdzane ręcznie. Dane nadal istnieją tylko w pamięci;
-nie ma API, bazy danych ani interfejsu przeglądarkowego.
+w tej wersji nie było API, bazy danych ani interfejsu przeglądarkowego.
 
 ## Budowanie i testy
 
@@ -195,11 +210,18 @@ wykonana całkowicie bez pomocy.
 
 ## Status
 
-**MVP 5 ukończone — `v0.5.0` (06.09.2026).** 22 testy jednostkowe przechodzą.
+**MVP 6 ukończone — `v0.6.0` (07.09.2026).** 29 testów jednostkowych:
+9 serwisu, 13 modelu Ticket i 7 zapytań. Build bez błędów i ostrzeżeń.
+Sprawdzono aktywne zgłoszenia, archiwum, szczegóły, brak ID, błędną trasę oraz
+pustą kolejkę przez HTTPS. Publikacja tylko na GitHubie; portfolio pozostaje
+przy v0.5.0 zgodnie z decyzją autora. Zakres kolejnego MVP wymaga ustalenia.
+
+Poniższe informacje opisują wcześniejsze wydania.
+
+**MVP 5 ukończone — `v0.5.0` (06.09.2026).** 22 testy jednostkowe przechodziły.
 Po refaktoryzacji ręcznie sprawdzono tworzenie z menu, aktywną kolejkę,
 zamknięcie, archiwum, ponowne otwarcie i zakończenie programu.
-Następny etap: wprowadzenie HTTP i pierwszego odczytowego API, z dalszą
-aktywną praktyką testowania. Poniższe informacje opisują wcześniejsze wydania.
+Kolejnym etapem było wprowadzenie odczytowego API w MVP 6.
 
 **MVP 4 ukończone — wersja `v0.4.0` (05.09.2026).** Pełny test regresji objął
 tworzenie poprawnych zgłoszeń, wszystkie błędne dane wejściowe, kolejne `Id`,

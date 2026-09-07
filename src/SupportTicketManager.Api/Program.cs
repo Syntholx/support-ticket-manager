@@ -32,7 +32,7 @@ app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
     isRunning = true,
-    version = "0.6.0-dev"
+    version = "0.6.0"
 });
 app.MapGet("api/name", () => "Support Ticket Manager");
 app.MapGet("/api/tickets", () =>
