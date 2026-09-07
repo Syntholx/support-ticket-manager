@@ -28,6 +28,7 @@ List<Ticket> tickets = new List<Ticket>
                 TicketStatus.InProgress)
 };
 TicketQueries ticketQueries = new TicketQueries();
+TicketService ticketService = new TicketService(tickets);
 app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
@@ -54,5 +55,19 @@ app.MapGet("/api/tickets/{id:int}", (int id) =>
         });
     }
     return Results.Ok(foundTicket);
+});
+app.MapPost("/api/tickets", (CreateTicketRequest request) =>
+
+{
+    if (request.Priority < 1 || request.Priority > 5)
+    {
+        return Results.BadRequest(new
+        {
+            message = "Priorytet musi być od 1 do 5"
+        });
+    }
+    Ticket createdTicket = ticketService.CreateTicket(request.Title, request.Description, request.Priority);
+    return Results.Created(
+        $"/api/tickets/{createdTicket.Id}", createdTicket);
 });
 app.Run();

@@ -3,6 +3,14 @@
 Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z konsolą i rozwijanym API. Projekt powstaje
 etapami jako pierwszy projekt backendowy w portfolio.
 
+## Prace po wydaniu — MVP 7 (nieukończone)
+
+Tag v0.6.0 pozostaje wydaniem odczytowym. Na main rozpoczęto POST
+/api/tickets z DTO CreateTicketRequest. Poprawne tworzenie zwraca 201,
+Location i obiekt widoczny przez GET; priorytet spoza 1–5 daje 400.
+Walidacja tytułu/opisu w odpowiedzi API oraz pełna weryfikacja są jeszcze
+do ukończenia. Nie jest to wydanie MVP 7. Portfolio pozostaje bez zmian.
+
 ## MVP 6 — v0.6.0 (07.09.2026)
 
 Wydanie dodaje odczytowe API
