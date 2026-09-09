@@ -8,8 +8,22 @@ etapami jako pierwszy projekt backendowy w portfolio.
 Tag v0.6.0 pozostaje wydaniem odczytowym. Na main rozpoczęto POST
 /api/tickets z DTO CreateTicketRequest. Poprawne tworzenie zwraca 201,
 Location i obiekt widoczny przez GET; priorytet spoza 1–5 daje 400.
-Walidacja tytułu/opisu w odpowiedzi API oraz pełna weryfikacja są jeszcze
-do ukończenia. Nie jest to wydanie MVP 7. Portfolio pozostaje bez zmian.
+Stan lokalny po sesji 08.09: walidacja tytułu i opisu przez IsNullOrWhiteSpace
+odbywa się przed tworzeniem i zwraca 400. Zestaw zawiera 29 testów jednostkowych
+i 6 integracyjnych API (35 zaliczonych według uruchomienia autora): poprawne
+tworzenie, priorytet 8, pusty tytuł, opis ze spacjami, priorytety 1 i 5.
+Testy sprawdzają kody POST, Location dla sukcesu i późniejszy GET; nie sprawdzają
+jeszcze pól JSON odpowiedzi tworzenia. Testowe API działa w pamięci, bez osobnego dotnet run;
+nie jest to test certyfikatu HTTPS.
+
+Stan lokalny 09.09: dodano POST `/api/tickets/{id:int}/close` i
+`/api/tickets/{id:int}/reopen`, bez body. Sukces: 200 z obiektem; brak ID: 404;
+niedozwolony stan: 409 z message. Reguły pozostają w Ticket. Dodano 7 testów
+operacji, w tym sprawdzenie statusu przez późniejszy GET i komunikatów błędów.
+Aktualnie 42 testy (29 jednostkowych, 13 API) przechodzą. Następne: rozpoczęcie
+obsługi i zmiana priorytetu przez API. Ten stan pozostaje lokalny do odbioru MVP 7.
+Pełna weryfikacja pozostałych błędnych danych jest do ukończenia.
+Nie jest to wydanie MVP 7. Portfolio pozostaje bez zmian.
 
 ## MVP 6 — v0.6.0 (07.09.2026)
 
