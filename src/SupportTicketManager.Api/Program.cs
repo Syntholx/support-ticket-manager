@@ -34,7 +34,7 @@ app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
     isRunning = true,
-    version = "0.6.0"
+    version = "0.7.0"
 });
 app.MapGet("api/name", () => "Support Ticket Manager");
 app.MapGet("/api/tickets", () =>
@@ -131,6 +131,47 @@ app.MapPost("/api/tickets/{id:int}/reopen", (int id) =>
     return Results.Ok(foundTicket);
 });
 
+app.MapPost("/api/tickets/{id:int}/start", (int id) =>
+{
+    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
+    if (foundTicket == null)
+    {
+        return Results.NotFound(new
+        {
+            message = "Nie znaleziono zgłoszenia"
+        });
+    }
+    bool wasTryStartProgress = foundTicket.TryStartProgress();
+    if (wasTryStartProgress == false)
+    {
+        return Results.Conflict(new
+        {
+            message = "Nie można rozpocząć obsługi zgłoszenia"
+        });
+    }
+    return Results.Ok(foundTicket);
+});
+
+app.MapPost("/api/tickets/{id:int}/priority", (int id, ChangeTicketPriorityRequest request) =>
+{
+    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
+    if (foundTicket == null)
+    {
+        return Results.NotFound(new
+        {
+            message = "Nie znaleziono zgłoszenia"
+        });
+    }
+    bool wasChangePriority = foundTicket.TryChangePriority(request.Priority);
+    if (wasChangePriority == false)
+    {
+        return Results.BadRequest(new
+        {
+            message = "Priorytet musi być od 1 do 5"
+        });
+    }
+    return Results.Ok(foundTicket);
+});
 
 app.Run();
 public partial class Program

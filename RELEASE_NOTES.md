@@ -1,4 +1,24 @@
-# MVP 6 — v0.6.0 (2026-09-07)
+# MVP 7 — v0.7.0 (2026-09-10)
+
+Tworzenie i pełny cykl obsługi zgłoszeń przez API ASP.NET Core.
+
+- POST tworzenia: DTO, walidacja, 201, Location i dane zgłoszenia.
+- POST start/close/reopen: reguły Ticket, 200/404/409 i odpowiedzi JSON.
+- POST zmiany priorytetu: zakres 1–5, 400 bez zmiany danych, 404 dla braku ID.
+  Zmiana działa także przy Closed; status pozostaje bez zmian.
+- 60 testów: 29 jednostkowych i 31 integracyjnych; build Release bez ostrzeżeń.
+- Testy granic, odrzucania danych, null/braku opisu, uszkodzonego JSON,
+  niepoprawnego typu oraz późniejszego odczytu zmienionego obiektu.
+- Autor potwierdził ręcznie pełny cykl i przechodzenie między kolejką a archiwum.
+- [Demo interfejsu na portfolio](https://szymon-michalek.dev/tsm-demo/):
+  przykładowe dane, bez połączenia z API, symulowane role i operacje.
+  UI przygotowane przez asystenta na prośbę autora, oddzielnie od nauki backendu.
+
+Ograniczenia: API nadal lokalne, bez bazy, kont i ochrony równoczesnych zapisów.
+Nie jest to produkcyjny system wieloużytkownikowy. Demo nie wysyła zgłoszeń
+do backendu; po odświeżeniu przywraca dane. Kolejny kierunek nauki: SQL.
+
+## Historia — MVP 6, v0.6.0 (2026-09-07)
 
 Pierwsze odczytowe API ASP.NET Core, działające obok aplikacji konsolowej.
 

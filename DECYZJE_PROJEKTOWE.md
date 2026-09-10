@@ -61,6 +61,20 @@ dziennikiem każdej zmiany ani listą przyszłych funkcji.
   listy, listę zamkniętych zgłoszeń i podgląd szczegółów zgłoszenia po Id.
   MVP 3 zostało ukończone jako wersja v0.3.0.
 
+## MVP 7 — operacje HTTP i osobne demo interfejsu (10.09.2026)
+
+- Problem: udostępnić istniejące operacje przez HTTP bez duplikowania reguł.
+- Decyzja: endpointy koordynują wyszukanie, wywołanie modelu/serwisu i odpowiedź;
+  Ticket kontroluje zmiany. Priorytet nie zależy od statusu zgłoszenia.
+- Alternatywa: przepisywanie reguł do endpointów — odrzucona.
+- Testy: osobna fabryka na test, kontrola HTTP i danych z późniejszego GET.
+  60 testów oraz ręczny przebieg użytkownika zakończyły odbiór etapu.
+- Publiczny jest kod i osobna makieta na portfolio, nie serwer API.
+  Demo JavaScript ma przykładowe dane, pozorne role i brak połączenia z backendem.
+- Świadome ograniczenia: brak trwałego zapisu, logowania, kontroli równoczesnych
+  modyfikacji i bezpiecznego generowania ID dla wielu żądań. Nie jest to produkcja.
+- Następnie nauka SQL, przed EF Core potrzebne DI/async i uporządkowanie API.
+
 ## MVP 6 — wspólny kod i odczytowe API (07.09.2026)
 
 - Problem: udostępnić odczyty przez HTTP bez powielania reguł konsoli.

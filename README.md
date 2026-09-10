@@ -3,33 +3,58 @@
 Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z konsolą i rozwijanym API. Projekt powstaje
 etapami jako pierwszy projekt backendowy w portfolio.
 
-## Prace po wydaniu — MVP 7 (nieukończone)
+## MVP 7 — v0.7.0 (10.09.2026)
 
-Tag v0.6.0 pozostaje wydaniem odczytowym. Na main rozpoczęto POST
-/api/tickets z DTO CreateTicketRequest. Poprawne tworzenie zwraca 201,
-Location i obiekt widoczny przez GET; priorytet spoza 1–5 daje 400.
-Stan lokalny po sesji 08.09: walidacja tytułu i opisu przez IsNullOrWhiteSpace
-odbywa się przed tworzeniem i zwraca 400. Zestaw zawiera 29 testów jednostkowych
-i 6 integracyjnych API (35 zaliczonych według uruchomienia autora): poprawne
-tworzenie, priorytet 8, pusty tytuł, opis ze spacjami, priorytety 1 i 5.
-Testy sprawdzają kody POST, Location dla sukcesu i późniejszy GET; nie sprawdzają
-jeszcze pól JSON odpowiedzi tworzenia. Testowe API działa w pamięci, bez osobnego dotnet run;
-nie jest to test certyfikatu HTTPS.
+Ukończony etap edukacyjny: tworzenie i obsługa zgłoszeń przez HTTP,
+z walidacją oraz 60 testami (29 jednostkowych i 31 integracyjnych API).
+Reguły pozostają w `Ticket`, tworzenie w `TicketService`, a zapytania
+w `TicketQueries`. Konsola i API współdzielą kod Core, nie pamięć procesu.
 
-Stan lokalny 09.09: dodano POST `/api/tickets/{id:int}/close` i
-`/api/tickets/{id:int}/reopen`, bez body. Sukces: 200 z obiektem; brak ID: 404;
-niedozwolony stan: 409 z message. Reguły pozostają w Ticket. Dodano 7 testów
-operacji, w tym sprawdzenie statusu przez późniejszy GET i komunikatów błędów.
-Aktualnie 42 testy (29 jednostkowych, 13 API) przechodzą. Następne: rozpoczęcie
-obsługi i zmiana priorytetu przez API. Ten stan pozostaje lokalny do odbioru MVP 7.
-Pełna weryfikacja pozostałych błędnych danych jest do ukończenia.
-Nie jest to wydanie MVP 7. Portfolio pozostaje bez zmian.
+| Metoda i ścieżka | Działanie | Odpowiedzi |
+|---|---|---|
+| GET `/api/tickets` | Aktywna kolejka, malejąco według priorytetu | 200, również dla `[]` |
+| GET `/api/tickets/archived` | Zamknięte zgłoszenia | 200 |
+| GET `/api/tickets/{id:int}` | Szczegóły zgłoszenia | 200 / 404 |
+| POST `/api/tickets` | Utworzenie zgłoszenia | 201 + Location / 400 |
+| POST `/api/tickets/{id:int}/start` | Open → InProgress | 200 / 404 / 409 |
+| POST `/api/tickets/{id:int}/close` | Open lub InProgress → Closed | 200 / 404 / 409 |
+| POST `/api/tickets/{id:int}/reopen` | Closed → Open | 200 / 404 / 409 |
+| POST `/api/tickets/{id:int}/priority` | Zmiana priorytetu na 1–5 | 200 / 400 / 404 |
 
-## MVP 6 — v0.6.0 (07.09.2026)
+Tworzenie przyjmuje JSON `{"title":"Problem","description":"Opis problemu","priority":3}`.
+Serwis nadaje ID i status `Open`. Tytuł/opis nie mogą być null, puste ani składać
+się z samych białych znaków. Zmiana priorytetu przyjmuje `{"priority":4}`;
+dozwolona jest również dla zamkniętego zgłoszenia i nie zmienia jego statusu.
+Start, close i reopen nie potrzebują body. Odpowiedź sukcesu zawiera Ticket.
+Brak zasobu daje 404, konflikt stanu 409, niepoprawne dane 400. Błędy zwracane
+przez kod endpointów mają pole `message`. Uszkodzony JSON lub nieczytelny typ
+może zostać odrzucony wcześniej przez ASP.NET Core bez tego pola.
 
-Wydanie dodaje odczytowe API
-ASP.NET Core i wspólną bibliotekę `SupportTicketManager.Core`. Konsola i API
-korzystają z tych samych klas, ale uruchomione osobno nie współdzielą pamięci.
+Weryfikacja: build Release bez błędów i ostrzeżeń, 60/60 testów. Testy obejmują
+m.in. Location i pola zgłoszenia przez GET po tworzeniu, odrzucenie null w opisie,
+braku opisu, tekstowego priorytetu, uszkodzonego JSON i granic 0/1/5/6.
+Autor sprawdził ręcznie pełny przebieg tworzenia, rozpoczęcia, zamknięcia,
+przejścia do archiwum i ponownego otwarcia. To nie jest deklaracja pokrycia
+wszystkich możliwych przypadków ani test certyfikatu HTTPS przez TestServer.
+
+### Demo interfejsu
+
+[Wypróbuj demo na portfolio (PL)](https://szymon-michalek.dev/tsm-demo/).
+Osobna makieta w repozytorium portfolio używa przykładowych danych w JavaScript,
+bez połączenia z API. Role, użytkownicy i operacje są symulowane. Odświeżenie
+usuwa zmiany. Interfejs przygotował asystent na prośbę autora; nie jest to
+zaliczenie frontendu w kursie. Backend pozostaje głównym obszarem nauki.
+
+### Ograniczenia wydania
+
+- API uruchamia się lokalnie; opublikowanie kodu nie oznacza publicznego hostingu API.
+- Brak bazy, kont, autoryzacji, przypisywania pracowników i trwałego zapisu.
+- Lista w pamięci oraz `Max + 1` nie zabezpieczają równoczesnych zapisów.
+  Wersja jest demonstracyjna, niegotowa do produkcyjnej obsługi wielu użytkowników.
+- Konsola, API i demo mają osobne dane. Nie wpisuj danych wrażliwych do demo.
+- Następny etap nauki: podstawy SQL, następnie potrzebne DI/async i EF Core.
+
+## Uruchomienie API
 
 Uruchomienie lokalnego API z katalogu repozytorium (.NET SDK 10):
 
@@ -58,13 +83,14 @@ Stan weryfikacji: 29 testów jednostkowych oraz ręczne sprawdzenie HTTP i HTTPS
 przez autora. Testy jednostkowe nie sprawdzają podłączenia endpointów.
 Pusta aktywna kolejka zwraca 200 i `[]`. Brak liczbowego ID zwraca 404 z JSON,
 a `/api/tickets/abc` nie pasuje do trasy i zwraca 404 bez komunikatu endpointu.
-Tworzenie i zmiany zgłoszeń przez API, baza danych i frontend są poza tym etapem.
+Tworzenie i zmiany przez API opisano powyżej. Baza oraz integracja z frontendem
+pozostają kolejnymi etapami.
 API działa lokalnie, bez uwierzytelniania i publicznego hostingu. Publikacja
 kodu na GitHubie nie uruchamia serwera dostępnego przez internet.
 
 Podział projektów: `SupportTicketManager.Core` — wspólne reguły i zapytania;
 `SupportTicketManager` — interaktywna konsola; `SupportTicketManager.Api` — HTTP;
-`SupportTicketManager.Tests` — testy logiki. API ma 3 własne przykładowe zgłoszenia,
+`SupportTicketManager.Tests` — testy logiki i integracyjne HTTP. API ma 3 własne przykładowe zgłoszenia,
 konsola 5. Dodanie zgłoszenia w konsoli nie zmienia listy osobnego procesu API.
 
 ## Cel
@@ -148,7 +174,7 @@ zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasi
 - .NET 10
 - ASP.NET Core Minimal API i JSON
 - LINQ
-- xUnit (testy jednostkowe)
+- xUnit i WebApplicationFactory (testy jednostkowe oraz integracyjne API)
 - Git i GitHub
 
 ## Uruchomienie konsoli
@@ -232,11 +258,17 @@ wykonana całkowicie bez pomocy.
 
 ## Status
 
+**MVP 7 ukończone — `v0.7.0` (10.09.2026).** 60 testów: 29 jednostkowych,
+31 integracyjnych API. Kod API dostępny na GitHubie, demo interfejsu osobno
+na portfolio. Brak połączenia demo z API i brak produkcyjnego wdrożenia backendu.
+
+Poniższe informacje opisują wcześniejsze wydania.
+
 **MVP 6 ukończone — `v0.6.0` (07.09.2026).** 29 testów jednostkowych:
 9 serwisu, 13 modelu Ticket i 7 zapytań. Build bez błędów i ostrzeżeń.
 Sprawdzono aktywne zgłoszenia, archiwum, szczegóły, brak ID, błędną trasę oraz
 pustą kolejkę przez HTTPS. Publikacja tylko na GitHubie; portfolio pozostaje
-przy v0.5.0 zgodnie z decyzją autora. Zakres kolejnego MVP wymaga ustalenia.
+przy v0.5.0 zgodnie z ówczesną decyzją autora. Był to stan wydania MVP 6.
 
 Poniższe informacje opisują wcześniejsze wydania.
 
