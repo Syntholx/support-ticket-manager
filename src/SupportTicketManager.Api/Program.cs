@@ -1,35 +1,58 @@
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-var app = builder.Build();
-List<Ticket> tickets = new List<Ticket>
-
+builder.Services.AddDbContext<TicketDbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("TicketDatabase")));
+builder.Services.AddScoped<TicketDatabaseService>();
+builder.Services
+.AddIdentityCore<ApplicationUser>(options =>
 {
-    new Ticket(
-        1,
-        "Problem z logowaniem",
-        "Użytkownik nie może wejść do panelu",
-        3,
-        TicketStatus.Open),
+    options.User.RequireUniqueEmail = true;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<TicketDbContext>()
+.AddSignInManager();
+builder.Services
+.AddAuthentication(IdentityConstants.ApplicationScheme)
+.AddIdentityCookies();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
 
-        new Ticket(
-            2,
-            "Błąd płatności",
-            "Płatność wymaga sprawdzenia",
-            5,
-            TicketStatus.Closed),
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
 
-            new Ticket(
-                3,
-                "Problem z wysyłką",
-                "Nie można nadać paczki",
-                4,
-                TicketStatus.InProgress)
-};
-TicketQueries ticketQueries = new TicketQueries();
-TicketService ticketService = new TicketService(tickets);
+// Local UI only. CORS is not authentication or a production access policy.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options => options.AddPolicy("LocalTicketView", policy =>
+        policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500")
+            .WithMethods("GET", "POST")
+            .WithHeaders("Content-Type")));
+}
+builder.Services.AddAuthorization();
+var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("LocalTicketView");
+}
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
@@ -37,142 +60,9 @@ app.MapGet("api/status", () => new
     version = "0.7.0"
 });
 app.MapGet("api/name", () => "Support Ticket Manager");
-app.MapGet("/api/tickets", () =>
-{
-    List<Ticket> activeTickets = ticketQueries.GetActiveTickets(tickets);
-    List<Ticket> sortedTickets = ticketQueries.SortTicketsByPriority(activeTickets);
-    return sortedTickets;
-}
-);
-app.MapGet("/api/tickets/archived", () => ticketQueries.GetClosedTickets(tickets));
-app.MapGet("/api/tickets/{id:int}", (int id) =>
-{
-    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
-    if (foundTicket == null)
-    {
-        return Results.NotFound(new
-        {
-            message = $"Nie znaleziono zgłoszenia o ID: {id}"
-        });
-    }
-    return Results.Ok(foundTicket);
-});
-app.MapPost("/api/tickets", (CreateTicketRequest request) =>
 
-{
-    if (string.IsNullOrWhiteSpace(request.Title))
-    {
-        return Results.BadRequest(new
-        {
-            message = "Tytuł nie może być pusty"
-        });
-    }
-    if (string.IsNullOrWhiteSpace(request.Description))
-    {
-        return Results.BadRequest(new
-        {
-            message = "Opis nie może być pusty"
-        });
-    }
-
-    if (request.Priority < 1 || request.Priority > 5)
-    {
-        return Results.BadRequest(new
-        {
-            message = "Priorytet musi być od 1 do 5"
-        });
-    }
-
-    Ticket createdTicket = ticketService.CreateTicket(request.Title, request.Description, request.Priority);
-
-    return Results.Created(
-        $"/api/tickets/{createdTicket.Id}", createdTicket);
-});
-app.MapPost("/api/tickets/{id:int}/close", (int id) =>
-{
-    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
-    if (foundTicket == null)
-    {
-        return Results.NotFound(new
-        {
-            message = "Nie znaleziono zgłoszenia"
-        });
-    }
-    bool wasClose = foundTicket.TryClose();
-    if (wasClose == false)
-    {
-        return Results.Conflict(new
-        {
-            message = "Zgłoszenie jest już zamknięte"
-        });
-    }
-    return Results.Ok(foundTicket);
-});
-app.MapPost("/api/tickets/{id:int}/reopen", (int id) =>
-{
-    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
-    if (foundTicket == null)
-    {
-        return Results.NotFound(new
-        {
-            message = "Nie znaleziono zgłoszenia"
-        });
-    }
-    bool wasReopen = foundTicket.TryReopen();
-    if (wasReopen == false)
-    {
-        return Results.Conflict(new
-        {
-            message = "Zgłoszenie nie jest zamknięte"
-        });
-
-    }
-
-    return Results.Ok(foundTicket);
-});
-
-app.MapPost("/api/tickets/{id:int}/start", (int id) =>
-{
-    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
-    if (foundTicket == null)
-    {
-        return Results.NotFound(new
-        {
-            message = "Nie znaleziono zgłoszenia"
-        });
-    }
-    bool wasTryStartProgress = foundTicket.TryStartProgress();
-    if (wasTryStartProgress == false)
-    {
-        return Results.Conflict(new
-        {
-            message = "Nie można rozpocząć obsługi zgłoszenia"
-        });
-    }
-    return Results.Ok(foundTicket);
-});
-
-app.MapPost("/api/tickets/{id:int}/priority", (int id, ChangeTicketPriorityRequest request) =>
-{
-    Ticket? foundTicket = ticketQueries.FindTicketById(tickets, id);
-    if (foundTicket == null)
-    {
-        return Results.NotFound(new
-        {
-            message = "Nie znaleziono zgłoszenia"
-        });
-    }
-    bool wasChangePriority = foundTicket.TryChangePriority(request.Priority);
-    if (wasChangePriority == false)
-    {
-        return Results.BadRequest(new
-        {
-            message = "Priorytet musi być od 1 do 5"
-        });
-    }
-    return Results.Ok(foundTicket);
-});
-
+TicketEndpoints.MapTicketEndpoints(app);
+AuthEndpoints.MapAuthEndpoints(app);
 app.Run();
 public partial class Program
 {
