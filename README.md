@@ -1,7 +1,59 @@
 # Support Ticket Manager
 
-Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z konsolą i rozwijanym API. Projekt powstaje
+Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z rozwijanym API. Projekt powstaje
 etapami jako pierwszy projekt backendowy w portfolio.
+
+## Bieżąca praca lokalna — po v0.7.0 (13.09.2026, niewydana)
+
+Projekt konsolowy został wycofany; jego kod pozostaje w historii Git (m.in. v0.7.0).
+Pozostają projekty Core, Api i Tests. Główne GET `/api/tickets`, GET po ID i POST
+korzystają z SQL przez `TicketDatabaseService` (Scoped). Potwierdzono trwałość
+zapisu po restarcie API. Kolejka zawiera Open i InProgress, sortowane po priorytecie.
+Archiwum, start, close, reopen i priority również korzystają z SQL przez serwis.
+Usunięto przykładową listę i jej rejestracje DI. TicketOperationResult przekazuje
+wynik operacji do endpointu, który wybiera odpowiedź HTTP. To nadal praca lokalna,
+bez nowego wydania i bez deklaracji gotowości produkcyjnej.
+Endpointy `/api/learning/...`, helper async i nieużywany odczyt wszystkich zgłoszeń
+`GetTicketsAsync` zostały usunięte. Reguły, kontekst, migracje i testy pozostają.
+
+Konfiguracja połączenia `ConnectionStrings:TicketDatabase` znajduje się w User Secrets,
+nie w repozytorium. EF Core i lokalny dotnet-ef: 10.0.12; manifest narzędzia:
+`dotnet-tools.json`. Trzy migracje tworzą Tickets, CHECK priorytetu 1–5 i tabele Identity.
+
+13.09: pełny zestaw po integracji SQL, interfejsu i Identity: 66/66 testów zaliczonych
+(w tym 6 testów lokalnego CORS: GET i preflight POST). Osiem tras zgłoszeń jest w Endpoints/TicketEndpoints.cs.
+Usunięto nieużywane listowe TicketQueries i TicketService wraz z ich 16 testami.
+Wcześniej zestaw liczył 68 testów; spadek liczby wynika z wycofania starego kodu,
+nie z pominięcia testów. Core zachowuje Ticket i TicketStatus. Historia Git zawiera
+poprzednie klasy i testy; testy modelu i obecnych operacji SQL pozostają.
+Na prośbę autora asystent dostosował wszystkie 31 TicketApiTests do izolowanej
+bazy, danych przygotowywanych przez test i ID nadawanych przez SQL. Pozostałe
+testy bazodanowe także używają TicketDatabaseFactory. Testy wymagają lokalnego
+SQL Server (`127.0.0.1,1433` lub `localhost,1433`) oraz konfiguracji połączenia.
+Fabryka podmienia nazwę bazy na unikalną `SupportTicketManagerTests_...`, stosuje
+migracje i usuwa tę bazę w sprzątaniu. Konto testowe potrzebuje uprawnień do
+tworzenia i usuwania baz; nie używaj tej konfiguracji z serwerem produkcyjnym.
+
+Lokalny interfejs odczytu i tworzenia zgłoszeń jest w osobnym repozytorium portfolio:
+`tsm-demo/local.html` (serwer `node tsm-demo/serve-local.mjs`, port 5500).
+Pobiera kolejkę, archiwum i szczegóły; tworzy, rozpoczyna, zamyka i ponownie otwiera
+zgłoszenia oraz zmienia priorytet przez POST. Konta nie są jeszcze podłączone do UI.
+Development CORS dopuszcza GET i POST z nagłówkiem Content-Type
+z http://localhost:5500 i http://127.0.0.1:5500.
+Po zmianie konfiguracji zrestartuj lokalne API. CORS nie jest autoryzacją.
+Publiczna makieta demo nie została zmieniona ani podłączona do lokalnej bazy.
+
+Identity: POST /api/auth/register i /login, chronione GET /api/auth/me oraz POST
+/api/auth/logout. Sprawdzone ręcznie i testami: hash hasła, unikalny e-mail,
+odrzucanie danych, cookie HttpOnly/Secure/SameSite Strict, 401 bez sesji i po logout.
+Wylogowanie usuwa ciasteczko klienta, nie konto ani wszystkie kopie wcześniej wydanego cookie.
+Brak jeszcze ról i kontroli właściciela na trasach zgłoszeń, pełnej ochrony CSRF,
+potwierdzania e-maila/resetu hasła i bezpiecznej konfiguracji wdrożenia.
+Nie wystawiać tego API publicznie. Dodanie Identity nie zabezpiecza automatycznie Tickets.
+Ustalone na kolejny etap: priorytet tworzenia 2 ustalany w backendzie i reopen tylko
+wsparcie. Obecnie te zasady nie są jeszcze wdrożone; POST nadal przyjmuje priorytet.
+
+Poniższe sekcje MVP opisują historyczne wydania, nie pełny stan bieżącej pracy.
 
 ## MVP 7 — v0.7.0 (10.09.2026)
 
@@ -52,7 +104,6 @@ zaliczenie frontendu w kursie. Backend pozostaje głównym obszarem nauki.
 - Lista w pamięci oraz `Max + 1` nie zabezpieczają równoczesnych zapisów.
   Wersja jest demonstracyjna, niegotowa do produkcyjnej obsługi wielu użytkowników.
 - Konsola, API i demo mają osobne dane. Nie wpisuj danych wrażliwych do demo.
-- Następny etap nauki: podstawy SQL, następnie potrzebne DI/async i EF Core.
 
 ## Uruchomienie API
 
@@ -88,10 +139,10 @@ pozostają kolejnymi etapami.
 API działa lokalnie, bez uwierzytelniania i publicznego hostingu. Publikacja
 kodu na GitHubie nie uruchamia serwera dostępnego przez internet.
 
-Podział projektów: `SupportTicketManager.Core` — wspólne reguły i zapytania;
-`SupportTicketManager` — interaktywna konsola; `SupportTicketManager.Api` — HTTP;
-`SupportTicketManager.Tests` — testy logiki i integracyjne HTTP. API ma 3 własne przykładowe zgłoszenia,
-konsola 5. Dodanie zgłoszenia w konsoli nie zmienia listy osobnego procesu API.
+Podział projektów: `SupportTicketManager.Core` — reguły i zapytania;
+`SupportTicketManager.Api` — HTTP i konfiguracja EF Core;
+`SupportTicketManager.Tests` — testy logiki, HTTP i integracji z SQL.
+Główne endpointy API mają 3 przykładowe zgłoszenia w pamięci, niezależnie od bazy SQL.
 
 ## Cel
 
@@ -177,11 +228,10 @@ zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasi
 - xUnit i WebApplicationFactory (testy jednostkowe oraz integracyjne API)
 - Git i GitHub
 
-## Uruchomienie konsoli
+## Historyczna wersja konsolowa
 
-```powershell
-dotnet run --project src/SupportTicketManager/SupportTicketManager.csproj
-```
+Konsola jest dostępna w historii Git, np. w tagu `v0.7.0`.
+Nie jest już częścią bieżącego rozwiązania.
 
 ## MVP 3 — v0.3.0
 
@@ -245,10 +295,10 @@ Polecenia wykonaj w głównym folderze repozytorium:
 
 ```powershell
 dotnet build SupportTicketManager.slnx
-dotnet test SupportTicketManager.slnx
+dotnet test SupportTicketManager.slnx --configuration Release
 ```
 
-Przed budowaniem zakończ uruchomioną konsolę opcją `0` lub `Ctrl+C`, aby proces
+Przed budowaniem zakończ uruchomione API przez `Ctrl+C`, aby proces
 nie blokował pliku wykonywalnego. Nowym zachowaniom towarzyszą potrzebne testy;
 po zmianie uruchamiany jest cały istniejący zestaw.
 

@@ -2,7 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src/SupportTicketManager.Api/SupportTicketManager.Api.csproj" />
     <Project Path="src/SupportTicketManager.Core/SupportTicketManager.Core.csproj" />
-    <Project Path="src/SupportTicketManager/SupportTicketManager.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SupportTicketManager.Tests/SupportTicketManager.Tests.csproj" />
