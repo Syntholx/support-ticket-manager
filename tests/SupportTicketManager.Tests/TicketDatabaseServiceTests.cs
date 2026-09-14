@@ -13,6 +13,9 @@ public class TicketDatabaseServiceTests
         {
             await factory.InitializeDatabaseAsync();
 
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            string supportId = await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
+
             using IServiceScope scope = factory.Services.CreateScope();
 
             TicketDbContext dbContext =
@@ -35,7 +38,7 @@ public class TicketDatabaseServiceTests
             dbContext.Tickets.Add(inProgressTicket);
             await dbContext.SaveChangesAsync();
 
-            List<Ticket> result = await service.GetActiveTicketsAsync();
+            List<Ticket> result = await service.GetActiveTicketsAsync(supportId, true);
 
             Assert.Equal(2, result.Count);
             Assert.Equal(inProgressTicket.Id, result[0].Id);

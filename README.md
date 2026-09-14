@@ -1,355 +1,299 @@
 # Support Ticket Manager
 
-Aplikacja C#/.NET do obsługi zgłoszeń wsparcia, z rozwijanym API. Projekt powstaje
-etapami jako pierwszy projekt backendowy w portfolio.
+Backend do obsługi zgłoszeń wsparcia napisany w C# i ASP.NET Core.
+Użytkownik zgłasza problem i śledzi jego status, a pracownik wsparcia zarządza
+kolejką, ustala priorytety i prowadzi zgłoszenia od otwarcia do zamknięcia.
 
-## Bieżąca praca lokalna — po v0.7.0 (13.09.2026, niewydana)
+**Wersja 1.0.0 — ukończony etap projektu edukacyjnego, uruchamiany lokalnie.**
+Kod jest dostępny do przeglądu i samodzielnego uruchomienia. Nie ma publicznego
+serwera API ani działającego demo na portfolio. To nie jest deklaracja gotowości
+produkcyjnej; ograniczenia bezpieczeństwa opisano poniżej.
 
-Projekt konsolowy został wycofany; jego kod pozostaje w historii Git (m.in. v0.7.0).
-Pozostają projekty Core, Api i Tests. Główne GET `/api/tickets`, GET po ID i POST
-korzystają z SQL przez `TicketDatabaseService` (Scoped). Potwierdzono trwałość
-zapisu po restarcie API. Kolejka zawiera Open i InProgress, sortowane po priorytecie.
-Archiwum, start, close, reopen i priority również korzystają z SQL przez serwis.
-Usunięto przykładową listę i jej rejestracje DI. TicketOperationResult przekazuje
-wynik operacji do endpointu, który wybiera odpowiedź HTTP. To nadal praca lokalna,
-bez nowego wydania i bez deklaracji gotowości produkcyjnej.
-Endpointy `/api/learning/...`, helper async i nieużywany odczyt wszystkich zgłoszeń
-`GetTicketsAsync` zostały usunięte. Reguły, kontekst, migracje i testy pozostają.
+## Co rozwiązuje projekt?
 
-Konfiguracja połączenia `ConnectionStrings:TicketDatabase` znajduje się w User Secrets,
-nie w repozytorium. EF Core i lokalny dotnet-ef: 10.0.12; manifest narzędzia:
-`dotnet-tools.json`. Trzy migracje tworzą Tickets, CHECK priorytetu 1–5 i tabele Identity.
+TSM porządkuje obsługę problemów, które bez wspólnej kolejki łatwo zgubić w wiadomościach.
+Każde zgłoszenie ma autora, opis, priorytet i status. Wsparcie widzi aktywną kolejkę
+według pilności, a zgłoszenia zamknięte trafiają do archiwum bez usuwania ich z bazy.
 
-13.09: pełny zestaw po integracji SQL, interfejsu i Identity: 66/66 testów zaliczonych
-(w tym 6 testów lokalnego CORS: GET i preflight POST). Osiem tras zgłoszeń jest w Endpoints/TicketEndpoints.cs.
-Usunięto nieużywane listowe TicketQueries i TicketService wraz z ich 16 testami.
-Wcześniej zestaw liczył 68 testów; spadek liczby wynika z wycofania starego kodu,
-nie z pominięcia testów. Core zachowuje Ticket i TicketStatus. Historia Git zawiera
-poprzednie klasy i testy; testy modelu i obecnych operacji SQL pozostają.
-Na prośbę autora asystent dostosował wszystkie 31 TicketApiTests do izolowanej
-bazy, danych przygotowywanych przez test i ID nadawanych przez SQL. Pozostałe
-testy bazodanowe także używają TicketDatabaseFactory. Testy wymagają lokalnego
-SQL Server (`127.0.0.1,1433` lub `localhost,1433`) oraz konfiguracji połączenia.
-Fabryka podmienia nazwę bazy na unikalną `SupportTicketManagerTests_...`, stosuje
-migracje i usuwa tę bazę w sprzątaniu. Konto testowe potrzebuje uprawnień do
-tworzenia i usuwania baz; nie używaj tej konfiguracji z serwerem produkcyjnym.
+Dane zgłoszeń i kont są przechowywane w SQL Server i pozostają po restarcie API.
+Interakcja odbywa się przez HTTP i JSON, np. za pomocą PowerShell lub klienta HTTP.
 
-Lokalny interfejs odczytu i tworzenia zgłoszeń jest w osobnym repozytorium portfolio:
-`tsm-demo/local.html` (serwer `node tsm-demo/serve-local.mjs`, port 5500).
-Pobiera kolejkę, archiwum i szczegóły; tworzy, rozpoczyna, zamyka i ponownie otwiera
-zgłoszenia oraz zmienia priorytet przez POST. Konta nie są jeszcze podłączone do UI.
-Development CORS dopuszcza GET i POST z nagłówkiem Content-Type
-z http://localhost:5500 i http://127.0.0.1:5500.
-Po zmianie konfiguracji zrestartuj lokalne API. CORS nie jest autoryzacją.
-Publiczna makieta demo nie została zmieniona ani podłączona do lokalnej bazy.
+## Funkcje i uprawnienia
 
-Identity: POST /api/auth/register i /login, chronione GET /api/auth/me oraz POST
-/api/auth/logout. Sprawdzone ręcznie i testami: hash hasła, unikalny e-mail,
-odrzucanie danych, cookie HttpOnly/Secure/SameSite Strict, 401 bez sesji i po logout.
-Wylogowanie usuwa ciasteczko klienta, nie konto ani wszystkie kopie wcześniej wydanego cookie.
-Brak jeszcze ról i kontroli właściciela na trasach zgłoszeń, pełnej ochrony CSRF,
-potwierdzania e-maila/resetu hasła i bezpiecznej konfiguracji wdrożenia.
-Nie wystawiać tego API publicznie. Dodanie Identity nie zabezpiecza automatycznie Tickets.
-Ustalone na kolejny etap: priorytet tworzenia 2 ustalany w backendzie i reopen tylko
-wsparcie. Obecnie te zasady nie są jeszcze wdrożone; POST nadal przyjmuje priorytet.
-
-Poniższe sekcje MVP opisują historyczne wydania, nie pełny stan bieżącej pracy.
-
-## MVP 7 — v0.7.0 (10.09.2026)
-
-Ukończony etap edukacyjny: tworzenie i obsługa zgłoszeń przez HTTP,
-z walidacją oraz 60 testami (29 jednostkowych i 31 integracyjnych API).
-Reguły pozostają w `Ticket`, tworzenie w `TicketService`, a zapytania
-w `TicketQueries`. Konsola i API współdzielą kod Core, nie pamięć procesu.
-
-| Metoda i ścieżka | Działanie | Odpowiedzi |
+| Operacja | Zalogowany użytkownik | Rola Support |
 |---|---|---|
-| GET `/api/tickets` | Aktywna kolejka, malejąco według priorytetu | 200, również dla `[]` |
-| GET `/api/tickets/archived` | Zamknięte zgłoszenia | 200 |
-| GET `/api/tickets/{id:int}` | Szczegóły zgłoszenia | 200 / 404 |
-| POST `/api/tickets` | Utworzenie zgłoszenia | 201 + Location / 400 |
-| POST `/api/tickets/{id:int}/start` | Open → InProgress | 200 / 404 / 409 |
-| POST `/api/tickets/{id:int}/close` | Open lub InProgress → Closed | 200 / 404 / 409 |
-| POST `/api/tickets/{id:int}/reopen` | Closed → Open | 200 / 404 / 409 |
-| POST `/api/tickets/{id:int}/priority` | Zmiana priorytetu na 1–5 | 200 / 400 / 404 |
+| Utworzenie zgłoszenia | W swoim imieniu | W swoim imieniu |
+| Aktywna kolejka, archiwum, szczegóły | Tylko własne zgłoszenia | Wszystkie zgłoszenia |
+| Zamknięcie | Tylko własne zgłoszenie | Dowolne zgłoszenie |
+| Rozpoczęcie obsługi | Niedozwolone | Dozwolone |
+| Ponowne otwarcie | Niedozwolone | Dozwolone |
+| Zmiana priorytetu | Niedozwolona | Dozwolona, zakres 1–5 |
 
-Tworzenie przyjmuje JSON `{"title":"Problem","description":"Opis problemu","priority":3}`.
-Serwis nadaje ID i status `Open`. Tytuł/opis nie mogą być null, puste ani składać
-się z samych białych znaków. Zmiana priorytetu przyjmuje `{"priority":4}`;
-dozwolona jest również dla zamkniętego zgłoszenia i nie zmienia jego statusu.
-Start, close i reopen nie potrzebują body. Odpowiedź sukcesu zawiera Ticket.
-Brak zasobu daje 404, konflikt stanu 409, niepoprawne dane 400. Błędy zwracane
-przez kod endpointów mają pole `message`. Uszkodzony JSON lub nieczytelny typ
-może zostać odrzucony wcześniej przez ASP.NET Core bez tego pola.
+- Rejestracja, logowanie, odczyt zalogowanego konta i wylogowanie wykorzystują ASP.NET Core Identity.
+- Wszystkie endpointy zgłoszeń wymagają uwierzytelnienia.
+- Autor jest pobierany z tożsamości zalogowanego konta, nie z JSON-a klienta.
+- Nowe zgłoszenie otrzymuje priorytet **2** i status **Open**.
+  Dodatkowe pola `priority` i `ownerId` przy tworzeniu nie zmieniają tych zasad.
+- Cudze zgłoszenie jest dla zwykłego użytkownika niedostępne: szczegóły i zamknięcie
+  zwracają 404, a listy go nie zawierają.
+- Support ma dostęp również do historycznych zgłoszeń bez autora.
+- Rejestracja nie przyznaje roli Support. Nadaje się ją osobnym poleceniem lokalnym.
 
-Weryfikacja: build Release bez błędów i ostrzeżeń, 60/60 testów. Testy obejmują
-m.in. Location i pola zgłoszenia przez GET po tworzeniu, odrzucenie null w opisie,
-braku opisu, tekstowego priorytetu, uszkodzonego JSON i granic 0/1/5/6.
-Autor sprawdził ręcznie pełny przebieg tworzenia, rozpoczęcia, zamknięcia,
-przejścia do archiwum i ponownego otwarcia. To nie jest deklaracja pokrycia
-wszystkich możliwych przypadków ani test certyfikatu HTTPS przez TestServer.
+## Model i reguły
 
-### Demo interfejsu
+Zgłoszenie zawiera `id`, `title`, `description`, `priority`, `status` i `ownerId`.
+Identyfikator nadaje SQL Server; luki w numeracji są dopuszczalne.
+`OwnerId` jest opcjonalnym kluczem obcym do kont Identity ze względu na starsze dane.
+Nowe zgłoszenia tworzone przez API zawsze mają autora.
 
-[Wypróbuj demo na portfolio (PL)](https://szymon-michalek.dev/tsm-demo/).
-Osobna makieta w repozytorium portfolio używa przykładowych danych w JavaScript,
-bez połączenia z API. Role, użytkownicy i operacje są symulowane. Odświeżenie
-usuwa zmiany. Interfejs przygotował asystent na prośbę autora; nie jest to
-zaliczenie frontendu w kursie. Backend pozostaje głównym obszarem nauki.
+| Operacja | Stan początkowy | Stan końcowy |
+|---|---|---|
+| Rozpoczęcie obsługi | Open | InProgress |
+| Zamknięcie | Open lub InProgress | Closed |
+| Ponowne otwarcie | Closed | Open |
 
-### Ograniczenia wydania
+Niedozwolona zmiana statusu zwraca konflikt i nie zapisuje zmiany.
+Zmiana priorytetu jest dozwolona także dla Closed i nie zmienia statusu.
+Aktywna kolejka obejmuje Open oraz InProgress, sortowane malejąco po priorytecie.
+Przy równym priorytecie kolejność nie jest określona. Archiwum obejmuje Closed.
 
-- API uruchamia się lokalnie; opublikowanie kodu nie oznacza publicznego hostingu API.
-- Brak bazy, kont, autoryzacji, przypisywania pracowników i trwałego zapisu.
-- Lista w pamięci oraz `Max + 1` nie zabezpieczają równoczesnych zapisów.
-  Wersja jest demonstracyjna, niegotowa do produkcyjnej obsługi wielu użytkowników.
-- Konsola, API i demo mają osobne dane. Nie wpisuj danych wrażliwych do demo.
+Tytuł i opis nie mogą być null, puste ani składać się wyłącznie z białych znaków.
+Reguły modelu znajdują się w `Ticket`; baza dodatkowo wymusza priorytet 1–5
+przez ograniczenie CHECK. Status w C# jest enumem, a w JSON tekstem.
 
-## Uruchomienie API
+## Technologie i architektura
 
-Uruchomienie lokalnego API z katalogu repozytorium (.NET SDK 10):
+C#, .NET 10, ASP.NET Core Minimal API, Entity Framework Core 10,
+SQL Server, ASP.NET Core Identity, LINQ, xUnit i WebApplicationFactory.
+
+Przepływ: **klient HTTP → endpoint → serwis → model / EF Core → SQL Server**.
+Po zakończeniu operacji endpoint dobiera odpowiedź HTTP.
+
+- `src/SupportTicketManager.Core` — Ticket, TicketStatus i reguły zgłoszenia.
+- `src/SupportTicketManager.Api/Endpoints` — odbiór żądań, kontrola dostępu i odpowiedzi HTTP.
+- `src/SupportTicketManager.Api/Services` — operacje i asynchroniczny zapis/odczyt przez TicketDatabaseService.
+- `src/SupportTicketManager.Api/Data` — TicketDbContext i cztery migracje bazy.
+- `src/SupportTicketManager.Api/Identity` — model konta i lokalne nadawanie roli Support.
+- `src/SupportTicketManager.Api/Program.cs` — konfiguracja DI, SQL, Identity, cookies, JSON i tras.
+- `tests/SupportTicketManager.Tests` — testy reguł, HTTP, bazy i uprawnień.
+
+Serwis i kontekst są rejestrowane jako Scoped. Serwis zwraca
+`TicketOperationResult`, a endpoint mapuje wynik na HTTP.
+`Add` przygotowuje dodanie encji; `SaveChangesAsync` zapisuje zmianę w SQL.
+Operacje wymagające Support chroni polityka endpointów — same metody serwisu
+nie są niezależną granicą autoryzacji dla innych aplikacji.
+
+## Uruchomienie lokalne
+
+### Wymagania
+
+- .NET SDK 10.
+- Działający lokalny SQL Server, np. w Docker Desktop, dostępny pod
+  `localhost,1433` albo `127.0.0.1,1433`.
+- Lokalny login SQL z uprawnieniami potrzebnymi do migracji.
+  Testy dodatkowo wymagają tworzenia i usuwania baz.
+- Zaufany deweloperski certyfikat HTTPS.
+
+Repozytorium nie uruchamia kontenera SQL automatycznie i nie zawiera hasła bazy.
+Nie używaj serwera produkcyjnego ani ważnych danych do ćwiczeń/testów.
+
+### 1. Pobierz kod i narzędzia
 
 ```powershell
-dotnet dev-certs https --check --trust
-dotnet run --project src/SupportTicketManager.Api/SupportTicketManager.Api.csproj --launch-profile https
+git clone https://github.com/Syntholx/support-ticket-manager.git
+cd support-ticket-manager
+dotnet restore
+dotnet tool restore
 ```
 
-Adres: `https://localhost:7280`.
-Jeśli sprawdzenie nie znajdzie zaufanego certyfikatu, wykonaj
-`dotnet dev-certs https --trust` i zaakceptuj zaufanie do lokalnego certyfikatu
-deweloperskiego. Nie jest to certyfikat do publicznego wdrożenia.
-Profil `https` udostępnia także HTTP pod `http://localhost:5231`; nie wymusza
-przekierowania HTTP na HTTPS. Profil `http` uruchamia tylko ten drugi adres.
+Manifest `dotnet-tools.json` przypina lokalny dotnet-ef do wersji 10.0.12.
 
-- `GET /api/tickets` — aktywne zgłoszenia, malejąco według priorytetu;
-- `GET /api/tickets/archived` — zamknięte zgłoszenia;
-- `GET /api/tickets/{id:int}` — szczegóły (200) lub 404 z komunikatem zawierającym ID;
-- `/api/status` i `/api/name` — pomocnicze endpointy z lekcji.
+### 2. Ustaw połączenie poza repozytorium
 
-Status zgłoszenia w JSON jest tekstem; we wspólnej logice pozostaje enumem.
-Przykładowe dane API: ID 1 Open, ID 2 Closed, ID 3 InProgress. Aktywna kolejka
-zwraca ID 3 przed ID 1. Dane są wyłącznie w pamięci, bez trwałego zapisu.
-
-Stan weryfikacji: 29 testów jednostkowych oraz ręczne sprawdzenie HTTP i HTTPS
-przez autora. Testy jednostkowe nie sprawdzają podłączenia endpointów.
-Pusta aktywna kolejka zwraca 200 i `[]`. Brak liczbowego ID zwraca 404 z JSON,
-a `/api/tickets/abc` nie pasuje do trasy i zwraca 404 bez komunikatu endpointu.
-Tworzenie i zmiany przez API opisano powyżej. Baza oraz integracja z frontendem
-pozostają kolejnymi etapami.
-API działa lokalnie, bez uwierzytelniania i publicznego hostingu. Publikacja
-kodu na GitHubie nie uruchamia serwera dostępnego przez internet.
-
-Podział projektów: `SupportTicketManager.Core` — reguły i zapytania;
-`SupportTicketManager.Api` — HTTP i konfiguracja EF Core;
-`SupportTicketManager.Tests` — testy logiki, HTTP i integracji z SQL.
-Główne endpointy API mają 3 przykładowe zgłoszenia w pamięci, niezależnie od bazy SQL.
-
-## Cel
-
-Aplikacja ma pokazać praktyczne użycie logiki biznesowej: rejestrowanie zgłoszeń,
-priorytetyzację, zmianę statusu, wyszukiwanie, filtrowanie i kontrolę czasu
-obsługi. Docelowo projekt będzie rozwijany wraz z nauką kolejnych elementów
-.NET — od aplikacji konsolowej do testów, bazy danych i API.
-
-## Użytkownik i problem
-
-Pierwszym użytkownikiem aplikacji jest pracownik wsparcia. Potrzebuje szybko
-zobaczyć, które zgłoszenia wymagają najpilniejszej reakcji, bez ręcznego
-przeglądania całej kolejki.
-
-## MVP 1 — v0.1.0
-
-Pierwsza ukończona wersja potrafi:
-
-- przechowywać przykładowe zgłoszenia;
-- wyświetlać wszystkie zgłoszenia;
-- filtrować pilne zgłoszenia;
-- sprawdzać, czy istnieje zgłoszenie krytyczne;
-- liczyć otwarte zgłoszenia;
-- sortować zgłoszenia od najwyższego priorytetu;
-- prezentować proste podsumowanie kolejki;
-- kontrolować rozpoczęcie obsługi, zamknięcie i ponowne otwarcie zgłoszenia;
-- bezpiecznie zmieniać priorytet;
-- odrzucać niepoprawny priorytet i status podczas tworzenia zgłoszenia.
-
-## Model zgłoszenia
-
-Każde zgłoszenie zawiera:
-
-- `Id` — jednoznaczny identyfikator;
-- `Title` — krótki tytuł problemu;
-- `Description` — dokładniejszy opis problemu;
-- `Priority` — pilność od `1` do `5`;
-- `Status` — aktualny etap obsługi.
-
-## Reguły biznesowe MVP
-
-Priorytety:
-
-- `1` — Low;
-- `2` — Normal;
-- `3` — High;
-- `4` — Urgent;
-- `5` — Critical.
-
-Statusy: `Open`, `InProgress` i `Closed`.
-
-- zgłoszenie pilne ma `Priority >= 4`;
-- zgłoszenie krytyczne ma `Priority == 5`;
-- otwarte zgłoszenie ma status inny niż `Closed`;
-- zgłoszenie w toku ma status `InProgress`;
-- natychmiastowej reakcji wymaga zgłoszenie jednocześnie krytyczne i otwarte;
-- kolejka może być sortowana od najwyższego priorytetu.
-
-## MVP 2 — v0.2.0
-
-Druga ukończona wersja dodaje interaktywną obsługę aplikacji przez pracownika
-wsparcia. Menu pozwala:
-
-- wyświetlić wszystkie zgłoszenia posortowane od najwyższego priorytetu;
-- wyświetlić zgłoszenia pilne;
-- wyświetlić podsumowanie kolejki;
-- rozpocząć obsługę zgłoszenia wskazanego przez `Id`;
-- zamknąć albo ponownie otworzyć wskazane zgłoszenie;
-- zmienić priorytet zgłoszenia na wartość od `1` do `5`;
-- zakończyć program w kontrolowany sposób.
-
-Program rozróżnia błędny tekst, poprawną liczbę spoza menu, nieistniejące `Id`,
-niedozwoloną zmianę stanu oraz priorytet spoza zakresu. Wyszukiwanie jednego
-zgłoszenia jest skupione w `FindTicketById`, a reguły zmian pozostają w klasie
-`Ticket`.
-
-## Technologie
-
-- C#
-- .NET 10
-- ASP.NET Core Minimal API i JSON
-- LINQ
-- xUnit i WebApplicationFactory (testy jednostkowe oraz integracyjne API)
-- Git i GitHub
-
-## Historyczna wersja konsolowa
-
-Konsola jest dostępna w historii Git, np. w tagu `v0.7.0`.
-Nie jest już częścią bieżącego rozwiązania.
-
-## MVP 3 — v0.3.0
-
-Trzecia ukończona wersja porządkuje odpowiedzialności aplikacji:
-
-- `Ticket` przechowuje dane i reguły pojedynczego zgłoszenia;
-- `TicketQueries` wyszukuje, filtruje, sortuje i liczy zgłoszenia;
-- `TicketConsoleView` odpowiada za menu i prezentowanie wyników;
-- `TicketConsoleApplication` steruje pętlą programu i obsługą operacji;
-- `SampleTicketData` tworzy dane demonstracyjne;
-- `Program.cs` tworzy potrzebne obiekty i uruchamia aplikację.
-
-Menu pozwala również wyświetlić zamknięte zgłoszenia oraz szczegóły jednego
-zgłoszenia wyszukanego po `Id`. Wyszukiwanie obsługuje poprawne `Id`, brak
-zgłoszenia oraz tekst, którego nie można zamienić na liczbę.
-
-## MVP 4 — v0.4.0
-
-Czwarta wersja pozwala pracownikowi utworzyć zgłoszenie podczas działania
-programu. Użytkownik podaje tytuł, opis i priorytet, a aplikacja:
-
-- odrzuca pusty tytuł, pusty opis i tekst złożony wyłącznie z białych znaków;
-- odrzuca niepoprawny numer priorytetu oraz wartość spoza zakresu `1–5`;
-- automatycznie nadaje kolejne unikalne `Id`;
-- tworzy zgłoszenie ze statusem `Open` i dodaje je do bieżącej kolekcji;
-- pokazuje identyfikator utworzonego zgłoszenia.
-
-Aktywna kolejka zawiera wyłącznie zgłoszenia `Open` i `InProgress`. Status
-`Closed` jest jednocześnie archiwum: zamknięcie usuwa zgłoszenie z aktywnej
-kolejki, a ponowne otwarcie automatycznie je do niej przywraca. Nie jest
-potrzebna osobna właściwość `IsArchived`, więc model zachowuje jedno źródło
-prawdy o stanie zgłoszenia.
-
-Właściwości `Id`, `Title`, `Description`, `Priority` i `Status` można odczytać,
-ale ich settery są prywatne. Dane pozostają przechowywane wyłącznie w pamięci
-podczas działania aplikacji.
-
-## MVP 5 — v0.5.0
-
-Piąta wersja wprowadza statusy typu `TicketStatus` (`enum`) i klasę
-`TicketService`. Serwis zapamiętuje referencję do listy w polu `private readonly`,
-ustala następne ID, tworzy zgłoszenie, dodaje je do listy i zwraca obiekt.
-Opcja `10` przekazuje mu dane; odczyt i komunikaty pozostają w konsoli.
-Walidacja konstruktora `Ticket` nadal chroni model niezależnie od źródła danych.
-
-W wydaniu MVP 5 projekt testowy zawierał **22 testy xUnit**:
-
-- 9 testów serwisu: ID dla pustej i niepustej listy, tworzenie, kolejne ID,
-  odrzucanie błędnego priorytetu, tytułu i opisu oraz zachowanie istniejącej listy;
-- 13 testów `Ticket`: zamknięcie, rozpoczęcie i ponowne otwarcie dla wszystkich
-  trzech statusów początkowych oraz granice priorytetu `0`, `1`, `5`, `6`.
-
-Testy sprawdzają opisane przypadki, nie gwarantują poprawności całego programu.
-Podłączenie menu pozostaje sprawdzane ręcznie. Dane nadal istnieją tylko w pamięci;
-w tej wersji nie było API, bazy danych ani interfejsu przeglądarkowego.
-
-## Budowanie i testy
-
-Wymagane: .NET SDK 10. Pierwsze uruchomienie pobiera pakiety z NuGet.
-Polecenia wykonaj w głównym folderze repozytorium:
+Projekt API ma już UserSecretsId. Ustaw połączenie przez User Secrets, zastępując
+login i hasło swoimi wartościami. Poniższy tekst jest szablonem, nie działającym sekretem:
 
 ```powershell
-dotnet build SupportTicketManager.slnx
+dotnet user-secrets set "ConnectionStrings:TicketDatabase" 'Server=localhost,1433;Database=SupportTicketManager;User Id=YOUR_LOCAL_SQL_LOGIN;Password=YOUR_LOCAL_SQL_PASSWORD;Encrypt=True;TrustServerCertificate=True' --project src/SupportTicketManager.Api
+```
+
+Nie wklejaj prawdziwego hasła do README, kodu, commita ani zgłoszenia na GitHubie.
+Polecenie z hasłem może trafić do historii terminala — można zamiast tego edytować
+lokalny plik User Secrets. User Secrets nie jest szyfrowanym sejfem produkcyjnym.
+`TrustServerCertificate=True` służy wyłącznie temu lokalnemu środowisku SQL.
+
+### 3. Zastosuj migracje
+
+```powershell
+dotnet ef database update --project src/SupportTicketManager.Api --startup-project src/SupportTicketManager.Api -- --environment Development
+```
+
+Migracje tworzą tabelę Tickets, CHECK priorytetu, tabele Identity oraz powiązanie
+autora. Na nowej bazie nie ma przykładowych kont ani zgłoszeń.
+Nie uruchamiaj historycznych ćwiczeń SQL jako konfiguracji projektu.
+
+### 4. Uruchom API przez HTTPS
+
+```powershell
+dotnet dev-certs https --trust
+dotnet run --project src/SupportTicketManager.Api --launch-profile https
+```
+
+Adres: **https://localhost:7280**. `GET /api/status` zwraca nazwę i wersję aplikacji;
+nie sprawdza połączenia z bazą. Sam adres `/` nie ma strony startowej ani Swagger UI.
+
+Profil uruchamia także HTTP na porcie 5231, ale cookies są Secure:
+do rejestracji, logowania i wszystkich operacji używaj HTTPS.
+Nie wyłączaj sprawdzania certyfikatu w kliencie.
+
+## Przykład użycia w PowerShell
+
+API musi działać w drugim terminalu. Przykład jest dla nowej lokalnej bazy;
+hasło poniżej jest wyłącznie demonstracyjne — nie używaj go poza lokalnym testem.
+
+```powershell
+$baseUrl = "https://localhost:7280"
+$accountBody = @{
+    email = "user@example.com"
+    password = "Local-Example!2026"
+} | ConvertTo-Json
+
+# Rejestracja: 201; nie oznacza jeszcze zalogowania.
+Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/register" -ContentType "application/json" -Body $accountBody
+
+# Logowanie: 200. Sesja przechowuje cookie do kolejnych żądań.
+Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/login" -ContentType "application/json" -Body $accountBody -SessionVariable tsmSession
+
+Invoke-RestMethod -Uri "$baseUrl/api/auth/me" -WebSession $tsmSession
+
+$ticketBody = @{
+    title = "Problem z logowaniem"
+    description = "Nie mogę zalogować się do systemu firmowego."
+} | ConvertTo-Json
+
+$createdTicket = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/tickets" -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($ticketBody)) -WebSession $tsmSession
+
+# POST zwraca 201, Location oraz obiekt z priority=2 i status=Open.
+# Korzystamy ze zwróconego ID, nie zakładamy, że wynosi 1.
+Invoke-RestMethod -Uri "$baseUrl/api/tickets/$($createdTicket.id)" -WebSession $tsmSession
+Invoke-RestMethod -Method Post -Uri "$baseUrl/api/tickets/$($createdTicket.id)/close" -WebSession $tsmSession
+Invoke-RestMethod -Uri "$baseUrl/api/tickets/archived" -WebSession $tsmSession
+Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/logout" -WebSession $tsmSession
+```
+
+Po wylogowaniu chronione żądanie zwraca 401. Ponowna rejestracja tego samego
+adresu zwraca 400 — istniejącym kontem należy się zalogować.
+PowerShell zgłasza wyjątek przy 4xx; po nieudanym przypisaniu zmienna może nadal
+zawierać poprzedni wynik.
+
+### Nadanie roli Support lokalnemu kontu
+
+Najpierw zarejestruj osobne konto, np. `support@example.com`, przez endpoint rejestracji.
+Następnie zatrzymaj API przez Ctrl+C i wykonaj:
+
+```powershell
+dotnet run --project src/SupportTicketManager.Api --launch-profile https -- --grant-support support@example.com
+```
+
+Polecenie działa tylko w Development i dla lokalnego SQL pod wskazanymi wyżej
+adresami. Sprawdza istnienie konta, tworzy rolę w razie potrzeby i przypisuje ją
+bez duplikowania. Następnie kończy proces — nie uruchamia serwera.
+Zwykły start aplikacji nie nadaje nikomu uprawnień.
+
+Uruchom API ponownie i zaloguj konto Support ponownie, aby nowe cookie zawierało rolę.
+Nie jest to publiczny endpoint administracyjny ani mechanizm administracji produkcyjnej.
+
+## Kontrakt HTTP
+
+W tabelach podano odpowiedzi obsługiwane przez aplikację.
+Nieprawidłowy JSON może zostać odrzucony przez ASP.NET Core przed endpointem.
+
+| Metoda i ścieżka | Dane / cel | Odpowiedzi |
+|---|---|---|
+| POST /api/auth/register | email, password | 201 / 400 |
+| POST /api/auth/login | email, password; cookie sesji | 200 / 400 / 401 |
+| GET /api/auth/me | Bieżące konto | 200 / 401 |
+| POST /api/auth/logout | Wylogowanie | 200 / 401 |
+| GET /api/status | Nazwa, wersja, isRunning | 200 |
+| GET /api/name | Nazwa aplikacji | 200 |
+
+Wszystkie poniższe trasy zwracają **401 bez zalogowania**.
+Trasy tylko dla Support zwracają **403 zwykłemu użytkownikowi**, także jeśli poda nieistniejące ID.
+
+| Metoda i ścieżka | Body | Sukces / błędy po autoryzacji |
+|---|---|---|
+| GET /api/tickets | Brak | 200, również [] |
+| GET /api/tickets/archived | Brak | 200, również [] |
+| GET /api/tickets/{id} | Brak | 200 / 404 |
+| POST /api/tickets | {"title":"Problem","description":"Opis"} | 201 + Location / 400 |
+| POST /api/tickets/{id}/close | Brak | 200 / 404 / 409 |
+| POST /api/tickets/{id}/start | Brak; Support | 200 / 404 / 409 |
+| POST /api/tickets/{id}/reopen | Brak; Support | 200 / 404 / 409 |
+| POST /api/tickets/{id}/priority | {"priority":4}; Support | 200 / 400 / 404 |
+
+ID w trasie musi być liczbą całkowitą. Odpowiedzi operacji zakończonych sukcesem
+zawierają zgłoszenie. Błędy biznesowe mają zazwyczaj obiekt `{"message":"..."}`;
+401/403 i błędy frameworka nie muszą zawierać tego pola.
+
+## Testy
+
+Zestaw obejmuje **101 przypadków testowych**: reguły modelu, operacje API,
+integrację z SQL, Identity, sesje, własność zgłoszeń i macierz uprawnień.
+Sprawdzane są nie tylko kody HTTP, ale również zwrócone dane i stan bazy po operacji.
+
+Testy SQL korzystają z prawdziwego lokalnego SQL Server.
+Fabryka podmienia nazwę bazy na unikalną `SupportTicketManagerTests_...`,
+wykonuje migracje i po teście usuwa wyłącznie tę bazę.
+Nie używa zgłoszeń z bazy aplikacji. Konto SQL musi móc tworzyć i usuwać bazy.
+
+```powershell
+dotnet build SupportTicketManager.slnx --configuration Release
 dotnet test SupportTicketManager.slnx --configuration Release
 ```
 
-Przed budowaniem zakończ uruchomione API przez `Ctrl+C`, aby proces
-nie blokował pliku wykonywalnego. Nowym zachowaniom towarzyszą potrzebne testy;
-po zmianie uruchamiany jest cały istniejący zestaw.
+Przed budowaniem zatrzymaj API, jeśli blokuje plik wykonywalny.
+Same testy reguł Ticket, bez połączenia z SQL:
 
-Projekt jest rozwijany w ramach nauki z pomocą mentora AI przy wyjaśnieniach,
-przykładach, przeglądzie kodu i dokumentacji. Nie jest przedstawiany jako praca
-wykonana całkowicie bez pomocy.
+```powershell
+dotnet test SupportTicketManager.slnx --filter FullyQualifiedName~TicketTests
+```
 
-## Status
+Zaliczenie testów nie oznacza pełnego audytu bezpieczeństwa ani testu rzeczywistej
+przeglądarki/transportu TLS. Testy HTTP korzystają z WebApplicationFactory.
 
-**MVP 7 ukończone — `v0.7.0` (10.09.2026).** 60 testów: 29 jednostkowych,
-31 integracyjnych API. Kod API dostępny na GitHubie, demo interfejsu osobno
-na portfolio. Brak połączenia demo z API i brak produkcyjnego wdrożenia backendu.
+## Ograniczenia i dalszy rozwój
 
-Poniższe informacje opisują wcześniejsze wydania.
+Projekt zamyka etap nauki backendu na przykładzie TSM, nie cały kurs.
+Przed ewentualnym publicznym wdrożeniem potrzebne są m.in.:
 
-**MVP 6 ukończone — `v0.6.0` (07.09.2026).** 29 testów jednostkowych:
-9 serwisu, 13 modelu Ticket i 7 zapytań. Build bez błędów i ostrzeżeń.
-Sprawdzono aktywne zgłoszenia, archiwum, szczegóły, brak ID, błędną trasę oraz
-pustą kolejkę przez HTTPS. Publikacja tylko na GitHubie; portfolio pozostaje
-przy v0.5.0 zgodnie z ówczesną decyzją autora. Był to stan wydania MVP 6.
+- pełna ochrona CSRF dla logowania i operacji opartych na cookies;
+- ograniczanie ruchu i rozmiaru danych, paginacja oraz ochrona przed nadużyciami;
+- potwierdzanie e-maila, reset hasła i dopracowanie cyklu życia sesji;
+- obsługa konfliktów równoczesnych aktualizacji;
+- konfiguracja produkcyjnych sekretów, kluczy Data Protection, TLS, logów i kopii bazy;
+- osobna weryfikacja integracji przeglądarkowej i wdrożenia.
 
-Poniższe informacje opisują wcześniejsze wydania.
+Cookies mają HttpOnly, Secure i SameSite=Strict, ale nie zastępuje to powyższych
+zabezpieczeń. Wylogowanie usuwa cookie klienta, nie konto ani każdą wcześniejszą
+kopię cookie. **Nie wystawiaj obecnej konfiguracji bezpośrednio do internetu.**
 
-**MVP 5 ukończone — `v0.5.0` (06.09.2026).** 22 testy jednostkowe przechodziły.
-Po refaktoryzacji ręcznie sprawdzono tworzenie z menu, aktywną kolejkę,
-zamknięcie, archiwum, ponowne otwarcie i zakończenie programu.
-Kolejnym etapem było wprowadzenie odczytowego API w MVP 6.
+Nie ma usuwania zgłoszeń, przypisywania konkretnego pracownika, załączników ani SLA.
+Rejestracja jest dostępna anonimowo. Nie ma zaplanowanego resetu publicznej bazy,
+ponieważ publiczne demo z bazą nie zostało wdrożone.
 
-**MVP 4 ukończone — wersja `v0.4.0` (05.09.2026).** Pełny test regresji objął
-tworzenie poprawnych zgłoszeń, wszystkie błędne dane wejściowe, kolejne `Id`,
-aktywną kolejkę, pilne zgłoszenia, archiwum, zamknięcie i ponowne otwarcie.
-Projekt kompiluje się bez błędów i ostrzeżeń.
+## Interfejs i historia projektu
 
-**MVP 3 ukończone — wersja `v0.3.0`.** Rozdzielono odpowiedzialności aplikacji,
-a wydanie opublikowano wraz z kodem źródłowym i aktualizacją portfolio.
+Kod makiety oraz wcześniejszego lokalnego interfejsu zachowano w
+[repozytorium portfolio](https://github.com/Syntholx/portfolio/tree/main/tsm-demo).
+Nie jest publikowany jako działające demo. Makieta używa danych przykładowych,
+a lokalny panel nie został dostosowany do aktualnego logowania i uprawnień API.
 
-**MVP 2 ukończone — wersja `v0.2.0`.** Projekt zawiera model `Ticket`,
-pięć przykładowych zgłoszeń, filtrowanie pilnych i zamkniętych zgłoszeń,
-wykrywanie zgłoszeń krytycznych i będących w toku, liczenie otwartych zgłoszeń,
-sortowanie według priorytetu oraz regułę natychmiastowej reakcji dla otwartego
-zgłoszenia krytycznego.
+Historyczna konsola i kolejne etapy MVP są dostępne w tagach v0.1.0–v0.7.0.
+W obecnej wersji pozostają Core, Api i Tests; stara konsola i listowe serwisy nie są wymagane.
 
-Projekt obsługuje kontrolowane zmiany stanu: rozpoczęcie obsługi wyłącznie dla
-zgłoszenia `Open`, zamknięcie zgłoszenia `Open` lub `InProgress` oraz ponowne
-otwarcie wyłącznie zgłoszenia `Closed`. Pozwala również zmienić priorytet tylko
-na wartość od `1` do `5`. Właściwości `Status` i `Priority` mają prywatne
-settery, dlatego kod zewnętrzny nie może zmieniać ich z pominięciem metod
-obiektu.
+## Autorstwo
 
-Interaktywne menu wyświetla pełną i pilną kolejkę, sortowanie według priorytetu
-oraz podsumowanie. Pozwala wyszukać zgłoszenie po `Id` i wykonać dozwoloną
-zmianę statusu albo priorytetu, pokazując wynik operacji. Konstruktor
-odrzuca priorytet spoza zakresu `1–5` oraz status inny niż `Open`, `InProgress`
-lub `Closed`. Sprawdzono poprawne wartości graniczne oraz przypadki odrzucane.
+Projekt powstał w ramach prowadzonej nauki C#/.NET. Autor implementował logikę
+i endpointy z przykładami oraz review mentora AI. Część testów, ich adaptację,
+interfejs i dokumentację przygotowano z pomocą AI.
+Projekt nie jest przedstawiany jako wykonany całkowicie samodzielnie.

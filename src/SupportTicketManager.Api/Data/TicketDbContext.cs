@@ -15,5 +15,11 @@ public class TicketDbContext : IdentityDbContext<ApplicationUser>
         .ToTable("Tickets", table =>
         table.HasCheckConstraint("CK_Tickets_Priority",
         "[Priority] >=1 AND [Priority] <= 5"));
+
+        modelBuilder.Entity<Ticket>()
+        .HasOne<ApplicationUser>()
+        .WithMany()
+        .HasForeignKey(ticket => ticket.OwnerId)
+        .IsRequired(false);
     }
 }

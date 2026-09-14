@@ -1,34 +1,63 @@
+using System.Security.Claims;
+
 public static class TicketEndpoints
 {
     public static void MapTicketEndpoints(WebApplication app)
     {
-        app.MapGet("/api/tickets", async (TicketDatabaseService ticketService) =>
+        app.MapGet("/api/tickets", async (TicketDatabaseService ticketService, ClaimsPrincipal user) =>
         {
-            List<Ticket> tickets = await ticketService.GetActiveTicketsAsync();
+            string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                return Results.Unauthorized();
+            }
+            bool isSupport = user.IsInRole("Support");
+            List<Ticket> tickets = await ticketService.GetActiveTicketsAsync(ownerId, isSupport);
             return Results.Ok(tickets);
         }
-        );
-        app.MapGet("/api/tickets/archived", async (TicketDatabaseService ticketService) =>
+        ).RequireAuthorization();
+        app.MapGet("/api/tickets/archived", async (TicketDatabaseService ticketService, ClaimsPrincipal user) =>
         {
-            List<Ticket> tickets = await ticketService.GetArchivedTicketsAsync();
+            bool isSupport = user.IsInRole("Support");
+            string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                return Results.Unauthorized();
+            }
+            List<Ticket> tickets = await ticketService.GetArchivedTicketsAsync(ownerId, isSupport);
             return Results.Ok(tickets);
-        });
+        }).RequireAuthorization();
 
-        app.MapGet("/api/tickets/{id:int}", async (int id, TicketDatabaseService ticketService) =>
+        app.MapGet("/api/tickets/{id:int}", async (int id, TicketDatabaseService ticketService, ClaimsPrincipal user) =>
         {
+            bool isSupport = user.IsInRole("Support");
+            string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                return Results.Unauthorized();
+            }
+
             Ticket? foundTicket = await ticketService.GetTicketByIdAsync(id);
-            if (foundTicket == null)
+            if (foundTicket == null || (!isSupport && foundTicket.OwnerId != ownerId))
             {
                 return Results.NotFound(new
                 {
                     message = $"Nie znaleziono zgłoszenia o ID: {id}"
                 });
             }
+
             return Results.Ok(foundTicket);
-        });
-        app.MapPost("/api/tickets", async (CreateTicketRequest request, TicketDatabaseService ticketService) =>
+
+        }).RequireAuthorization();
+        app.MapPost("/api/tickets", async (CreateTicketRequest request, TicketDatabaseService ticketService, ClaimsPrincipal user) =>
 
         {
+            string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                return Results.Unauthorized();
+            }
+
             if (string.IsNullOrWhiteSpace(request.Title))
             {
                 return Results.BadRequest(new
@@ -44,22 +73,25 @@ public static class TicketEndpoints
                 });
             }
 
-            if (request.Priority < 1 || request.Priority > 5)
-            {
-                return Results.BadRequest(new
-                {
-                    message = "Priorytet musi być od 1 do 5"
-                });
-            }
 
-            Ticket createdTicket = await ticketService.CreateTicketAsync(request.Title, request.Description, request.Priority);
+
+
+            Ticket createdTicket = await ticketService.CreateTicketAsync(request.Title, request.Description, ownerId);
 
             return Results.Created(
                 $"/api/tickets/{createdTicket.Id}", createdTicket);
-        });
-        app.MapPost("/api/tickets/{id:int}/close", async (int id, TicketDatabaseService ticketService) =>
+        }).RequireAuthorization();
+        app.MapPost("/api/tickets/{id:int}/close", async (int id, TicketDatabaseService ticketService, ClaimsPrincipal user) =>
         {
-            TicketOperationResult result = await ticketService.CloseTicketAsync(id);
+            bool isSupport = user.IsInRole("Support");
+
+            string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(ownerId))
+            {
+                return Results.Unauthorized();
+            }
+
+            TicketOperationResult result = await ticketService.CloseTicketAsync(id, ownerId, isSupport);
             if (result.Status == TicketOperationStatus.NotFound)
             {
                 return Results.NotFound(new
@@ -76,7 +108,7 @@ public static class TicketEndpoints
                 });
             }
             return Results.Ok(result.Ticket);
-        });
+        }).RequireAuthorization();
         app.MapPost("/api/tickets/{id:int}/reopen", async (int id, TicketDatabaseService ticketService) =>
         {
             TicketOperationResult result = await ticketService.ReopenTicketAsync(id);
@@ -98,7 +130,7 @@ public static class TicketEndpoints
             }
 
             return Results.Ok(result.Ticket);
-        });
+        }).RequireAuthorization("SupportOnly");
 
         app.MapPost("/api/tickets/{id:int}/start", async (int id, TicketDatabaseService ticketService) =>
         {
@@ -119,7 +151,7 @@ public static class TicketEndpoints
                 });
             }
             return Results.Ok(result.Ticket);
-        });
+        }).RequireAuthorization("SupportOnly");
 
         app.MapPost("/api/tickets/{id:int}/priority", async (int id, TicketDatabaseService ticketService, ChangeTicketPriorityRequest request) =>
         {
@@ -139,7 +171,7 @@ public static class TicketEndpoints
                 });
             }
             return Results.Ok(result.Ticket);
-        });
+        }).RequireAuthorization("SupportOnly");
 
     }
 }

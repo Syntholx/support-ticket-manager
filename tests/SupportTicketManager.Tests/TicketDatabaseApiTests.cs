@@ -15,7 +15,8 @@ public class TicketDatabaseApiTests
         {
             await factory.InitializeDatabaseAsync();
 
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterAndLoginAsync(client);
 
             using HttpResponseMessage response =
                 await client.GetAsync("/api/tickets");
@@ -34,20 +35,23 @@ public class TicketDatabaseApiTests
         }
     }
     [Fact]
-    public async Task CreateTicket_ValidData_ReturnsCreatedAndCanBeRead()
+    public async Task CreateTicket_WithoutPriority_ReturnsCreatedAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterAndLoginAsync(client);
             using HttpResponseMessage response = await client.PostAsJsonAsync("api/tickets", new
             {
                 title = "Test zapisu",
-                description = "Zgłoszenie zapisane w SQL",
-                priority = 3
+                description = "Zgłoszenie zapisane w SQL"
             });
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdTicket = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdTicket.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdTicket.GetProperty("status").GetString());
             Assert.NotNull(response.Headers.Location);
             using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -58,7 +62,8 @@ public class TicketDatabaseApiTests
             int priority = ticket.GetProperty("priority").GetInt32();
             Assert.Equal("Test zapisu", title);
             Assert.Equal("Zgłoszenie zapisane w SQL", description);
-            Assert.Equal(3, priority);
+            Assert.Equal(2, priority);
+            Assert.Equal(createdTicket.GetProperty("id").GetInt32(), ticket.GetProperty("id").GetInt32());
             Assert.Equal("Open", status);
         }
         finally
@@ -67,28 +72,33 @@ public class TicketDatabaseApiTests
         }
     }
     [Fact]
-    public async Task CreateTicket_InvalidPriority_ReturnsBadRequestAndLeavesDatabaseEmpty()
+    public async Task CreateTicket_WithClientPriority_ReturnsCreatedAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterAndLoginAsync(client);
             using HttpResponseMessage response = await client.PostAsJsonAsync("/api/tickets", new
             {
-                title = "Test walidacji",
-                description = "Niepoprawny priorytet",
-                priority = 8
+                title = "Test priorytetu",
+                description = "Próba wymuszenia priorytetu przez klienta",
+                priority = 5
             });
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
-            string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
-            using HttpResponseMessage getResponse = await client.GetAsync("/api/tickets");
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdTicket = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdTicket.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdTicket.GetProperty("status").GetString());
+            Assert.NotNull(response.Headers.Location);
+            using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
             JsonElement ticket = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal(JsonValueKind.Array, ticket.ValueKind);
-            Assert.Equal(0, ticket.GetArrayLength());
+            Assert.Equal(2, ticket.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", ticket.GetProperty("status").GetString());
+            Assert.Equal(createdTicket.GetProperty("id").GetInt32(), ticket.GetProperty("id").GetInt32());
+            Assert.Equal("Test priorytetu", ticket.GetProperty("title").GetString());
+            Assert.Equal("Próba wymuszenia priorytetu przez klienta", ticket.GetProperty("description").GetString());
         }
         finally
         {
@@ -104,7 +114,8 @@ public class TicketDatabaseApiTests
         {
             await factory.InitializeDatabaseAsync();
 
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterAndLoginAsync(client);
 
             using HttpResponseMessage response =
                 await client.GetAsync("/api/tickets/99");

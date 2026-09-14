@@ -3,6 +3,19 @@
 Ten plik zapisuje istotne decyzje podjęte podczas rozwoju projektu. Nie jest
 dziennikiem każdej zmiany ani listą przyszłych funkcji.
 
+## 1.0.0 — zamknięcie lokalnego backendu (14.09.2026)
+
+- Decyzja autora: publikować kod i dokumentację, bez publicznego serwera API.
+  Próby darmowego Azure F1 odrzucono przez dostępność regionu i limit subskrypcji.
+  Nie przechodzimy na płatny hosting. To nie dowodzi usterki API.
+- Model ma autora z tożsamości, domyślny priorytet 2 i trwały zapis SQL.
+  Użytkownik czyta/zamyka własne zgłoszenia; Support obsługuje wszystkie.
+- Role przyznaje osobna lokalna komenda, nie rejestracja ani zwykły start API.
+- Publiczny interfejs wycofany, kod zachowany w repozytorium portfolio.
+- 1.0.0 oznacza zamknięty zakres edukacyjny, nie gotowość produkcyjną.
+  CSRF, limity nadużyć, współbieżność i bezpieczne wdrożenie pozostają poza wydaniem.
+- Dalsza nauka w kolejnym projekcie z większą samodzielnością; TSM może być referencją.
+
 ## MVP 5 — typ statusu, serwis i testy (06.09.2026)
 
 - **Problem:** status był tekstem, tworzenie zgłoszenia należało do kodu konsoli,

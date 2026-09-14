@@ -5,6 +5,7 @@ public class Ticket
     public string Title { get; private set; } = "";
     public string Description { get; private set; } = "";
     public int Priority { get; private set; }
+    public string? OwnerId { get; private set; }
     public TicketStatus Status { get; private set; }
 
     public Ticket(
@@ -12,7 +13,9 @@ public class Ticket
         string title,
         string description,
         int priority,
-        TicketStatus status)
+        TicketStatus status,
+        string? ownerId = null)
+
     {
         Id = id;
         if (string.IsNullOrWhiteSpace(title))
@@ -35,6 +38,7 @@ public class Ticket
             throw new ArgumentException("Status musi być jednym z: Open, InProgress, Closed", nameof(status));
         }
         Status = status;
+        OwnerId = ownerId;
     }
 
     public bool IsUrgent()

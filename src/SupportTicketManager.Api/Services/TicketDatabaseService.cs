@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 public class TicketDatabaseService
 {
     private readonly TicketDbContext dbContext;
@@ -13,31 +14,36 @@ public class TicketDatabaseService
         return foundTicket;
     }
     public async Task<Ticket> CreateTicketAsync(
-        string title, string description, int priority)
+        string title, string description, string ownerId)
     {
         Ticket newTicket = new Ticket(0,
     title,
     description,
-   priority,
-    TicketStatus.Open);
+    2,
+   TicketStatus.Open,
+   ownerId);
+
+
         dbContext.Tickets.Add(newTicket);
         await dbContext.SaveChangesAsync();
         return newTicket;
     }
 
-    public async Task<List<Ticket>> GetActiveTicketsAsync()
+    public async Task<List<Ticket>> GetActiveTicketsAsync(string ownerId, bool isSupport)
     {
+
         List<Ticket> tickets = await dbContext.Tickets
-        .Where(ticket => ticket.Status != TicketStatus.Closed)
+        .Where(ticket => ticket.Status != TicketStatus.Closed && (ticket.OwnerId == ownerId || isSupport))
         .OrderByDescending(ticket => ticket.Priority)
         .ToListAsync();
 
         return tickets;
     }
-    public async Task<TicketOperationResult> CloseTicketAsync(int id)
+    public async Task<TicketOperationResult> CloseTicketAsync(int id, string ownerId, bool isSupport)
     {
         Ticket? foundTicket = await dbContext.Tickets.FindAsync(id);
-        if (foundTicket == null)
+
+        if (foundTicket == null || (foundTicket.OwnerId != ownerId && !isSupport))
         {
             return new TicketOperationResult(TicketOperationStatus.NotFound, null);
         }
@@ -103,10 +109,10 @@ public class TicketDatabaseService
         return new TicketOperationResult(TicketOperationStatus.Success, foundTicket);
     }
 
-    public async Task<List<Ticket>> GetArchivedTicketsAsync()
+    public async Task<List<Ticket>> GetArchivedTicketsAsync(string ownerId, bool isSupport)
     {
         List<Ticket> tickets = await dbContext.Tickets
-        .Where(ticket => ticket.Status == TicketStatus.Closed)
+       .Where(ticket => ticket.Status == TicketStatus.Closed && (isSupport || ticket.OwnerId == ownerId))
         .ToListAsync();
         return tickets;
 

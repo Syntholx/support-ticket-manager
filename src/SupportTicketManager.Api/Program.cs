@@ -45,8 +45,56 @@ if (builder.Environment.IsDevelopment())
             .WithMethods("GET", "POST")
             .WithHeaders("Content-Type")));
 }
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SupportOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Support");
+    });
+});
 var app = builder.Build();
+if (args.Contains("--grant-support"))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "To polecenie jest dostępne tylko w Development.");
+    }
+
+    if (args.Length != 2 ||
+        args[0] != "--grant-support" ||
+        string.IsNullOrWhiteSpace(args[1]))
+    {
+        throw new InvalidOperationException(
+            "Użycie: --grant-support adres-email");
+    }
+
+    using IServiceScope scope = app.Services.CreateScope();
+
+    TicketDbContext database =
+        scope.ServiceProvider.GetRequiredService<TicketDbContext>();
+
+    string server = database.Database.GetDbConnection().DataSource;
+
+    if (server != "localhost,1433" && server != "127.0.0.1,1433")
+    {
+        throw new InvalidOperationException(
+            "Polecenie może korzystać tylko z lokalnego SQL Server.");
+    }
+
+    UserManager<ApplicationUser> userManager =
+        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    RoleManager<IdentityRole> roleManager =
+        scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    await SupportRoleSetup.AssignAsync(
+        args[1], userManager, roleManager);
+
+    Console.WriteLine("Konto ma przypisaną rolę Support.");
+    return;
+}
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("LocalTicketView");
@@ -57,7 +105,7 @@ app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
     isRunning = true,
-    version = "0.7.0"
+    version = "1.0.0"
 });
 app.MapGet("api/name", () => "Support Ticket Manager");
 

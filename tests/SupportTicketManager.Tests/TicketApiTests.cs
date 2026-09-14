@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SupportTicketManager.Tests;
 
+// Business-rule regression tests run as Support; access isolation is tested separately.
 public class TicketApiTests
 {
     [Fact]
@@ -15,18 +16,19 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
         {
             title = "Problem z logowaniem",
-            description = "Nie mogę wejść do panelu",
-            priority = 3
+            description = "Nie mogę wejść do panelu"
         });
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             Assert.NotNull(response.Headers.Location);
             JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
             int createdId = createdJson.GetProperty("id").GetInt32();
             Assert.True(createdId > 0);
             Assert.DoesNotContain(createdId, new[] { seed.OpenId, seed.ClosedId, seed.InProgressId });
@@ -45,7 +47,7 @@ public class TicketApiTests
             Assert.Equal("Problem z logowaniem", title);
             Assert.Equal("Nie mogę wejść do panelu", description);
             Assert.Equal("Open", status);
-            Assert.Equal(3, priority);
+            Assert.Equal(2, priority);
         }
         finally
         {
@@ -54,14 +56,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_InvalidPriority_ReturnsBadRequestAndDoesNotCreateTicket()
+    public async Task CreateTicket_OutOfRangeClientPriority_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets",
                 new
@@ -71,9 +74,17 @@ public class TicketApiTests
                     priority = 8
                 });
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-            await AssertSeedUnchangedAsync(client, seed);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdJson.GetProperty("status").GetString());
+            Assert.NotNull(response.Headers.Location);
+            using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
+            Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdJson.GetProperty("id").GetInt32(), storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -89,14 +100,14 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets",
                 new
                 {
                     title = "",
-                    description = "Nie mogę wejść do panelu",
-                    priority = 3
+                    description = "Nie mogę wejść do panelu"
                 });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
@@ -116,14 +127,14 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets",
                 new
                 {
                     title = "Problem z logowaniem",
-                    description = "   ",
-                    priority = 3
+                    description = "   "
                 }
             );
 
@@ -137,14 +148,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_PriorityOne_ReturnsCreated()
+    public async Task CreateTicket_PriorityOne_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets",
                 new
@@ -157,6 +169,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             Assert.NotNull(response.Headers.Location);
             JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
             int createdId = createdJson.GetProperty("id").GetInt32();
             Assert.True(createdId > 0);
             Assert.DoesNotContain(createdId, new[] { seed.OpenId, seed.ClosedId, seed.InProgressId });
@@ -165,6 +178,10 @@ public class TicketApiTests
                 response.Headers.Location
             );
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdId, storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -173,14 +190,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_PriorityFive_ReturnsCreated()
+    public async Task CreateTicket_PriorityFive_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets",
                 new
@@ -192,6 +210,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             Assert.NotNull(response.Headers.Location);
             JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
             int createdId = createdJson.GetProperty("id").GetInt32();
             Assert.True(createdId > 0);
             Assert.DoesNotContain(createdId, new[] { seed.OpenId, seed.ClosedId, seed.InProgressId });
@@ -200,6 +219,10 @@ public class TicketApiTests
                response.Headers.Location
            );
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdId, storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -215,7 +238,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.InProgressId}/close", null);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -244,7 +268,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                 "/api/tickets/99/close", null);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -268,7 +293,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.ClosedId}/close", null);
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -290,7 +316,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.ClosedId}/reopen", null);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -319,7 +346,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.OpenId}/reopen", null);
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -341,7 +369,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.InProgressId}/reopen", null);
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -367,7 +396,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                 "/api/tickets/99/reopen", null);
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -393,7 +423,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.OpenId}/start", null
             );
@@ -423,7 +454,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.InProgressId}/start", null
             );
@@ -447,7 +479,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                  $"/api/tickets/{seed.ClosedId}/start", null
             );
@@ -471,7 +504,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsync(
                 "/api/tickets/99/start", null
             );
@@ -495,7 +529,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 4 }
             );
@@ -525,7 +560,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 8 }
             );
@@ -553,7 +589,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                 "/api/tickets/99/priority", new { priority = 4 }
             );
@@ -576,7 +613,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 0 });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -603,7 +641,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 6 });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -630,7 +669,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 1 });
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -654,7 +694,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.OpenId}/priority", new { priority = 5 });
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -678,7 +719,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
                  $"/api/tickets/{seed.ClosedId}/priority", new { priority = 2 });
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -697,14 +739,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_PriorityZero_ReturnsBadRequestAndDoesNotCreateTicket()
+    public async Task CreateTicket_PriorityZero_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
@@ -713,12 +756,17 @@ public class TicketApiTests
             description = "Nie mogę wejść do panelu",
             priority = 0
         });
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
-            string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
-
-            await AssertSeedUnchangedAsync(client, seed);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdJson.GetProperty("status").GetString());
+            Assert.NotNull(response.Headers.Location);
+            using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
+            Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdJson.GetProperty("id").GetInt32(), storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -727,14 +775,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_PrioritySix_ReturnsBadRequestAndDoesNotCreateTicket()
+    public async Task CreateTicket_PrioritySix_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
@@ -743,12 +792,17 @@ public class TicketApiTests
             description = "Nie mogę wejść do panelu",
             priority = 6
         });
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
-            string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
-
-            await AssertSeedUnchangedAsync(client, seed);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdJson.GetProperty("status").GetString());
+            Assert.NotNull(response.Headers.Location);
+            using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
+            Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdJson.GetProperty("id").GetInt32(), storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -764,13 +818,13 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
         {
-            title = "Problem z logowaniem",
-            priority = 3
+            title = "Problem z logowaniem"
         });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -793,14 +847,14 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
         {
             title = "Problem z logowaniem",
-            description = (string?)null,
-            priority = 3
+            description = (string?)null
         });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -816,14 +870,15 @@ public class TicketApiTests
     }
 
     [Fact]
-    public async Task CreateTicket_NonNumericPriority_ReturnsBadRequestAndDoesNotCreateTicket()
+    public async Task CreateTicket_NonNumericClientPriority_IsIgnoredAndStoresDefaultPriority()
     {
         using TicketDatabaseFactory factory = new TicketDatabaseFactory();
         try
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using HttpResponseMessage response = await client.PostAsJsonAsync(
         "/api/tickets",
         new
@@ -832,9 +887,17 @@ public class TicketApiTests
             description = "Nie mogę się zalogować",
             priority = "abc"
         });
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-
-            await AssertSeedUnchangedAsync(client, seed);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            JsonElement createdJson = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(2, createdJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", createdJson.GetProperty("status").GetString());
+            Assert.NotNull(response.Headers.Location);
+            using HttpResponseMessage getResponse = await client.GetAsync(response.Headers.Location);
+            Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+            JsonElement storedJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(createdJson.GetProperty("id").GetInt32(), storedJson.GetProperty("id").GetInt32());
+            Assert.Equal(2, storedJson.GetProperty("priority").GetInt32());
+            Assert.Equal("Open", storedJson.GetProperty("status").GetString());
         }
         finally
         {
@@ -850,7 +913,8 @@ public class TicketApiTests
         {
             await factory.InitializeDatabaseAsync();
             var seed = await SeedTicketsAsync(factory);
-            using HttpClient client = factory.CreateClient();
+            using HttpClient client = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client);
             using StringContent content = new StringContent(
         "{\"title\":",
         System.Text.Encoding.UTF8,
