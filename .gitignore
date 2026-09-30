@@ -15,3 +15,5 @@ appsettings.Production.json
 .env.*
 !*.example
 data-protection-keys/
+node_modules/
+frontend/dist/

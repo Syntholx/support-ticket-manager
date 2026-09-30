@@ -254,11 +254,17 @@ ponieważ publiczne demo z bazą nie zostało wdrożone.
 ## Interfejs i historia projektu
 
 Nowy klient edukacyjny znajduje się w `frontend/`, w tym samym repo co backend.
-Na 30.09.2026 jest to mały ekran HTML/JS pobierający publiczny `/api/status`,
-z komunikatami ładowania/błędu i blokadą przycisku na czas żądania.
-Uruchomienie: API przez profil HTTPS, `frontend/index.html` przez Live Server
-na porcie 5500. To jeszcze nie interfejs logowania ani obsługi zgłoszeń.
-Dalsza rozbudowa planowana w TypeScript i React, wraz z nauką backendu C#.
+Na 30.09.2026 jest to mały ekran HTML/TypeScript pobierający publiczny `/api/status`,
+z walidacją odpowiedzi, komunikatami ładowania/błędu i blokadą przycisku.
+W folderze `frontend` uruchom `npm.cmd ci`, a następnie `npx.cmd tsc` lub
+`npx.cmd tsc --watch` do automatycznej kompilacji. Wymagane Node.js i npm.
+Edytujemy `script.ts`; HTML wczytuje wygenerowany `dist/script.js`.
+Pakiety node_modules i wynik dist są ignorowane w Git i wymagają odtworzenia lokalnie.
+Uruchom API przez profil HTTPS, a `frontend/index.html` przez Live Server
+na porcie 5500. To jeszcze nie interfejs logowania ani obsługi zgłoszeń ani React.
+`invalid-status.json` służy do ręcznych prób walidacji; po próbach może zawierać
+poprawne dane. Normalne działanie klienta korzysta z API, nie tego pliku.
+Dalsza rozbudowa w TS i React wraz z nauką backendu C#.
 
 Kod makiety oraz wcześniejszego lokalnego interfejsu zachowano w
 [repozytorium portfolio](https://github.com/Syntholx/portfolio/tree/main/tsm-demo).
