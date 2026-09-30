@@ -32,7 +32,7 @@ public class AuthApiTests
             // Only the public message is allowed, not user/password/hash fields.
             JsonProperty property = Assert.Single(body.EnumerateObject().ToArray());
             Assert.Equal("message", property.Name);
-            Assert.Equal("Konto zostało utworzone.", property.Value.GetString());
+            Assert.Equal("Konto zostało utworzone. Potwierdź adres e-mail.", property.Value.GetString());
 
             using IServiceScope scope = factory.Services.CreateScope();
             TicketDbContext database = scope.ServiceProvider.GetRequiredService<TicketDbContext>();

@@ -43,6 +43,7 @@ internal static class TicketTestAuthentication
         using HttpResponseMessage registration = await client.PostAsJsonAsync(
             "/api/auth/register", new { email, password });
         Assert.Equal(HttpStatusCode.Created, registration.StatusCode);
+        await ((TestBrowserClient)client).ConfirmEmailAsync(email);
 
         using HttpResponseMessage login = await client.PostAsJsonAsync(
             "/api/auth/login", new { email, password });

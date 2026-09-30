@@ -11,6 +11,13 @@ namespace SupportTicketManager.Tests;
 
 public class TicketDatabaseFactory : WebApplicationFactory<Program>
 {
+    public TestEmail Inbox { get; } = new();
+    public new HttpClient CreateClient() => CreateClient(new WebApplicationFactoryClientOptions
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    public new HttpClient CreateClient(WebApplicationFactoryClientOptions options) =>
+        new TestBrowserClient(base.CreateClient(options), Inbox) { BaseAddress = options.BaseAddress };
+    public HttpClient CreateRawClient() => base.CreateClient(new WebApplicationFactoryClientOptions
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
     private readonly string databaseName = $"SupportTicketManagerTests_{Guid.NewGuid():N}";
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -18,6 +25,8 @@ public class TicketDatabaseFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<IAccountEmail>();
+            services.AddSingleton<IAccountEmail>(Inbox);
             services.RemoveAll<
                 IDbContextOptionsConfiguration<TicketDbContext>>();
             services.RemoveAll<DbContextOptions<TicketDbContext>>();

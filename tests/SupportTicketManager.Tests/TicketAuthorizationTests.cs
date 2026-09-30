@@ -69,15 +69,29 @@ public class TicketAuthorizationTests
     [InlineData("/api/tickets/archived")]
     public async Task Lists_AccountWithoutTickets_ReturnOkAndEmptyArray(string path)
     {
-        await using Sandbox sandbox = await Sandbox.CreateAsync();
-        using HttpClient emptyAccount = TicketTestAuthentication.CreateClient(sandbox.Factory);
-        await TicketTestAuthentication.RegisterAndLoginAsync(emptyAccount, "empty@example.com");
-        using HttpResponseMessage response = await emptyAccount.GetAsync(path);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(JsonValueKind.Array, body.ValueKind);
-        Assert.Equal(0, body.GetArrayLength());
-        Assert.Equal(sandbox.Initial, await sandbox.ReadStatesAsync());
+        using var factory = new TicketDatabaseFactory();
+        try
+        {
+            await factory.InitializeDatabaseAsync();
+            using var emptyAccount = TicketTestAuthentication.CreateClient(factory);
+            await TicketTestAuthentication.RegisterAndLoginAsync(emptyAccount, "empty@example.com");
+            // Seed unrelated data directly: this list test does not need three other HTTP login flows.
+            using var scope = factory.Services.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
+            var other = new ApplicationUser { UserName = "other@example.com", Email = "other@example.com" };
+            database.Users.Add(other);
+            database.Tickets.AddRange(new Ticket(0, "Other open", "Text", 2, TicketStatus.Open, other.Id),
+                new Ticket(0, "Other closed", "Text", 2, TicketStatus.Closed, other.Id));
+            await database.SaveChangesAsync();
+            using var response = await emptyAccount.GetAsync(path);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(JsonValueKind.Array, body.ValueKind);
+            Assert.Equal(0, body.GetArrayLength());
+            var states = await database.Tickets.AsNoTracking().OrderBy(ticket => ticket.Id).Select(ticket => ticket.Status).ToListAsync();
+            Assert.Equal(new[] { TicketStatus.Open, TicketStatus.Closed }, states);
+        }
+        finally { await factory.DeleteDatabaseAsync(); }
     }
 
     [Theory]

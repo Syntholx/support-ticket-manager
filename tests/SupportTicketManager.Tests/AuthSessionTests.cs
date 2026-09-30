@@ -26,6 +26,7 @@ public class AuthSessionTests
         using HttpResponseMessage response = await client.PostAsJsonAsync("/api/auth/register",
             new { email = Email, password = Password });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        await ((TestBrowserClient)client).ConfirmEmailAsync(Email);
     }
 
     [Fact]
@@ -48,7 +49,7 @@ public class AuthSessionTests
             Assert.Equal("Zalogowano.", loginBody.GetProperty("message").GetString());
             // Do not print authentication cookie values in test failures.
             Assert.True(login.Headers.TryGetValues("Set-Cookie", out var cookies));
-            string? authCookie = cookies!.FirstOrDefault(value => value.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
+            string? authCookie = cookies!.FirstOrDefault(value => value.StartsWith("__Host-TSM-Session=", StringComparison.Ordinal));
             Assert.True(authCookie is not null);
             Assert.True(authCookie!.Contains("httponly", StringComparison.OrdinalIgnoreCase));
             Assert.True(authCookie.Contains("secure", StringComparison.OrdinalIgnoreCase));

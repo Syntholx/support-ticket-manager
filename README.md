@@ -4,10 +4,10 @@ Backend do obsługi zgłoszeń wsparcia napisany w C# i ASP.NET Core.
 Użytkownik zgłasza problem i śledzi jego status, a pracownik wsparcia zarządza
 kolejką, ustala priorytety i prowadzi zgłoszenia od otwarcia do zamknięcia.
 
-**Wersja 1.0.0 — ukończony etap projektu edukacyjnego, uruchamiany lokalnie.**
-Kod jest dostępny do przeglądu i samodzielnego uruchomienia. Nie ma publicznego
-serwera API ani działającego demo na portfolio. To nie jest deklaracja gotowości
-produkcyjnej; ograniczenia bezpieczeństwa opisano poniżej.
+**Rozwój po 1.0.0: zabezpieczenia i przygotowanie wdrożenia.**
+Nie ma publicznego serwera API. Dodano CSRF, limity, potwierdzanie e-mail/reset
+hasła, unieważnianie sesji, paginację i kontrolę równoczesnego zapisu.
+Przed uruchomieniem potrzebny jest odbiór środowiska — [instrukcja produkcyjna](docs/PRODUCTION.md).
 
 ## Co rozwiązuje projekt?
 
@@ -55,7 +55,7 @@ Nowe zgłoszenia tworzone przez API zawsze mają autora.
 Niedozwolona zmiana statusu zwraca konflikt i nie zapisuje zmiany.
 Zmiana priorytetu jest dozwolona także dla Closed i nie zmienia statusu.
 Aktywna kolejka obejmuje Open oraz InProgress, sortowane malejąco po priorytecie.
-Przy równym priorytecie kolejność nie jest określona. Archiwum obejmuje Closed.
+Przy równym priorytecie kolejność to Id rosnąco. Archiwum obejmuje Closed, również według Id.
 
 Tytuł i opis nie mogą być null, puste ani składać się wyłącznie z białych znaków.
 Reguły modelu znajdują się w `Ticket`; baza dodatkowo wymusza priorytet 1–5
@@ -72,7 +72,7 @@ Po zakończeniu operacji endpoint dobiera odpowiedź HTTP.
 - `src/SupportTicketManager.Core` — Ticket, TicketStatus i reguły zgłoszenia.
 - `src/SupportTicketManager.Api/Endpoints` — odbiór żądań, kontrola dostępu i odpowiedzi HTTP.
 - `src/SupportTicketManager.Api/Services` — operacje i asynchroniczny zapis/odczyt przez TicketDatabaseService.
-- `src/SupportTicketManager.Api/Data` — TicketDbContext i cztery migracje bazy.
+- `src/SupportTicketManager.Api/Data` — TicketDbContext i migracje bazy.
 - `src/SupportTicketManager.Api/Identity` — model konta i lokalne nadawanie roli Support.
 - `src/SupportTicketManager.Api/Program.cs` — konfiguracja DI, SQL, Identity, cookies, JSON i tras.
 - `tests/SupportTicketManager.Tests` — testy reguł, HTTP, bazy i uprawnień.
@@ -122,6 +122,9 @@ Polecenie z hasłem może trafić do historii terminala — można zamiast tego 
 lokalny plik User Secrets. User Secrets nie jest szyfrowanym sejfem produkcyjnym.
 `TrustServerCertificate=True` służy wyłącznie temu lokalnemu środowisku SQL.
 
+Skonfiguruj też SMTP i Email:FrontendBaseUrl według [instrukcji](docs/PRODUCTION.md).
+Testy używają poczty w pamięci; uruchomione API nie potwierdza kont automatycznie.
+
 ### 3. Zastosuj migracje
 
 ```powershell
@@ -146,49 +149,17 @@ Profil uruchamia także HTTP na porcie 5231, ale cookies są Secure:
 do rejestracji, logowania i wszystkich operacji używaj HTTPS.
 Nie wyłączaj sprawdzania certyfikatu w kliencie.
 
-## Przykład użycia w PowerShell
+## Korzystanie z API
 
-API musi działać w drugim terminalu. Przykład jest dla nowej lokalnej bazy;
-hasło poniżej jest wyłącznie demonstracyjne — nie używaj go poza lokalnym testem.
-
-```powershell
-$baseUrl = "https://localhost:7280"
-$accountBody = @{
-    email = "user@example.com"
-    password = "Local-Example!2026"
-} | ConvertTo-Json
-
-# Rejestracja: 201; nie oznacza jeszcze zalogowania.
-Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/register" -ContentType "application/json" -Body $accountBody
-
-# Logowanie: 200. Sesja przechowuje cookie do kolejnych żądań.
-Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/login" -ContentType "application/json" -Body $accountBody -SessionVariable tsmSession
-
-Invoke-RestMethod -Uri "$baseUrl/api/auth/me" -WebSession $tsmSession
-
-$ticketBody = @{
-    title = "Problem z logowaniem"
-    description = "Nie mogę zalogować się do systemu firmowego."
-} | ConvertTo-Json
-
-$createdTicket = Invoke-RestMethod -Method Post -Uri "$baseUrl/api/tickets" -ContentType "application/json; charset=utf-8" -Body ([System.Text.Encoding]::UTF8.GetBytes($ticketBody)) -WebSession $tsmSession
-
-# POST zwraca 201, Location oraz obiekt z priority=2 i status=Open.
-# Korzystamy ze zwróconego ID, nie zakładamy, że wynosi 1.
-Invoke-RestMethod -Uri "$baseUrl/api/tickets/$($createdTicket.id)" -WebSession $tsmSession
-Invoke-RestMethod -Method Post -Uri "$baseUrl/api/tickets/$($createdTicket.id)/close" -WebSession $tsmSession
-Invoke-RestMethod -Uri "$baseUrl/api/tickets/archived" -WebSession $tsmSession
-Invoke-RestMethod -Method Post -Uri "$baseUrl/api/auth/logout" -WebSession $tsmSession
-```
-
-Po wylogowaniu chronione żądanie zwraca 401. Ponowna rejestracja tego samego
-adresu zwraca 400 — istniejącym kontem należy się zalogować.
-PowerShell zgłasza wyjątek przy 4xx; po nieudanym przypisaniu zmienna może nadal
-zawierać poprzedni wynik.
+Najpierw pobierz GET /api/auth/csrf, zachowując cookie w sesji klienta.
+Do każdego POST dodaj X-CSRF-TOKEN z odpowiedzi. Po login/logout pobierz go ponownie.
+Rejestracja nie loguje ani nie potwierdza konta — wymagane potwierdzenie e-mail.
+Nowe trasy kont, format linków i limity: [kontrakt bezpieczeństwa](docs/PRODUCTION.md).
+Stare przykłady POST bez CSRF z wersji 1.0.0 nie działają z nowym API.
 
 ### Nadanie roli Support lokalnemu kontu
 
-Najpierw zarejestruj osobne konto, np. `support@example.com`, przez endpoint rejestracji.
+Najpierw zarejestruj i potwierdź e-mail osobnego konta, np. `support@example.com`.
 Następnie zatrzymaj API przez Ctrl+C i wykonaj:
 
 ```powershell
@@ -210,7 +181,12 @@ Nieprawidłowy JSON może zostać odrzucony przez ASP.NET Core przed endpointem.
 
 | Metoda i ścieżka | Dane / cel | Odpowiedzi |
 |---|---|---|
-| POST /api/auth/register | email, password | 201 / 400 |
+| GET /api/auth/csrf | Token CSRF + cookie | 200 |
+| POST /api/auth/register | email, password; wysyłka potwierdzenia | 201 / 400 / 503 |
+| POST /api/auth/confirm-email | userId, token | 200 / 400 |
+| POST /api/auth/resend-confirmation | email | 202 / 400 |
+| POST /api/auth/forgot-password | email | 202 / 400 |
+| POST /api/auth/reset-password | email, token, password | 200 / 400 |
 | POST /api/auth/login | email, password; cookie sesji | 200 / 400 / 401 |
 | GET /api/auth/me | Bieżące konto | 200 / 401 |
 | POST /api/auth/logout | Wylogowanie | 200 / 401 |
@@ -237,8 +213,10 @@ zawierają zgłoszenie. Błędy biznesowe mają zazwyczaj obiekt `{"message":"..
 
 ## Testy
 
-Zestaw obejmuje **101 przypadków testowych**: reguły modelu, operacje API,
+Zestaw obejmuje **126 przypadków testowych**: reguły modelu, operacje API,
 integrację z SQL, Identity, sesje, własność zgłoszeń i macierz uprawnień.
+Nowe scenariusze obejmują CSRF, limity, potwierdzanie e-mail, reset hasła,
+blokadę logowania, wygasłe tokeny, paginację, rowversion i walidację konfiguracji.
 Sprawdzane są nie tylko kody HTTP, ale również zwrócone dane i stan bazy po operacji.
 
 Testy SQL korzystają z prawdziwego lokalnego SQL Server.
@@ -263,25 +241,24 @@ przeglądarki/transportu TLS. Testy HTTP korzystają z WebApplicationFactory.
 
 ## Ograniczenia i dalszy rozwój
 
-Projekt zamyka etap nauki backendu na przykładzie TSM, nie cały kurs.
-Przed ewentualnym publicznym wdrożeniem potrzebne są m.in.:
-
-- pełna ochrona CSRF dla logowania i operacji opartych na cookies;
-- ograniczanie ruchu i rozmiaru danych, paginacja oraz ochrona przed nadużyciami;
-- potwierdzanie e-maila, reset hasła i dopracowanie cyklu życia sesji;
-- obsługa konfliktów równoczesnych aktualizacji;
-- konfiguracja produkcyjnych sekretów, kluczy Data Protection, TLS, logów i kopii bazy;
-- osobna weryfikacja integracji przeglądarkowej i wdrożenia.
-
-Cookies mają HttpOnly, Secure i SameSite=Strict, ale nie zastępuje to powyższych
-zabezpieczeń. Wylogowanie usuwa cookie klienta, nie konto ani każdą wcześniejszą
-kopię cookie. **Nie wystawiaj obecnej konfiguracji bezpośrednio do internetu.**
+Dodano mechanizmy bezpieczeństwa opisane w [PRODUCTION.md](docs/PRODUCTION.md).
+Nie oznacza to zakończonego audytu ani gotowego środowiska produkcyjnego.
+Wymagane są rzeczywisty dostawca SMTP, TLS, sekrety, backup/restore, konfiguracja
+hostingu, nowe ekrany potwierdzenia/resetu oraz testy przeglądarkowe i obciążeniowe.
+Limity ruchu są per instancja; publiczny ruch wymaga też ochrony na bramie.
 
 Nie ma usuwania zgłoszeń, przypisywania konkretnego pracownika, załączników ani SLA.
 Rejestracja jest dostępna anonimowo. Nie ma zaplanowanego resetu publicznej bazy,
 ponieważ publiczne demo z bazą nie zostało wdrożone.
 
 ## Interfejs i historia projektu
+
+Nowy klient edukacyjny znajduje się w `frontend/`, w tym samym repo co backend.
+Na 30.09.2026 jest to mały ekran HTML/JS pobierający publiczny `/api/status`,
+z komunikatami ładowania/błędu i blokadą przycisku na czas żądania.
+Uruchomienie: API przez profil HTTPS, `frontend/index.html` przez Live Server
+na porcie 5500. To jeszcze nie interfejs logowania ani obsługi zgłoszeń.
+Dalsza rozbudowa planowana w TypeScript i React, wraz z nauką backendu C#.
 
 Kod makiety oraz wcześniejszego lokalnego interfejsu zachowano w
 [repozytorium portfolio](https://github.com/Syntholx/portfolio/tree/main/tsm-demo).

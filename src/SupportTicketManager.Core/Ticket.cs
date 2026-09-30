@@ -1,6 +1,10 @@
 
 public class Ticket
 {
+    public const int MaxTitleLength = 200;
+    public const int MaxDescriptionLength = 5000;
+    [System.Text.Json.Serialization.JsonIgnore]
+    public byte[] RowVersion { get; private set; } = [];
     public int Id { get; private set; }
     public string Title { get; private set; } = "";
     public string Description { get; private set; } = "";
@@ -23,11 +27,15 @@ public class Ticket
             throw new ArgumentException("Tytuł nie może być pusty", nameof(title));
         }
         Title = title;
+        if (title.Length > MaxTitleLength)
+            throw new ArgumentException("Tytuł jest za długi", nameof(title));
         if (string.IsNullOrWhiteSpace(description))
         {
             throw new ArgumentException("Opis nie może być pusty.", nameof(description));
         }
         Description = description;
+        if (description.Length > MaxDescriptionLength)
+            throw new ArgumentException("Opis jest za długi", nameof(description));
         if (priority < 1 || priority > 5)
         {
             throw new ArgumentOutOfRangeException(nameof(priority));

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
+builder.AddApiSecurity();
 builder.Services.ConfigureHttpJsonOptions(options =>
 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddDbContext<TicketDbContext>(options =>
@@ -12,18 +13,47 @@ builder.Services
 .AddIdentityCore<ApplicationUser>(options =>
 {
     options.User.RequireUniqueEmail = true;
+    options.Password.RequiredLength = 12;
+    options.Password.RequiredUniqueChars = 4;
+    options.SignIn.RequireConfirmedEmail = true;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<TicketDbContext>()
-.AddSignInManager();
+.AddSignInManager()
+.AddDefaultTokenProviders();
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(1));
+builder.Services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
+builder.Services.AddAccountEmail(builder.Configuration, builder.Environment);
 builder.Services
 .AddAuthentication(IdentityConstants.ApplicationScheme)
 .AddIdentityCookies();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
+    options.Cookie.Name = "__Host-TSM-Session";
+    options.Cookie.Path = "/";
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Strict;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = false;
+    options.Events.OnSigningIn = context =>
+    {
+        context.Properties.Items["session-start"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return Task.CompletedTask;
+    };
+    options.Events.OnValidatePrincipal = async context =>
+    {
+        if (!context.Properties.Items.TryGetValue("session-start", out var started)
+            || !long.TryParse(started, out long seconds)
+            || DateTimeOffset.UtcNow.ToUnixTimeSeconds() - seconds >= 1800)
+        {
+            context.RejectPrincipal();
+            return;
+        }
+        await SecurityStampValidator.ValidatePrincipalAsync(context);
+    };
 
     options.Events.OnRedirectToLogin = context =>
     {
@@ -54,6 +84,7 @@ builder.Services.AddAuthorization(options =>
     });
 });
 var app = builder.Build();
+app.UseApiSecurityHeaders();
 if (args.Contains("--grant-support"))
 {
     if (!app.Environment.IsDevelopment())
@@ -99,8 +130,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors("LocalTicketView");
 }
+app.UseRequestTimeouts();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
+app.UseApiRequestProtection();
 app.MapGet("api/status", () => new
 {
     name = "Support Ticket Manager",
