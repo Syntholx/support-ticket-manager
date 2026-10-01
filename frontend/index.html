@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="./dist/script.js" defer></script>
+    <script type="module" src="./dist/script.js"></script>
+    <script type="module" src="./main.tsx"></script>
     <title>TSM - Status</title>
   </head>
   <body>
     <main>
-      <h1>Status TSM</h1>
+      <div id="status-heading-root"></div>
       <button id="check-connection" type="button">Sprawdź połączenie</button>
       <p id="connection-status">Nie sprawdzono połączenia</p>
     </main>
