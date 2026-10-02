@@ -37,11 +37,14 @@ public static class AccountEmailRegistration
     }
 }
 
-public sealed class SmtpAccountEmail(IOptions<AccountEmailOptions> options) : IAccountEmail
+public sealed class SmtpAccountEmail(IOptions<AccountEmailOptions> options, IHostEnvironment environment) : IAccountEmail
 {
     public async Task SendAsync(string email, string subject, string link, CancellationToken cancellationToken)
     {
         var settings = options.Value;
+        bool isLocalMailpit = environment.IsDevelopment()
+            && settings.Host == "127.0.0.1" && settings.Port == 1025;
+
         if (string.IsNullOrWhiteSpace(settings.Host))
             throw new InvalidOperationException("SMTP is not configured. Use a local test sender or configure Email settings.");
         var message = new MimeMessage();
@@ -53,9 +56,11 @@ public sealed class SmtpAccountEmail(IOptions<AccountEmailOptions> options) : IA
         deadline.CancelAfter(TimeSpan.FromSeconds(15));
         cancellationToken = deadline.Token;
         using var client = new SmtpClient { Timeout = 15000 };
-        await client.ConnectAsync(settings.Host, settings.Port,
-            settings.Port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls, cancellationToken);
-        await client.AuthenticateAsync(settings.Username, settings.Password, cancellationToken);
+        var socketOptions = isLocalMailpit ? SecureSocketOptions.None
+            : settings.Port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+        await client.ConnectAsync(settings.Host, settings.Port, socketOptions, cancellationToken);
+        if (!isLocalMailpit)
+            await client.AuthenticateAsync(settings.Username, settings.Password, cancellationToken);
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);
     }

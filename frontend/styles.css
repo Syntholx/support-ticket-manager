@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background-color: #f4f7fb;
+  color: #172033;
+  font-family: system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.app-shell {
+  max-width: 760px;
+  margin: 40px auto;
+  padding: 16px;
+  width: 100%;
+}
+.welcome-card {
+  background-color: #ffffff;
+  border: 1px solid #dce5ef;
+  border-radius: 16px;
+  padding: 28px;
+}
+.welcome-card h1 {
+  margin-top: 0;
+}
+.status-card {
+  background-color: #ffffff;
+  border: 1px solid #dce5ef;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 20px;
+}
+.status-card h2 {
+  margin-top: 0;
+}
+.status-card button {
+  background-color: white;
+  color: #1d4ed8;
+  border: 1px solid #b8c8e4;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.status-card button:hover {
+  background-color: #eff6ff;
+}
+.status-card button:disabled {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}
+.login-card {
+  background-color: #ffffff;
+  border: 1px solid #dce5ef;
+  border-radius: 16px;
+  padding: 28px;
+}
+.login-card h1 {
+  margin-top: 0px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  gap: 6px;
+  width: 100%;
+}
+.form-field input {
+  min-height: 44px;
+  border: 1px solid #b7c7e4;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background-color: white;
+}
+.login-button {
+  background-color: #1d4ed8;
+  color: white;
+  border-radius: 10px;
+  border: none;
+  padding: 10px 16px;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.back-button {
+  color: #1d4ed8;
+  font-weight: 600;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}

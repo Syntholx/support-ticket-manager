@@ -2,9 +2,8 @@
   "name": "frontend",
   "version": "1.0.0",
   "description": "",
-  "main": "script.js",
   "scripts": {
-    "dev": "vite --port 5500 --strictPort",
+    "dev": "node --use-system-ca ./node_modules/vite/bin/vite.js --port 5500 --strictPort",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

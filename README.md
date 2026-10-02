@@ -20,14 +20,14 @@ Interakcja odbywa się przez HTTP i JSON, np. za pomocą PowerShell lub klienta 
 
 ## Funkcje i uprawnienia
 
-| Operacja | Zalogowany użytkownik | Rola Support |
-|---|---|---|
-| Utworzenie zgłoszenia | W swoim imieniu | W swoim imieniu |
-| Aktywna kolejka, archiwum, szczegóły | Tylko własne zgłoszenia | Wszystkie zgłoszenia |
-| Zamknięcie | Tylko własne zgłoszenie | Dowolne zgłoszenie |
-| Rozpoczęcie obsługi | Niedozwolone | Dozwolone |
-| Ponowne otwarcie | Niedozwolone | Dozwolone |
-| Zmiana priorytetu | Niedozwolona | Dozwolona, zakres 1–5 |
+| Operacja                             | Zalogowany użytkownik   | Rola Support          |
+| ------------------------------------ | ----------------------- | --------------------- |
+| Utworzenie zgłoszenia                | W swoim imieniu         | W swoim imieniu       |
+| Aktywna kolejka, archiwum, szczegóły | Tylko własne zgłoszenia | Wszystkie zgłoszenia  |
+| Zamknięcie                           | Tylko własne zgłoszenie | Dowolne zgłoszenie    |
+| Rozpoczęcie obsługi                  | Niedozwolone            | Dozwolone             |
+| Ponowne otwarcie                     | Niedozwolone            | Dozwolone             |
+| Zmiana priorytetu                    | Niedozwolona            | Dozwolona, zakres 1–5 |
 
 - Rejestracja, logowanie, odczyt zalogowanego konta i wylogowanie wykorzystują ASP.NET Core Identity.
 - Wszystkie endpointy zgłoszeń wymagają uwierzytelnienia.
@@ -46,11 +46,11 @@ Identyfikator nadaje SQL Server; luki w numeracji są dopuszczalne.
 `OwnerId` jest opcjonalnym kluczem obcym do kont Identity ze względu na starsze dane.
 Nowe zgłoszenia tworzone przez API zawsze mają autora.
 
-| Operacja | Stan początkowy | Stan końcowy |
-|---|---|---|
-| Rozpoczęcie obsługi | Open | InProgress |
-| Zamknięcie | Open lub InProgress | Closed |
-| Ponowne otwarcie | Closed | Open |
+| Operacja            | Stan początkowy     | Stan końcowy |
+| ------------------- | ------------------- | ------------ |
+| Rozpoczęcie obsługi | Open                | InProgress   |
+| Zamknięcie          | Open lub InProgress | Closed       |
+| Ponowne otwarcie    | Closed              | Open         |
 
 Niedozwolona zmiana statusu zwraca konflikt i nie zapisuje zmiany.
 Zmiana priorytetu jest dozwolona także dla Closed i nie zmienia statusu.
@@ -179,33 +179,33 @@ Nie jest to publiczny endpoint administracyjny ani mechanizm administracji produ
 W tabelach podano odpowiedzi obsługiwane przez aplikację.
 Nieprawidłowy JSON może zostać odrzucony przez ASP.NET Core przed endpointem.
 
-| Metoda i ścieżka | Dane / cel | Odpowiedzi |
-|---|---|---|
-| GET /api/auth/csrf | Token CSRF + cookie | 200 |
-| POST /api/auth/register | email, password; wysyłka potwierdzenia | 201 / 400 / 503 |
-| POST /api/auth/confirm-email | userId, token | 200 / 400 |
-| POST /api/auth/resend-confirmation | email | 202 / 400 |
-| POST /api/auth/forgot-password | email | 202 / 400 |
-| POST /api/auth/reset-password | email, token, password | 200 / 400 |
-| POST /api/auth/login | email, password; cookie sesji | 200 / 400 / 401 |
-| GET /api/auth/me | Bieżące konto | 200 / 401 |
-| POST /api/auth/logout | Wylogowanie | 200 / 401 |
-| GET /api/status | Nazwa, wersja, isRunning | 200 |
-| GET /api/name | Nazwa aplikacji | 200 |
+| Metoda i ścieżka                   | Dane / cel                             | Odpowiedzi      |
+| ---------------------------------- | -------------------------------------- | --------------- |
+| GET /api/auth/csrf                 | Token CSRF + cookie                    | 200             |
+| POST /api/auth/register            | email, password; wysyłka potwierdzenia | 201 / 400 / 503 |
+| POST /api/auth/confirm-email       | userId, token                          | 200 / 400       |
+| POST /api/auth/resend-confirmation | email                                  | 202 / 400       |
+| POST /api/auth/forgot-password     | email                                  | 202 / 400       |
+| POST /api/auth/reset-password      | email, token, password                 | 200 / 400       |
+| POST /api/auth/login               | email, password; cookie sesji          | 200 / 400 / 401 |
+| GET /api/auth/me                   | Bieżące konto                          | 200 / 401       |
+| POST /api/auth/logout              | Wylogowanie                            | 200 / 401       |
+| GET /api/status                    | Nazwa, wersja, isRunning               | 200             |
+| GET /api/name                      | Nazwa aplikacji                        | 200             |
 
 Wszystkie poniższe trasy zwracają **401 bez zalogowania**.
 Trasy tylko dla Support zwracają **403 zwykłemu użytkownikowi**, także jeśli poda nieistniejące ID.
 
-| Metoda i ścieżka | Body | Sukces / błędy po autoryzacji |
-|---|---|---|
-| GET /api/tickets | Brak | 200, również [] |
-| GET /api/tickets/archived | Brak | 200, również [] |
-| GET /api/tickets/{id} | Brak | 200 / 404 |
-| POST /api/tickets | {"title":"Problem","description":"Opis"} | 201 + Location / 400 |
-| POST /api/tickets/{id}/close | Brak | 200 / 404 / 409 |
-| POST /api/tickets/{id}/start | Brak; Support | 200 / 404 / 409 |
-| POST /api/tickets/{id}/reopen | Brak; Support | 200 / 404 / 409 |
-| POST /api/tickets/{id}/priority | {"priority":4}; Support | 200 / 400 / 404 |
+| Metoda i ścieżka                | Body                                     | Sukces / błędy po autoryzacji |
+| ------------------------------- | ---------------------------------------- | ----------------------------- |
+| GET /api/tickets                | Brak                                     | 200, również []               |
+| GET /api/tickets/archived       | Brak                                     | 200, również []               |
+| GET /api/tickets/{id}           | Brak                                     | 200 / 404                     |
+| POST /api/tickets               | {"title":"Problem","description":"Opis"} | 201 + Location / 400          |
+| POST /api/tickets/{id}/close    | Brak                                     | 200 / 404 / 409               |
+| POST /api/tickets/{id}/start    | Brak; Support                            | 200 / 404 / 409               |
+| POST /api/tickets/{id}/reopen   | Brak; Support                            | 200 / 404 / 409               |
+| POST /api/tickets/{id}/priority | {"priority":4}; Support                  | 200 / 400 / 404               |
 
 ID w trasie musi być liczbą całkowitą. Odpowiedzi operacji zakończonych sukcesem
 zawierają zgłoszenie. Błędy biznesowe mają zazwyczaj obiekt `{"message":"..."}`;
@@ -254,14 +254,20 @@ ponieważ publiczne demo z bazą nie zostało wdrożone.
 ## Interfejs i historia projektu
 
 Nowy klient edukacyjny znajduje się w `frontend/`, w tym samym repo co backend.
-Na 30.09.2026 jest to mały ekran HTML/TypeScript pobierający publiczny `/api/status`,
+Na 02.10.2026 jest to mały ekran React + TypeScript pobierający publiczny `/api/status`,
 z walidacją odpowiedzi, komunikatami ładowania/błędu i blokadą przycisku.
-W folderze `frontend` uruchom `npm.cmd ci`, a następnie `npx.cmd tsc` lub
-`npx.cmd tsc --watch` do automatycznej kompilacji. Wymagane Node.js i npm.
-Edytujemy `script.ts`; HTML wczytuje wygenerowany `dist/script.js`.
-Pakiety node_modules i wynik dist są ignorowane w Git i wymagają odtworzenia lokalnie.
-Uruchom API przez profil HTTPS, a `frontend/index.html` przez Live Server
-na porcie 5500. To jeszcze nie interfejs logowania ani obsługi zgłoszeń ani React.
+W folderze `frontend` uruchom najpierw npm.cmd ci do instalacji pakietów Vite, następnie npm.cmd run dev do uruchomienia lokalnej wersji strony poprzez Vite, na porcie 5500.
+Natomiast by uruchomić API, uruchom je za pomocą dotnet run --project src/SupportTicketManager.Api --launch-profile https, bezpośrednio z głownego folderu repozytorium.
+React generuje nowy widok za pomocą komponentów.
+Klient ma widoki logowania i rejestracji. Rejestracja została sprawdzona z
+lokalnym Mailpit; potwierdzenie e-maila w React jest jeszcze w trakcie pracy,
+a ekrany obsługi zgłoszeń nie są gotowe.
+Vite działa pod `https://localhost:5500` i wymaga lokalnego certyfikatu
+developerskiego w `%LOCALAPPDATA%\TSMDevCert\localhost.pem` oraz klucza
+`localhost.key`. Pliki te pozostają poza repozytorium; prywatny klucz PEM
+jest przeznaczony wyłącznie do lokalnego testu i musi mieć ograniczony dostęp.
+Proxy Vite przekazuje `/api/` do API na `https://localhost:7280`.
+Pakiety node_modules i wynik dist są ignorowane w Git, natomiast pakiety node_modules trzeba odtworzyć za pomocą npm.cmd ci, ale dist nie jest potrzebny do pracy przez Vite, dist to ignorowany wynik budowania.
 `invalid-status.json` służy do ręcznych prób walidacji; po próbach może zawierać
 poprawne dane. Normalne działanie klienta korzysta z API, nie tego pliku.
 Dalsza rozbudowa w TS i React wraz z nauką backendu C#.
