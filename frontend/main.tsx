@@ -8,17 +8,18 @@ import { RegisterScreen } from "./components/RegisterScreen";
 import { useState, useEffect } from "react";
 import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
 import { getCsrfToken } from "./get-csrf-token";
-import { TicketSummary } from "./ticket";
+import { TicketSummary, parseTicket } from "./ticket";
+
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
   throw new Error("Nie znaleziono elementu");
 }
 
 function App() {
-  const [tickets, setTickets] = useState<TicketSummary[]>([
-    { id: 1, title: "Problem z logowaniem", priority: 2, status: "Open" },
-    { id: 2, title: "Problem z drukarką", priority: 3, status: "Open" },
-  ]);
+  const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
+  const [ticketsError, setTicketsError] = useState("");
+  const [tickets, setTickets] = useState<TicketSummary[]>([]);
+  const [isLoadingTickets, setLoadingTickets] = useState(true);
   const [isLoggingOut, setLoggingOut] = useState(false);
   const [logoutMessage, setLogoutMessage] = useState("");
   const [hasSessionError, setSessionError] = useState(false);
@@ -56,10 +57,54 @@ function App() {
 
     checkSession();
   }, []);
+  useEffect(() => {
+    if (screen !== "dashboard") return;
+    setTickets([]);
+    setTicketsError("");
+    setLoadingTickets(true);
+    let ignore = false;
+    async function loadTickets() {
+      try {
+        const loadTicketsResponse = await fetch("/api/tickets", {
+          credentials: "same-origin",
+        });
+        if (ignore) return;
+        if (!loadTicketsResponse.ok) {
+          setTicketsError("Nie udało się pobrać zgłoszeń");
+          return;
+        }
+        const ticketsData: unknown = await loadTicketsResponse.json();
+        if (ignore) return;
+        if (!Array.isArray(ticketsData)) {
+          setTicketsError("Api zwróciło nieprawidłową listę zgłoszeń");
+          return;
+        }
+        const parsedTickets = ticketsData.map(parseTicket);
+        setTickets(parsedTickets);
+      } catch (error) {
+        if (!ignore) {
+          setTicketsError(
+            "Nie udało się pobrać lub odczytać zgłoszeń, sprawdź połączenie i spróbuj ponownie.",
+          );
+          return;
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingTickets(false);
+        }
+      }
+    }
+    loadTickets();
+    return () => {
+      ignore = true;
+    };
+  }, [screen, ticketsRefreshKey]);
+
   function openLoginFromConfirmation() {
     window.history.replaceState(null, "", "/");
     setScreen("login");
   }
+
   function renderCurrentScreen() {
     if (screen === "login") {
       return (
@@ -82,6 +127,10 @@ function App() {
           message={logoutMessage}
           onLogoutClick={handleLogoutClick}
           isLoggingOut={isLoggingOut}
+          isLoadingTickets={isLoadingTickets}
+          ticketsError={ticketsError}
+          onTicketCreated={refreshTickets}
+          onRefreshTickets={refreshTickets}
         />
       );
     }
@@ -132,6 +181,9 @@ function App() {
     } finally {
       setLoggingOut(false);
     }
+  }
+  function refreshTickets() {
+    setTicketsRefreshKey((previous) => previous + 1);
   }
   return (
     <div className="app-shell">

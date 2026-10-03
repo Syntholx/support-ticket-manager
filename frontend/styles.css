@@ -69,13 +69,16 @@ body {
   gap: 6px;
   width: 100%;
 }
-.form-field input {
+.form-field input,
+.form-field textarea {
   min-height: 44px;
   border: 1px solid #b7c7e4;
   border-radius: 10px;
   padding: 10px 12px;
   background-color: white;
+  font: inherit;
 }
+
 .login-button {
   background-color: #1d4ed8;
   color: white;
