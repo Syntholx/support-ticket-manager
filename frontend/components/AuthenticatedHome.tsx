@@ -11,6 +11,7 @@ export function AuthenticatedHome(prop: {
   ticketsError: string;
   onTicketCreated: () => void;
   onRefreshTickets: () => void;
+  onTicketClick: (id: number) => void;
 }) {
   const [createMessage, setCreateMessage] = useState("");
   const [isCreatingTicket, setCreatingTicket] = useState(false);
@@ -96,7 +97,12 @@ export function AuthenticatedHome(prop: {
           <ul>
             {prop.tickets.map((ticket) => (
               <li key={ticket.id}>
-                #{ticket.id} - {ticket.title}
+                <button
+                  type="button"
+                  onClick={() => prop.onTicketClick(ticket.id)}
+                >
+                  #{ticket.id} - {ticket.title}
+                </button>
               </li>
             ))}
           </ul>

@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
 import { getCsrfToken } from "./get-csrf-token";
 import { TicketSummary, parseTicket } from "./ticket";
+import { TicketDetail, parseTicketDetails } from "./ticket";
+import { formatTicketStatus } from "./ticket";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
@@ -16,6 +18,11 @@ if (!(app instanceof HTMLElement)) {
 }
 
 function App() {
+  const [ticketDetailRefreshKey, setTicketDetailRefreshKey] = useState(0);
+  const [ticketDetail, setTicketDetail] = useState<TicketDetail | null>(null);
+  const [isLoadingTicketDetail, setLoadingTicketDetail] = useState(false);
+  const [ticketDetailError, setTicketDetailError] = useState("");
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [ticketsError, setTicketsError] = useState("");
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -25,7 +32,13 @@ function App() {
   const [hasSessionError, setSessionError] = useState(false);
   const [sessionMessage, setSessionMessage] = useState("Sprawdzam sesję...");
   const [screen, setScreen] = useState<
-    "guest" | "login" | "register" | "confirm" | "dashboard" | "checking"
+    | "guest"
+    | "login"
+    | "register"
+    | "confirm"
+    | "dashboard"
+    | "checking"
+    | "details"
   >(window.location.pathname === "/confirm-email" ? "confirm" : "checking");
   async function checkSession() {
     setSessionError(false);
@@ -99,6 +112,44 @@ function App() {
       ignore = true;
     };
   }, [screen, ticketsRefreshKey]);
+  useEffect(() => {
+    if (screen !== "details" || selectedTicketId === null) return;
+    setTicketDetailError("");
+    setLoadingTicketDetail(true);
+    let ignore = false;
+    async function loadTicketDetail() {
+      try {
+        const ticketDetailResponse = await fetch(
+          `/api/tickets/${selectedTicketId}`,
+          {
+            credentials: "same-origin",
+          },
+        );
+        if (ignore) return;
+        if (!ticketDetailResponse.ok) {
+          setTicketDetailError(
+            "Nie udało się pobrać szczegółów zgłoszenia, sprawdź połączenie i spróbuj ponownie.",
+          );
+          return;
+        }
+        const ticketDetailsData: unknown = await ticketDetailResponse.json();
+        if (ignore) return;
+        setTicketDetail(parseTicketDetails(ticketDetailsData));
+      } catch (error) {
+        if (!ignore) {
+          setTicketDetailError("Błąd połączenia lub odczytu danych");
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingTicketDetail(false);
+        }
+      }
+    }
+    loadTicketDetail();
+    return () => {
+      ignore = true;
+    };
+  }, [screen, selectedTicketId, ticketDetailRefreshKey]);
 
   function openLoginFromConfirmation() {
     window.history.replaceState(null, "", "/");
@@ -131,6 +182,11 @@ function App() {
           ticketsError={ticketsError}
           onTicketCreated={refreshTickets}
           onRefreshTickets={refreshTickets}
+          onTicketClick={(id) => {
+            setTicketDetail(null);
+            setSelectedTicketId(id);
+            setScreen("details");
+          }}
         />
       );
     }
@@ -141,6 +197,50 @@ function App() {
           onRetryClick={checkSession}
           hasSessionError={hasSessionError}
         />
+      );
+    }
+    if (screen === "details") {
+      return (
+        <section className="welcome-card">
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => setScreen("dashboard")}
+          >
+            Wróć
+          </button>
+          <h1>Zgłoszenie #{selectedTicketId}</h1>
+
+          {isLoadingTicketDetail && <p>Ładowanie szczegółów...</p>}
+
+          {!isLoadingTicketDetail && ticketDetailError !== "" && (
+            <>
+              <p>{ticketDetailError}</p>
+              <button
+                type="button"
+                className="login-button"
+                onClick={refreshTicketDetail}
+              >
+                Spróbuj ponownie
+              </button>
+            </>
+          )}
+
+          {!isLoadingTicketDetail &&
+            ticketDetailError === "" &&
+            ticketDetail !== null && (
+              <>
+                <h2>{ticketDetail.title}</h2>
+                <p className="ticket-status">
+                  Status: {formatTicketStatus(ticketDetail.status)}
+                </p>
+                <p className="priority-ticket">
+                  Priorytet {ticketDetail.priority}/5
+                </p>
+                <p>{ticketDetail.description}</p>
+              </>
+            )}
+        </section>
       );
     }
     return (
@@ -185,6 +285,10 @@ function App() {
   function refreshTickets() {
     setTicketsRefreshKey((previous) => previous + 1);
   }
+  function refreshTicketDetail() {
+    setTicketDetailRefreshKey((previous) => previous + 1);
+  }
+
   return (
     <div className="app-shell">
       {renderCurrentScreen()}
