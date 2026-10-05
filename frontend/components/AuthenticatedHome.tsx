@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { TicketSummary } from "../ticket";
+import { formatTicketStatus, TicketSummary } from "../ticket";
 import { getCsrfToken } from "../get-csrf-token";
 
 export function AuthenticatedHome(prop: {
@@ -82,6 +82,7 @@ export function AuthenticatedHome(prop: {
       <h2>Aktywne zgłoszenia</h2>
       <button
         type="button"
+        className="refresh-tickets-button"
         onClick={prop.onRefreshTickets}
         disabled={prop.isLoadingTickets}
       >
@@ -94,15 +95,19 @@ export function AuthenticatedHome(prop: {
         (prop.tickets.length === 0 ? (
           <p>Nie masz jeszcze aktywnych zgłoszeń</p>
         ) : (
-          <ul>
+          <ul className="ticket-list">
             {prop.tickets.map((ticket) => (
               <li key={ticket.id}>
                 <button
                   type="button"
+                  className="ticket-title-button"
                   onClick={() => prop.onTicketClick(ticket.id)}
                 >
                   #{ticket.id} - {ticket.title}
                 </button>
+                <span className="ticket-status">
+                  Status: {formatTicketStatus(ticket.status)}
+                </span>
               </li>
             ))}
           </ul>
@@ -137,6 +142,7 @@ export function AuthenticatedHome(prop: {
       <p>{prop.message}</p>
       <button
         type="button"
+        className="logout-button"
         onClick={prop.onLogoutClick}
         disabled={prop.isLoggingOut}
       >

@@ -1,6 +1,7 @@
 export type TicketSummary = {
   id: number;
   title: string;
+  status: "Open" | "InProgress" | "Closed";
 };
 
 export type TicketDetail = {
@@ -25,9 +26,21 @@ export function parseTicket(data: unknown): TicketSummary {
   if (!data.title.trim()) {
     throw new Error("Title zgłoszenia nie może być puste");
   }
+  if (!("status" in data) || typeof data.status !== "string") {
+    throw new Error("Brak status lub nieprawidłowy typ");
+  }
+  if (
+    data.status !== "Open" &&
+    data.status !== "InProgress" &&
+    data.status !== "Closed"
+  ) {
+    throw new Error("Status nie zawiera dopuszczalnych statusów.");
+  }
+
   return {
     id: data.id,
     title: data.title,
+    status: data.status,
   };
 }
 export function parseTicketDetails(data: unknown): TicketDetail {

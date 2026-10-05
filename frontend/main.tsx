@@ -10,7 +10,7 @@ import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
 import { getCsrfToken } from "./get-csrf-token";
 import { TicketSummary, parseTicket } from "./ticket";
 import { TicketDetail, parseTicketDetails } from "./ticket";
-import { formatTicketStatus } from "./ticket";
+import { TicketDetailsScreen } from "./components/TicketDetailsScreen";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
@@ -82,6 +82,10 @@ function App() {
           credentials: "same-origin",
         });
         if (ignore) return;
+        if (loadTicketsResponse.status === 401) {
+          setScreen("login");
+          return;
+        }
         if (!loadTicketsResponse.ok) {
           setTicketsError("Nie udało się pobrać zgłoszeń");
           return;
@@ -126,6 +130,16 @@ function App() {
           },
         );
         if (ignore) return;
+        if (ticketDetailResponse.status === 401) {
+          setScreen("login");
+          return;
+        }
+        if (ticketDetailResponse.status === 404) {
+          setTicketDetailError(
+            "Zgłoszenie nie istnieje lub nie masz do niego dostępu.",
+          );
+          return;
+        }
         if (!ticketDetailResponse.ok) {
           setTicketDetailError(
             "Nie udało się pobrać szczegółów zgłoszenia, sprawdź połączenie i spróbuj ponownie.",
@@ -201,46 +215,14 @@ function App() {
     }
     if (screen === "details") {
       return (
-        <section className="welcome-card">
-          <button
-            type="button"
-            className="back-button"
-            onClick={() => setScreen("dashboard")}
-          >
-            Wróć
-          </button>
-          <h1>Zgłoszenie #{selectedTicketId}</h1>
-
-          {isLoadingTicketDetail && <p>Ładowanie szczegółów...</p>}
-
-          {!isLoadingTicketDetail && ticketDetailError !== "" && (
-            <>
-              <p>{ticketDetailError}</p>
-              <button
-                type="button"
-                className="login-button"
-                onClick={refreshTicketDetail}
-              >
-                Spróbuj ponownie
-              </button>
-            </>
-          )}
-
-          {!isLoadingTicketDetail &&
-            ticketDetailError === "" &&
-            ticketDetail !== null && (
-              <>
-                <h2>{ticketDetail.title}</h2>
-                <p className="ticket-status">
-                  Status: {formatTicketStatus(ticketDetail.status)}
-                </p>
-                <p className="priority-ticket">
-                  Priorytet {ticketDetail.priority}/5
-                </p>
-                <p>{ticketDetail.description}</p>
-              </>
-            )}
-        </section>
+        <TicketDetailsScreen
+          selectedTicketId={selectedTicketId}
+          ticketDetail={ticketDetail}
+          isLoadingTicketDetail={isLoadingTicketDetail}
+          ticketDetailError={ticketDetailError}
+          onBackClick={() => setScreen("dashboard")}
+          onRetryClick={refreshTicketDetail}
+        />
       );
     }
     return (

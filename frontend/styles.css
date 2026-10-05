@@ -117,3 +117,60 @@ body {
   display: inline-block;
   margin: 0 8px 16px 0;
 }
+.ticket-list li {
+  margin-bottom: 12px;
+}
+
+.ticket-list .ticket-status {
+  margin: 0 0 0 8px;
+}
+.refresh-tickets-button {
+  background-color: white;
+  color: #1d4ed8;
+  border: 1px solid #b7c7e4;
+  border-radius: 10px;
+  padding: 6px 12px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.refresh-tickets-button:hover {
+  background-color: #dbeafe;
+}
+.ticket-title-button {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #b7c7e4;
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 100%;
+  cursor: pointer;
+  text-align: left;
+  word-break: break-word;
+  white-space: normal;
+  display: inline-block;
+}
+.ticket-title-button:hover {
+  background-color: #dbeafe;
+}
+.logout-button {
+  background-color: WHITE;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 6px 12px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.logout-button:hover {
+  background-color: #f1f5f9;
+}
