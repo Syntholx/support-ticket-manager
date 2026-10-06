@@ -174,3 +174,39 @@ body {
 .logout-button:hover {
   background-color: #f1f5f9;
 }
+.guest-login-button {
+  background-color: #1d4ed8;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 600;
+  max-width: 100%;
+  cursor: pointer;
+}
+.guest-login-button:hover {
+  background-color: #1e40af;
+}
+.guest-register-button {
+  background-color: white;
+  color: #1d4ed8;
+  border: 1px solid #b7c7e4;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 600;
+  max-width: 100%;
+  cursor: pointer;
+}
+.guest-register-button:hover {
+  background-color: #eff6ff;
+}
+
+.guest-action {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}

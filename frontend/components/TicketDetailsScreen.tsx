@@ -8,6 +8,9 @@ export function TicketDetailsScreen(props: {
   isLoadingTicketDetail: boolean;
   ticketDetailError: string;
   onRetryClick: () => void;
+  onCloseTicket: () => void;
+  isClosingTicket: boolean;
+  closeTicketMessage: string;
 }) {
   return (
     <section className="welcome-card">
@@ -41,6 +44,17 @@ export function TicketDetailsScreen(props: {
               Priorytet {props.ticketDetail.priority}/5
             </p>
             <p>{props.ticketDetail.description}</p>
+            {props.ticketDetail.status !== "Closed" && (
+              <button
+                type="button"
+                className="login-button"
+                onClick={props.onCloseTicket}
+                disabled={props.isClosingTicket}
+              >
+                Zamknij zgłoszenie
+              </button>
+            )}
+            <p>{props.closeTicketMessage}</p>
           </>
         )}
     </section>

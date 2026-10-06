@@ -31,6 +31,8 @@ function App() {
   const [logoutMessage, setLogoutMessage] = useState("");
   const [hasSessionError, setSessionError] = useState(false);
   const [sessionMessage, setSessionMessage] = useState("Sprawdzam sesję...");
+  const [isClosingTicket, setClosingTicket] = useState(false);
+  const [closeTicketMessage, setCloseTicketMessage] = useState("");
   const [screen, setScreen] = useState<
     | "guest"
     | "login"
@@ -198,6 +200,7 @@ function App() {
           onRefreshTickets={refreshTickets}
           onTicketClick={(id) => {
             setTicketDetail(null);
+            setCloseTicketMessage("");
             setSelectedTicketId(id);
             setScreen("details");
           }}
@@ -222,6 +225,9 @@ function App() {
           ticketDetailError={ticketDetailError}
           onBackClick={() => setScreen("dashboard")}
           onRetryClick={refreshTicketDetail}
+          onCloseTicket={handleCloseTicketClick}
+          isClosingTicket={isClosingTicket}
+          closeTicketMessage={closeTicketMessage}
         />
       );
     }
@@ -270,7 +276,59 @@ function App() {
   function refreshTicketDetail() {
     setTicketDetailRefreshKey((previous) => previous + 1);
   }
-
+  async function handleCloseTicketClick() {
+    if (selectedTicketId === null) return;
+    setClosingTicket(true);
+    setCloseTicketMessage("Zamykam zgłoszenie...");
+    try {
+      const csrfToken = await getCsrfToken();
+      if (csrfToken === null) {
+        setCloseTicketMessage(
+          "Nie udało się przygotować bezpiecznego zamknięcia zgłoszenia.",
+        );
+        return;
+      }
+      const responseCloseTicket = await fetch(
+        `/api/tickets/${selectedTicketId}/close`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+          },
+        },
+      );
+      if (responseCloseTicket.status === 401) {
+        setScreen("login");
+        return;
+      }
+      if (responseCloseTicket.status === 409) {
+        setCloseTicketMessage("Zgłoszenie jest już zamknięte");
+        refreshTicketDetail();
+        return;
+      }
+      if (responseCloseTicket.status === 404) {
+        setCloseTicketMessage(
+          "Zgłoszenie nie istnieje lub nie masz do niego dostępu",
+        );
+        return;
+      }
+      if (!responseCloseTicket.ok) {
+        setCloseTicketMessage(
+          "Wystąpił problem z zamknięciem zgłoszenia. Spróbuj ponownie.",
+        );
+        return;
+      }
+      setCloseTicketMessage("Zgłoszenie zamknięte");
+      refreshTicketDetail();
+    } catch (error) {
+      setCloseTicketMessage(
+        "Nie udało się zamknąć zgłoszenia. Spróbuj ponownie.",
+      );
+    } finally {
+      setClosingTicket(false);
+    }
+  }
   return (
     <div className="app-shell">
       {renderCurrentScreen()}
