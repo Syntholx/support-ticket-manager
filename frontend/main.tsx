@@ -8,9 +8,18 @@ import { RegisterScreen } from "./components/RegisterScreen";
 import { useState, useEffect } from "react";
 import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
 import { getCsrfToken } from "./get-csrf-token";
-import { TicketSummary, parseTicket } from "./ticket";
-import { TicketDetail, parseTicketDetails } from "./ticket";
 import { TicketDetailsScreen } from "./components/TicketDetailsScreen";
+import { useTicketDetails } from "./hooks/useTicketDetails";
+import { useTickets } from "./hooks/useTickets";
+import {
+  BrowserRouter,
+  Route,
+  useLocation,
+  useNavigate,
+  Routes,
+  Navigate,
+} from "react-router";
+import { useMatch } from "react-router";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
@@ -18,31 +27,63 @@ if (!(app instanceof HTMLElement)) {
 }
 
 function App() {
-  const [ticketDetailRefreshKey, setTicketDetailRefreshKey] = useState(0);
-  const [ticketDetail, setTicketDetail] = useState<TicketDetail | null>(null);
-  const [isLoadingTicketDetail, setLoadingTicketDetail] = useState(false);
-  const [ticketDetailError, setTicketDetailError] = useState("");
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
-  const [ticketsError, setTicketsError] = useState("");
-  const [tickets, setTickets] = useState<TicketSummary[]>([]);
-  const [isLoadingTickets, setLoadingTickets] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const ticketMatch = useMatch("/tickets/:ticketId");
+  const ticketIdText = ticketMatch?.params.ticketId;
+  const ticketIdNumber = Number(ticketIdText);
+  const selectedTicketId =
+    ticketIdText !== undefined &&
+    /^[1-9]\d*$/.test(ticketIdText) &&
+    Number.isSafeInteger(ticketIdNumber)
+      ? ticketIdNumber
+      : null;
+  const [isCheckingSession, setCheckingSession] = useState(
+    location.pathname !== "/confirm-email",
+  );
+  const [isAuthenticated, setAuthenticated] = useState(false);
   const [isLoggingOut, setLoggingOut] = useState(false);
   const [logoutMessage, setLogoutMessage] = useState("");
   const [hasSessionError, setSessionError] = useState(false);
   const [sessionMessage, setSessionMessage] = useState("Sprawdzam sesję...");
-  const [isClosingTicket, setClosingTicket] = useState(false);
-  const [closeTicketMessage, setCloseTicketMessage] = useState("");
-  const [screen, setScreen] = useState<
-    | "guest"
-    | "login"
-    | "register"
-    | "confirm"
-    | "dashboard"
-    | "checking"
-    | "details"
-  >(window.location.pathname === "/confirm-email" ? "confirm" : "checking");
+  const {
+    ticketDetail,
+    isLoadingTicketDetail,
+    ticketDetailError,
+    hasSessionExpired: detailsSessionExpired,
+    refreshTicketDetail,
+    isClosingTicket,
+    closeTicketMessage,
+    handleCloseTicketClick,
+  } = useTicketDetails(
+    ticketMatch !== null &&
+      selectedTicketId !== null &&
+      isAuthenticated &&
+      !isCheckingSession &&
+      !hasSessionError,
+    selectedTicketId,
+  );
+  const {
+    tickets,
+    ticketsError,
+    isLoadingTickets,
+    hasSessionExpired: ticketsSessionExpired,
+    refreshTickets,
+  } = useTickets(
+    location.pathname === "/tickets" &&
+      isAuthenticated &&
+      !isCheckingSession &&
+      !hasSessionError,
+  );
+  useEffect(() => {
+    if (detailsSessionExpired || ticketsSessionExpired) {
+      setAuthenticated(false);
+      navigate("/login", { replace: true });
+    }
+  }, [ticketsSessionExpired, detailsSessionExpired, navigate]);
+
   async function checkSession() {
+    setCheckingSession(true);
     setSessionError(false);
     setSessionMessage("Sprawdzam sesję...");
     try {
@@ -51,9 +92,9 @@ function App() {
         credentials: "same-origin",
       });
       if (meResponse.status === 200) {
-        setScreen("dashboard");
+        setAuthenticated(true);
       } else if (meResponse.status === 401) {
-        setScreen("guest");
+        setAuthenticated(false);
       } else {
         setSessionError(true);
         setSessionMessage(
@@ -65,6 +106,8 @@ function App() {
       setSessionMessage(
         "Nie udało się sprawdzić sesji. Sprawdź API i odswież stronę.",
       );
+    } finally {
+      setCheckingSession(false);
     }
   }
   useEffect(() => {
@@ -72,142 +115,13 @@ function App() {
 
     checkSession();
   }, []);
-  useEffect(() => {
-    if (screen !== "dashboard") return;
-    setTickets([]);
-    setTicketsError("");
-    setLoadingTickets(true);
-    let ignore = false;
-    async function loadTickets() {
-      try {
-        const loadTicketsResponse = await fetch("/api/tickets", {
-          credentials: "same-origin",
-        });
-        if (ignore) return;
-        if (loadTicketsResponse.status === 401) {
-          setScreen("login");
-          return;
-        }
-        if (!loadTicketsResponse.ok) {
-          setTicketsError("Nie udało się pobrać zgłoszeń");
-          return;
-        }
-        const ticketsData: unknown = await loadTicketsResponse.json();
-        if (ignore) return;
-        if (!Array.isArray(ticketsData)) {
-          setTicketsError("Api zwróciło nieprawidłową listę zgłoszeń");
-          return;
-        }
-        const parsedTickets = ticketsData.map(parseTicket);
-        setTickets(parsedTickets);
-      } catch (error) {
-        if (!ignore) {
-          setTicketsError(
-            "Nie udało się pobrać lub odczytać zgłoszeń, sprawdź połączenie i spróbuj ponownie.",
-          );
-          return;
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingTickets(false);
-        }
-      }
-    }
-    loadTickets();
-    return () => {
-      ignore = true;
-    };
-  }, [screen, ticketsRefreshKey]);
-  useEffect(() => {
-    if (screen !== "details" || selectedTicketId === null) return;
-    setTicketDetailError("");
-    setLoadingTicketDetail(true);
-    let ignore = false;
-    async function loadTicketDetail() {
-      try {
-        const ticketDetailResponse = await fetch(
-          `/api/tickets/${selectedTicketId}`,
-          {
-            credentials: "same-origin",
-          },
-        );
-        if (ignore) return;
-        if (ticketDetailResponse.status === 401) {
-          setScreen("login");
-          return;
-        }
-        if (ticketDetailResponse.status === 404) {
-          setTicketDetailError(
-            "Zgłoszenie nie istnieje lub nie masz do niego dostępu.",
-          );
-          return;
-        }
-        if (!ticketDetailResponse.ok) {
-          setTicketDetailError(
-            "Nie udało się pobrać szczegółów zgłoszenia, sprawdź połączenie i spróbuj ponownie.",
-          );
-          return;
-        }
-        const ticketDetailsData: unknown = await ticketDetailResponse.json();
-        if (ignore) return;
-        setTicketDetail(parseTicketDetails(ticketDetailsData));
-      } catch (error) {
-        if (!ignore) {
-          setTicketDetailError("Błąd połączenia lub odczytu danych");
-        }
-      } finally {
-        if (!ignore) {
-          setLoadingTicketDetail(false);
-        }
-      }
-    }
-    loadTicketDetail();
-    return () => {
-      ignore = true;
-    };
-  }, [screen, selectedTicketId, ticketDetailRefreshKey]);
 
   function openLoginFromConfirmation() {
-    window.history.replaceState(null, "", "/");
-    setScreen("login");
+    navigate("/login", { replace: true });
   }
 
   function renderCurrentScreen() {
-    if (screen === "login") {
-      return (
-        <LoginScreen
-          onBackClick={() => setScreen("guest")}
-          onLoginSuccess={() => setScreen("dashboard")}
-        />
-      );
-    }
-    if (screen === "register") {
-      return <RegisterScreen onBackClick={() => setScreen("guest")} />;
-    }
-    if (screen === "confirm") {
-      return <ConfirmEmailScreen onLoginClick={openLoginFromConfirmation} />;
-    }
-    if (screen === "dashboard") {
-      return (
-        <AuthenticatedHome
-          tickets={tickets}
-          message={logoutMessage}
-          onLogoutClick={handleLogoutClick}
-          isLoggingOut={isLoggingOut}
-          isLoadingTickets={isLoadingTickets}
-          ticketsError={ticketsError}
-          onTicketCreated={refreshTickets}
-          onRefreshTickets={refreshTickets}
-          onTicketClick={(id) => {
-            setTicketDetail(null);
-            setCloseTicketMessage("");
-            setSelectedTicketId(id);
-            setScreen("details");
-          }}
-        />
-      );
-    }
-    if (screen === "checking") {
+    if (isCheckingSession || hasSessionError) {
       return (
         <CheckingSession
           message={sessionMessage}
@@ -216,26 +130,117 @@ function App() {
         />
       );
     }
-    if (screen === "details") {
+    if (
+      !isAuthenticated &&
+      (location.pathname === "/tickets" || ticketMatch !== null)
+    ) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (
+      isAuthenticated &&
+      (location.pathname === "/" || location.pathname === "/login")
+    ) {
+      return <Navigate to="/tickets" replace />;
+    }
+    if (ticketMatch !== null && selectedTicketId === null) {
       return (
-        <TicketDetailsScreen
-          selectedTicketId={selectedTicketId}
-          ticketDetail={ticketDetail}
-          isLoadingTicketDetail={isLoadingTicketDetail}
-          ticketDetailError={ticketDetailError}
-          onBackClick={() => setScreen("dashboard")}
-          onRetryClick={refreshTicketDetail}
-          onCloseTicket={handleCloseTicketClick}
-          isClosingTicket={isClosingTicket}
-          closeTicketMessage={closeTicketMessage}
-        />
+        <section className="welcome-card">
+          <h1>Nieprawidłowy numer zgłoszenia</h1>
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => navigate("/tickets")}
+          >
+            {" "}
+            Wróć do listy
+          </button>
+        </section>
       );
     }
     return (
-      <GuestHome
-        onLoginClick={() => setScreen("login")}
-        onRegisterClick={() => setScreen("register")}
-      />
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <LoginScreen
+              onBackClick={() => navigate("/")}
+              onLoginSuccess={() => {
+                setAuthenticated(true);
+                navigate("/tickets", { replace: true });
+              }}
+            />
+          }
+        />
+        <Route
+          path="/register"
+          element={<RegisterScreen onBackClick={() => navigate("/")} />}
+        />
+        <Route
+          path="/confirm-email"
+          element={
+            <ConfirmEmailScreen onLoginClick={openLoginFromConfirmation} />
+          }
+        />
+        <Route
+          path="/tickets"
+          element={
+            <AuthenticatedHome
+              tickets={tickets}
+              message={logoutMessage}
+              onLogoutClick={handleLogoutClick}
+              isLoggingOut={isLoggingOut}
+              isLoadingTickets={isLoadingTickets}
+              ticketsError={ticketsError}
+              onTicketCreated={refreshTickets}
+              onRefreshTickets={refreshTickets}
+              onTicketClick={(id) => {
+                navigate(`/tickets/${id}`);
+              }}
+            />
+          }
+        />
+        <Route
+          path="/tickets/:ticketId"
+          element={
+            <TicketDetailsScreen
+              selectedTicketId={selectedTicketId}
+              ticketDetail={ticketDetail}
+              isLoadingTicketDetail={isLoadingTicketDetail}
+              ticketDetailError={ticketDetailError}
+              onBackClick={() => navigate("/tickets")}
+              onRetryClick={refreshTicketDetail}
+              onCloseTicket={handleCloseTicketClick}
+              isClosingTicket={isClosingTicket}
+              closeTicketMessage={closeTicketMessage}
+            />
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <GuestHome
+              onLoginClick={() => navigate("/login")}
+              onRegisterClick={() => navigate("/register")}
+            />
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <section className="welcome-card">
+              <h1>Nie znaleziono strony</h1>
+              <button
+                type="button"
+                className="back-button"
+                onClick={() => navigate("/")}
+              >
+                Wróć na stronę główną
+              </button>
+            </section>
+          }
+        />
+      </Routes>
     );
   }
   async function handleLogoutClick() {
@@ -260,7 +265,8 @@ function App() {
         );
         return;
       }
-      setScreen("guest");
+      setAuthenticated(false);
+      navigate("/", { replace: true });
       setLogoutMessage("");
     } catch (error) {
       setLogoutMessage(
@@ -270,65 +276,7 @@ function App() {
       setLoggingOut(false);
     }
   }
-  function refreshTickets() {
-    setTicketsRefreshKey((previous) => previous + 1);
-  }
-  function refreshTicketDetail() {
-    setTicketDetailRefreshKey((previous) => previous + 1);
-  }
-  async function handleCloseTicketClick() {
-    if (selectedTicketId === null) return;
-    setClosingTicket(true);
-    setCloseTicketMessage("Zamykam zgłoszenie...");
-    try {
-      const csrfToken = await getCsrfToken();
-      if (csrfToken === null) {
-        setCloseTicketMessage(
-          "Nie udało się przygotować bezpiecznego zamknięcia zgłoszenia.",
-        );
-        return;
-      }
-      const responseCloseTicket = await fetch(
-        `/api/tickets/${selectedTicketId}/close`,
-        {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "X-CSRF-TOKEN": csrfToken,
-          },
-        },
-      );
-      if (responseCloseTicket.status === 401) {
-        setScreen("login");
-        return;
-      }
-      if (responseCloseTicket.status === 409) {
-        setCloseTicketMessage("Zgłoszenie jest już zamknięte");
-        refreshTicketDetail();
-        return;
-      }
-      if (responseCloseTicket.status === 404) {
-        setCloseTicketMessage(
-          "Zgłoszenie nie istnieje lub nie masz do niego dostępu",
-        );
-        return;
-      }
-      if (!responseCloseTicket.ok) {
-        setCloseTicketMessage(
-          "Wystąpił problem z zamknięciem zgłoszenia. Spróbuj ponownie.",
-        );
-        return;
-      }
-      setCloseTicketMessage("Zgłoszenie zamknięte");
-      refreshTicketDetail();
-    } catch (error) {
-      setCloseTicketMessage(
-        "Nie udało się zamknąć zgłoszenia. Spróbuj ponownie.",
-      );
-    } finally {
-      setClosingTicket(false);
-    }
-  }
+
   return (
     <div className="app-shell">
       {renderCurrentScreen()}
@@ -337,4 +285,8 @@ function App() {
   );
 }
 
-createRoot(app).render(<App />);
+createRoot(app).render(
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>,
+);

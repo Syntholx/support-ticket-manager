@@ -14,7 +14,12 @@ export function TicketDetailsScreen(props: {
 }) {
   return (
     <section className="welcome-card">
-      <button type="button" className="back-button" onClick={props.onBackClick}>
+      <button
+        type="button"
+        className="back-button"
+        onClick={props.onBackClick}
+        disabled={props.isClosingTicket}
+      >
         Wróć
       </button>
       <h1>Zgłoszenie #{props.selectedTicketId}</h1>
