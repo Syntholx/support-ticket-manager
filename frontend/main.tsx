@@ -5,12 +5,12 @@ import { GuestHome } from "./components/GuestHome";
 import { AuthenticatedHome } from "./components/AuthenticatedHome";
 import { CheckingSession } from "./components/CheckingSession";
 import { RegisterScreen } from "./components/RegisterScreen";
-import { useState, useEffect } from "react";
+import { useEffect, startTransition } from "react";
 import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
-import { getCsrfToken } from "./get-csrf-token";
 import { TicketDetailsScreen } from "./components/TicketDetailsScreen";
 import { useTicketDetails } from "./hooks/useTicketDetails";
 import { useTickets } from "./hooks/useTickets";
+import { useSession } from "./hooks/useSession";
 import {
   BrowserRouter,
   Route,
@@ -18,8 +18,9 @@ import {
   useNavigate,
   Routes,
   Navigate,
+  useMatch,
 } from "react-router";
-import { useMatch } from "react-router";
+import { useLogout } from "./hooks/useLogout";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
@@ -38,14 +39,15 @@ function App() {
     Number.isSafeInteger(ticketIdNumber)
       ? ticketIdNumber
       : null;
-  const [isCheckingSession, setCheckingSession] = useState(
-    location.pathname !== "/confirm-email",
-  );
-  const [isAuthenticated, setAuthenticated] = useState(false);
-  const [isLoggingOut, setLoggingOut] = useState(false);
-  const [logoutMessage, setLogoutMessage] = useState("");
-  const [hasSessionError, setSessionError] = useState(false);
-  const [sessionMessage, setSessionMessage] = useState("Sprawdzam sesję...");
+
+  const {
+    isAuthenticated,
+    isCheckingSession,
+    hasSessionError,
+    sessionMessage,
+    checkSession,
+    setAuthenticated,
+  } = useSession(location.pathname !== "/confirm-email");
   const {
     ticketDetail,
     isLoadingTicketDetail,
@@ -63,6 +65,7 @@ function App() {
       !hasSessionError,
     selectedTicketId,
   );
+
   const {
     tickets,
     ticketsError,
@@ -75,46 +78,18 @@ function App() {
       !isCheckingSession &&
       !hasSessionError,
   );
+  const { isLoggingOut, logoutMessage, handleLogoutClick } = useLogout(() => {
+    startTransition(() => {
+      setAuthenticated(false);
+      navigate("/", { replace: true });
+    });
+  });
   useEffect(() => {
     if (detailsSessionExpired || ticketsSessionExpired) {
       setAuthenticated(false);
       navigate("/login", { replace: true });
     }
   }, [ticketsSessionExpired, detailsSessionExpired, navigate]);
-
-  async function checkSession() {
-    setCheckingSession(true);
-    setSessionError(false);
-    setSessionMessage("Sprawdzam sesję...");
-    try {
-      const meResponse = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "same-origin",
-      });
-      if (meResponse.status === 200) {
-        setAuthenticated(true);
-      } else if (meResponse.status === 401) {
-        setAuthenticated(false);
-      } else {
-        setSessionError(true);
-        setSessionMessage(
-          "Nie udało się sprawdzić sesji. Sprawdź API i odswież stronę.",
-        );
-      }
-    } catch {
-      setSessionError(true);
-      setSessionMessage(
-        "Nie udało się sprawdzić sesji. Sprawdź API i odswież stronę.",
-      );
-    } finally {
-      setCheckingSession(false);
-    }
-  }
-  useEffect(() => {
-    if (window.location.pathname === "/confirm-email") return;
-
-    checkSession();
-  }, []);
 
   function openLoginFromConfirmation() {
     navigate("/login", { replace: true });
@@ -242,39 +217,6 @@ function App() {
         />
       </Routes>
     );
-  }
-  async function handleLogoutClick() {
-    setLogoutMessage("Przygotowuję wylogowanie...");
-    setLoggingOut(true);
-    try {
-      const csrfToken = await getCsrfToken();
-      if (csrfToken === null) {
-        setLogoutMessage("Nie udało się przygotować bezpiecznego wylogowania.");
-        return;
-      }
-      const logoutResponse = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "X-CSRF-TOKEN": csrfToken,
-        },
-      });
-      if (!logoutResponse.ok) {
-        setLogoutMessage(
-          "Wystąpił problem z wylogowaniem, sprawdź połączenie i spróbuj ponownie.",
-        );
-        return;
-      }
-      setAuthenticated(false);
-      navigate("/", { replace: true });
-      setLogoutMessage("");
-    } catch (error) {
-      setLogoutMessage(
-        "Błąd API lub sieci, sprawdź połączenie i spróbuj ponownie.",
-      );
-    } finally {
-      setLoggingOut(false);
-    }
   }
 
   return (
