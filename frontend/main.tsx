@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { ArchivedTicketsScreen } from "./components/ArchivedTicketsScreen";
 import { LoginScreen } from "./components/LoginScreen";
 import { StatusPanel } from "./components/StatusPanel";
 import { GuestHome } from "./components/GuestHome";
@@ -33,6 +34,8 @@ function App() {
   const ticketMatch = useMatch("/tickets/:ticketId");
   const ticketIdText = ticketMatch?.params.ticketId;
   const ticketIdNumber = Number(ticketIdText);
+  const isArchiveRoute = location.pathname === "/tickets/archived";
+  const isTicketDetailsRoute = ticketMatch !== null && !isArchiveRoute;
   const selectedTicketId =
     ticketIdText !== undefined &&
     /^[1-9]\d*$/.test(ticketIdText) &&
@@ -58,7 +61,7 @@ function App() {
     closeTicketMessage,
     handleCloseTicketClick,
   } = useTicketDetails(
-    ticketMatch !== null &&
+    isTicketDetailsRoute &&
       selectedTicketId !== null &&
       isAuthenticated &&
       !isCheckingSession &&
@@ -73,10 +76,11 @@ function App() {
     hasSessionExpired: ticketsSessionExpired,
     refreshTickets,
   } = useTickets(
-    location.pathname === "/tickets" &&
+    (location.pathname === "/tickets" || isArchiveRoute) &&
       isAuthenticated &&
       !isCheckingSession &&
       !hasSessionError,
+    isArchiveRoute ? "archived" : "active",
   );
   const { isLoggingOut, logoutMessage, handleLogoutClick } = useLogout(() => {
     startTransition(() => {
@@ -107,7 +111,9 @@ function App() {
     }
     if (
       !isAuthenticated &&
-      (location.pathname === "/tickets" || ticketMatch !== null)
+      (location.pathname === "/tickets" ||
+        isArchiveRoute ||
+        isTicketDetailsRoute)
     ) {
       return <Navigate to="/login" replace />;
     }
@@ -118,7 +124,7 @@ function App() {
     ) {
       return <Navigate to="/tickets" replace />;
     }
-    if (ticketMatch !== null && selectedTicketId === null) {
+    if (isTicketDetailsRoute && selectedTicketId === null) {
       return (
         <section className="welcome-card">
           <h1>Nieprawidłowy numer zgłoszenia</h1>
@@ -169,6 +175,7 @@ function App() {
               ticketsError={ticketsError}
               onTicketCreated={refreshTickets}
               onRefreshTickets={refreshTickets}
+              onArchiveClick={() => navigate("/tickets/archived")}
               onTicketClick={(id) => {
                 navigate(`/tickets/${id}`);
               }}
@@ -188,6 +195,21 @@ function App() {
               onCloseTicket={handleCloseTicketClick}
               isClosingTicket={isClosingTicket}
               closeTicketMessage={closeTicketMessage}
+            />
+          }
+        />
+        <Route
+          path="/tickets/archived"
+          element={
+            <ArchivedTicketsScreen
+              tickets={tickets}
+              ticketsError={ticketsError}
+              isLoadingTickets={isLoadingTickets}
+              onRefreshClick={refreshTickets}
+              onTicketClick={(id) => {
+                navigate(`/tickets/${id}`);
+              }}
+              onBackClick={() => navigate("/tickets")}
             />
           }
         />

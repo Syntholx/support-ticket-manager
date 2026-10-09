@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { TicketSummary, parseTicket } from "../ticket";
 import { useEffect } from "react";
-export function useTickets(isActive: boolean) {
+export function useTickets(
+  isActive: boolean,
+  listType: "archived" | "active" = "active",
+) {
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [ticketsError, setTicketsError] = useState("");
   const [isLoadingTickets, setLoadingTickets] = useState(true);
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [hasSessionExpired, setSessionExpired] = useState(false);
+
   function refreshTickets() {
     setTicketsRefreshKey((previous) => previous + 1);
   }
   useEffect(() => {
     setSessionExpired(false);
-  }, [isActive]);
+  }, [isActive, listType]);
   useEffect(() => {
     if (!isActive) return;
     setTickets([]);
@@ -22,9 +26,15 @@ export function useTickets(isActive: boolean) {
 
     async function loadTickets() {
       try {
-        const loadTicketsResponse = await fetch("/api/tickets", {
+        let endpoint = "/api/tickets";
+        if (listType === "archived") {
+          endpoint = "/api/tickets/archived";
+        }
+
+        const loadTicketsResponse = await fetch(endpoint, {
           credentials: "same-origin",
         });
+
         if (ignore) return;
         if (loadTicketsResponse.status === 401) {
           setSessionExpired(true);
@@ -59,7 +69,7 @@ export function useTickets(isActive: boolean) {
     return () => {
       ignore = true;
     };
-  }, [isActive, ticketsRefreshKey]);
+  }, [isActive, ticketsRefreshKey, listType]);
 
   return {
     tickets,

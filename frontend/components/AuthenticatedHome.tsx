@@ -12,6 +12,7 @@ export function AuthenticatedHome(prop: {
   onTicketCreated: () => void;
   onRefreshTickets: () => void;
   onTicketClick: (id: number) => void;
+  onArchiveClick: () => void;
 }) {
   const [createMessage, setCreateMessage] = useState("");
   const [isCreatingTicket, setCreatingTicket] = useState(false);
@@ -79,6 +80,13 @@ export function AuthenticatedHome(prop: {
     <section className="welcome-card">
       <h1>Panel użytkownika</h1>
       <p>Witaj! Jesteś zalogowany.</p>
+      <button
+        type="button"
+        className="refresh-tickets-button"
+        onClick={prop.onArchiveClick}
+      >
+        Archiwum zgłoszeń
+      </button>
       <h2>Aktywne zgłoszenia</h2>
       <button
         type="button"
