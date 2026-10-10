@@ -26,10 +26,11 @@ export function StatusPanel(props: { title: string }) {
     }
   }
   return (
-    <section className="status-card">
+    <section className="mt-5 rounded-2xl border border-solid border-[#dce5ef] bg-white p-6 [&>h2]:mt-0">
       <h2>{props.title}</h2>
       <StatusMessage text={message} />
       <button
+        className="min-h-[44px] rounded-[10px] border border-solid border-[#b8c8e4] bg-white px-4 py-2.5 font-semibold text-[#1d4ed8] hover:bg-[#eff6ff] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
         type="button"
         onClick={handleCheckConnection}
         disabled={isLoading}

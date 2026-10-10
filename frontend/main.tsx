@@ -30,7 +30,12 @@ if (!(app instanceof HTMLElement)) {
 
 function App() {
   const location = useLocation();
+  const ticketReturnPath =
+    location.state?.returnTo === "/tickets/archived"
+      ? "/tickets/archived"
+      : "/tickets";
   const navigate = useNavigate();
+
   const ticketMatch = useMatch("/tickets/:ticketId");
   const ticketIdText = ticketMatch?.params.ticketId;
   const ticketIdNumber = Number(ticketIdText);
@@ -126,11 +131,11 @@ function App() {
     }
     if (isTicketDetailsRoute && selectedTicketId === null) {
       return (
-        <section className="welcome-card">
+        <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
           <h1>Nieprawidłowy numer zgłoszenia</h1>
           <button
             type="button"
-            className="back-button"
+            className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
             onClick={() => navigate("/tickets")}
           >
             {" "}
@@ -177,7 +182,9 @@ function App() {
               onRefreshTickets={refreshTickets}
               onArchiveClick={() => navigate("/tickets/archived")}
               onTicketClick={(id) => {
-                navigate(`/tickets/${id}`);
+                navigate(`/tickets/${id}`, {
+                  state: { returnTo: "/tickets" },
+                });
               }}
             />
           }
@@ -190,7 +197,7 @@ function App() {
               ticketDetail={ticketDetail}
               isLoadingTicketDetail={isLoadingTicketDetail}
               ticketDetailError={ticketDetailError}
-              onBackClick={() => navigate("/tickets")}
+              onBackClick={() => navigate(ticketReturnPath)}
               onRetryClick={refreshTicketDetail}
               onCloseTicket={handleCloseTicketClick}
               isClosingTicket={isClosingTicket}
@@ -207,7 +214,9 @@ function App() {
               isLoadingTickets={isLoadingTickets}
               onRefreshClick={refreshTickets}
               onTicketClick={(id) => {
-                navigate(`/tickets/${id}`);
+                navigate(`/tickets/${id}`, {
+                  state: { returnTo: "/tickets/archived" },
+                });
               }}
               onBackClick={() => navigate("/tickets")}
             />
@@ -225,11 +234,11 @@ function App() {
         <Route
           path="*"
           element={
-            <section className="welcome-card">
+            <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
               <h1>Nie znaleziono strony</h1>
               <button
                 type="button"
-                className="back-button"
+                className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
                 onClick={() => navigate("/")}
               >
                 Wróć na stronę główną
@@ -242,7 +251,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="mx-auto my-10 w-full max-w-[760px] p-4">
       {renderCurrentScreen()}
       <StatusPanel title="Status API" />
     </div>

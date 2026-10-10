@@ -77,12 +77,12 @@ export function AuthenticatedHome(prop: {
     }
   }
   return (
-    <section className="welcome-card">
+    <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <h1>Panel użytkownika</h1>
       <p>Witaj! Jesteś zalogowany.</p>
       <button
         type="button"
-        className="refresh-tickets-button"
+        className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
         onClick={prop.onArchiveClick}
       >
         Archiwum zgłoszeń
@@ -90,7 +90,7 @@ export function AuthenticatedHome(prop: {
       <h2>Aktywne zgłoszenia</h2>
       <button
         type="button"
-        className="refresh-tickets-button"
+        className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
         onClick={prop.onRefreshTickets}
         disabled={prop.isLoadingTickets}
       >
@@ -103,17 +103,17 @@ export function AuthenticatedHome(prop: {
         (prop.tickets.length === 0 ? (
           <p>Nie masz jeszcze aktywnych zgłoszeń</p>
         ) : (
-          <ul className="ticket-list">
+          <ul className="m-0 mt-4 list-none p-0">
             {prop.tickets.map((ticket) => (
-              <li key={ticket.id}>
+              <li key={ticket.id} className="mb-3 flex w-full flex-wrap items-center gap-2 rounded-xl border border-solid border-[#dce5ef] bg-white p-3">
                 <button
                   type="button"
-                  className="ticket-title-button"
+                  className="[font-family:inherit] leading-[inherit] inline-block min-h-[44px] max-w-full cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-[#eff6ff] px-3 py-2 text-left text-[14px] font-semibold whitespace-normal [word-break:break-word] text-[#1e40af] hover:bg-[#dbeafe]"
                   onClick={() => prop.onTicketClick(ticket.id)}
                 >
                   #{ticket.id} - {ticket.title}
                 </button>
-                <span className="ticket-status">
+                <span className="m-0 inline-block rounded-full bg-[#f1f5f9] px-2.5 py-1 text-[14px] font-semibold text-[#334155]">
                   Status: {formatTicketStatus(ticket.status)}
                 </span>
               </li>
@@ -122,14 +122,14 @@ export function AuthenticatedHome(prop: {
         ))}
       <h2>Nowe zgłoszenie</h2>
       <form onSubmit={handleCreateTicketSubmit}>
-        <div className="form-field">
+        <div className="mb-4 flex w-full flex-col gap-1.5">
           <label htmlFor="title">Podaj tytuł zgłoszenia</label>
-          <input id="title" name="title" required maxLength={200}></input>
+          <input className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5" id="title" name="title" required maxLength={200}></input>
         </div>
-        <div className="form-field">
+        <div className="mb-4 flex w-full flex-col gap-1.5">
           <label htmlFor="description">Podaj opis problemu</label>
 
-          <textarea
+          <textarea className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             id="description"
             name="description"
             required
@@ -139,7 +139,7 @@ export function AuthenticatedHome(prop: {
         </div>
         <button
           type="submit"
-          className="login-button"
+          className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white"
           disabled={isCreatingTicket}
         >
           Utwórz zgłoszenie
@@ -150,7 +150,7 @@ export function AuthenticatedHome(prop: {
       <p>{prop.message}</p>
       <button
         type="button"
-        className="logout-button"
+        className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#cbd5e1] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#334155] hover:bg-[#f1f5f9]"
         onClick={prop.onLogoutClick}
         disabled={prop.isLoggingOut}
       >
