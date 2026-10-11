@@ -71,7 +71,11 @@ export function LoginScreen(props: {
 
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <button type="button" className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]" onClick={props.onBackClick}>
+      <button
+        type="button"
+        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
+        onClick={props.onBackClick}
+      >
         Wróć
       </button>
       <h1>Logowanie</h1>
@@ -79,7 +83,8 @@ export function LoginScreen(props: {
       <form onSubmit={handleLoginSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
           <label htmlFor="email">Podaj adres e-mail</label>
-          <input className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+          <input
+            className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="email"
             id="email"
             name="email"
@@ -89,7 +94,8 @@ export function LoginScreen(props: {
         </div>
         <div className="mb-4 flex w-full flex-col gap-1.5">
           <label htmlFor="password">Podaj hasło</label>
-          <input className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+          <input
+            className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="password"
             id="password"
             name="password"
@@ -97,8 +103,12 @@ export function LoginScreen(props: {
             required
           ></input>
         </div>
-        <button type="submit" className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white" disabled={isLoggingIn}>
-          Zaloguj się
+        <button
+          type="submit"
+          className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
+          disabled={isLoggingIn}
+        >
+          {isLoggingIn ? "Logowanie..." : "Zaloguj się"}
         </button>
       </form>
     </section>

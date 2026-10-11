@@ -16,7 +16,7 @@ export function TicketDetailsScreen(props: {
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <button
         type="button"
-        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
+        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] disabled:text-[#64748b] disabled:cursor-not-allowed"
         onClick={props.onBackClick}
         disabled={props.isClosingTicket}
       >
@@ -52,11 +52,11 @@ export function TicketDetailsScreen(props: {
             {props.ticketDetail.status !== "Closed" && (
               <button
                 type="button"
-                className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white"
+                className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
                 onClick={props.onCloseTicket}
                 disabled={props.isClosingTicket}
               >
-                Zamknij zgłoszenie
+                {props.isClosingTicket ? "Zamykanie..." : "Zamknij zgłoszenie"}
               </button>
             )}
             <p>{props.closeTicketMessage}</p>

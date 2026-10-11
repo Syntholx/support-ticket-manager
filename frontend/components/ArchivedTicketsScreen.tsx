@@ -1,4 +1,6 @@
-import { TicketSummary, formatTicketStatus } from "../ticket";
+import { TicketSummary } from "../ticket";
+import { TicketList } from "../components/TicketList";
+import { useState } from "react";
 export function ArchivedTicketsScreen(prop: {
   tickets: TicketSummary[];
   isLoadingTickets: boolean;
@@ -7,13 +9,44 @@ export function ArchivedTicketsScreen(prop: {
   onTicketClick: (id: number) => void;
   onBackClick: () => void;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredTickets = prop.tickets.filter((ticket) =>
+    ticket.title.toLowerCase().includes(searchQuery.trim().toLowerCase()),
+  );
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <button type="button" onClick={prop.onBackClick} className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]">
+      <button
+        type="button"
+        onClick={prop.onBackClick}
+        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
+      >
         Wróć do aktywnych
       </button>
       <h1>Archiwum zgłoszeń</h1>
-      <p>Zamknięte zgłoszenia</p>
+      <p>
+        Zamknięte zgłoszenia
+        {!prop.isLoadingTickets && prop.ticketsError === "" && (
+          <>: {prop.tickets.length}</>
+        )}
+      </p>
+      <div className="mb-4 flex w-full flex-col gap-1.5">
+        <label htmlFor="search-Query">Szukaj po tytule</label>
+        <input
+          type="search"
+          id="search-Query"
+          name="search-Query"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+        ></input>
+      </div>
+      {!prop.isLoadingTickets &&
+        prop.ticketsError === "" &&
+        searchQuery.trim() !== "" && (
+          <p className="text-[#64748b] mt-0 mb-[16px] text-[14px]">
+            {`Wyniki:   ${filteredTickets.length}   z   ${prop.tickets.length} pobranych`}
+          </p>
+        )}
       <button
         type="button"
         onClick={prop.onRefreshClick}
@@ -28,23 +61,13 @@ export function ArchivedTicketsScreen(prop: {
         prop.ticketsError === "" &&
         (prop.tickets.length === 0 ? (
           <p>Nie masz jeszcze zamkniętych zgłoszeń.</p>
+        ) : filteredTickets.length === 0 ? (
+          <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania.</p>
         ) : (
-          <ul className="m-0 mt-4 list-none p-0">
-            {prop.tickets.map((ticket) => (
-              <li key={ticket.id} className="mb-3 flex w-full flex-wrap items-center gap-2 rounded-xl border border-solid border-[#dce5ef] bg-white p-3">
-                <button
-                  type="button"
-                  className="[font-family:inherit] leading-[inherit] inline-block min-h-[44px] max-w-full cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-[#eff6ff] px-3 py-2 text-left text-[14px] font-semibold whitespace-normal [word-break:break-word] text-[#1e40af] hover:bg-[#dbeafe]"
-                  onClick={() => prop.onTicketClick(ticket.id)}
-                >
-                  #{ticket.id} - {ticket.title}
-                </button>
-                <span className="m-0 inline-block rounded-full bg-[#f1f5f9] px-2.5 py-1 text-[14px] font-semibold text-[#334155]">
-                  Status: {formatTicketStatus(ticket.status)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <TicketList
+            tickets={filteredTickets}
+            onTicketClick={prop.onTicketClick}
+          />
         ))}
     </section>
   );
