@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { TicketSummary } from "../ticket";
 import { getCsrfToken } from "../get-csrf-token";
 import { TicketList } from "./TicketList";
+import { TicketSearch } from "../components/TicketSearch";
 
 export function AuthenticatedHome(prop: {
   onLogoutClick: () => void;
@@ -99,17 +100,7 @@ export function AuthenticatedHome(prop: {
           <>: {prop.tickets.length} </>
         )}
       </h2>
-      <div className="mb-4 flex w-full flex-col gap-1.5">
-        <label htmlFor="search-Query">Szukaj po tytule</label>
-        <input
-          type="search"
-          id="search-Query"
-          name="search-Query"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.currentTarget.value)}
-          className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
-        ></input>
-      </div>
+      <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (
@@ -117,6 +108,7 @@ export function AuthenticatedHome(prop: {
             {`Wyniki: ${filteredTickets.length} z ${prop.tickets.length} pobranych`}
           </p>
         )}
+
       <button
         type="button"
         className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"

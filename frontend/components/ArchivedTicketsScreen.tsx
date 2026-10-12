@@ -1,6 +1,7 @@
 import { TicketSummary } from "../ticket";
 import { TicketList } from "../components/TicketList";
 import { useState } from "react";
+import { TicketSearch } from "./TicketSearch";
 export function ArchivedTicketsScreen(prop: {
   tickets: TicketSummary[];
   isLoadingTickets: boolean;
@@ -29,17 +30,7 @@ export function ArchivedTicketsScreen(prop: {
           <>: {prop.tickets.length}</>
         )}
       </p>
-      <div className="mb-4 flex w-full flex-col gap-1.5">
-        <label htmlFor="search-Query">Szukaj po tytule</label>
-        <input
-          type="search"
-          id="search-Query"
-          name="search-Query"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.currentTarget.value)}
-          className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
-        ></input>
-      </div>
+      <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (
@@ -47,6 +38,7 @@ export function ArchivedTicketsScreen(prop: {
             {`Wyniki:   ${filteredTickets.length}   z   ${prop.tickets.length} pobranych`}
           </p>
         )}
+
       <button
         type="button"
         onClick={prop.onRefreshClick}
@@ -56,6 +48,12 @@ export function ArchivedTicketsScreen(prop: {
         {prop.isLoadingTickets ? "Odświeżanie..." : "Odśwież listę"}
       </button>
       {prop.ticketsError !== "" && <p>{prop.ticketsError}</p>}
+      {!prop.isLoadingTickets && prop.ticketsError !== "" && (
+        <p className="text-[#64748b] text-[14px] mt-[8px] mb-[16px]">
+          Odświeżanie zakończone błędem. Spróbuj ponownie.
+        </p>
+      )}
+
       {prop.isLoadingTickets && <p>Ładowanie archiwum...</p>}
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
