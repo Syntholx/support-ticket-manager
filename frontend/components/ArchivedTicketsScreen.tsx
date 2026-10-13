@@ -14,6 +14,11 @@ export function ArchivedTicketsScreen(prop: {
   const filteredTickets = prop.tickets.filter((ticket) =>
     ticket.title.toLowerCase().includes(searchQuery.trim().toLowerCase()),
   );
+  const [sortOrder, setSortOrder] = useState("asc");
+  const sortedTickets = [...filteredTickets].sort((a, b) =>
+    sortOrder === "asc" ? a.id - b.id : b.id - a.id,
+  );
+
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <button
@@ -31,6 +36,25 @@ export function ArchivedTicketsScreen(prop: {
         )}
       </p>
       <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
+      <div className="mb-4 flex w-full flex-col gap-1.5">
+        <label htmlFor="ticket-sort">Kolejność</label>
+        <select
+          className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+          id="ticket-sort"
+          value={sortOrder}
+          onChange={(event) => setSortOrder(event.currentTarget.value)}
+        >
+          <option value="asc">ID rosnąco</option>
+          <option value="desc">ID malejąco</option>
+        </select>
+        {!prop.isLoadingTickets &&
+          prop.ticketsError === "" &&
+          prop.tickets.length > 0 && (
+            <p className="text-[14px] text-[#64748b] m-0">
+              Kolejność dotyczy tylko pobranych zgłoszeń.
+            </p>
+          )}
+      </div>
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (
@@ -63,7 +87,7 @@ export function ArchivedTicketsScreen(prop: {
           <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania.</p>
         ) : (
           <TicketList
-            tickets={filteredTickets}
+            tickets={sortedTickets}
             onTicketClick={prop.onTicketClick}
           />
         ))}
