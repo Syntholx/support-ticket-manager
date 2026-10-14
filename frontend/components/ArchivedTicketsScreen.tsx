@@ -2,6 +2,7 @@ import { TicketSummary } from "../ticket";
 import { TicketList } from "../components/TicketList";
 import { useState } from "react";
 import { TicketSearch } from "./TicketSearch";
+import { TicketSort } from "./TicketSort";
 export function ArchivedTicketsScreen(prop: {
   tickets: TicketSummary[];
   isLoadingTickets: boolean;
@@ -37,16 +38,7 @@ export function ArchivedTicketsScreen(prop: {
       </p>
       <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
       <div className="mb-4 flex w-full flex-col gap-1.5">
-        <label htmlFor="ticket-sort">Kolejność</label>
-        <select
-          className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
-          id="ticket-sort"
-          value={sortOrder}
-          onChange={(event) => setSortOrder(event.currentTarget.value)}
-        >
-          <option value="asc">ID rosnąco</option>
-          <option value="desc">ID malejąco</option>
-        </select>
+        <TicketSort order={sortOrder} onOrderChange={setSortOrder} />
         {!prop.isLoadingTickets &&
           prop.ticketsError === "" &&
           prop.tickets.length > 0 && (
@@ -55,6 +47,17 @@ export function ArchivedTicketsScreen(prop: {
             </p>
           )}
       </div>
+      <button
+        type="button"
+        disabled={searchQuery === "" && sortOrder === "asc"}
+        className="[font-family:inherit] self-start mb-[16px] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+        onClick={() => {
+          setSearchQuery("");
+          setSortOrder("asc");
+        }}
+      >
+        Resetuj widok
+      </button>
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (

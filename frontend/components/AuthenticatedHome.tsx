@@ -3,6 +3,7 @@ import { TicketSummary } from "../ticket";
 import { getCsrfToken } from "../get-csrf-token";
 import { TicketList } from "./TicketList";
 import { TicketSearch } from "../components/TicketSearch";
+import { TicketSort } from "../components/TicketSort";
 
 export function AuthenticatedHome(prop: {
   onLogoutClick: () => void;
@@ -82,7 +83,10 @@ export function AuthenticatedHome(prop: {
       setCreatingTicket(false);
     }
   }
-
+  const [sortOrder, setSortOrder] = useState("asc");
+  const sortedTickets = [...filteredTickets].sort((a, b) =>
+    sortOrder === "asc" ? a.id - b.id : b.id - a.id,
+  );
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <h1>Panel użytkownika</h1>
@@ -101,6 +105,27 @@ export function AuthenticatedHome(prop: {
         )}
       </h2>
       <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
+      <div className="mb-4 flex w-full flex-col gap-1.5">
+        <TicketSort order={sortOrder} onOrderChange={setSortOrder} />
+        {!prop.isLoadingTickets &&
+          prop.ticketsError === "" &&
+          prop.tickets.length > 0 && (
+            <p className="text-[14px] text-[#64748b] m-0">
+              Kolejność dotyczy tylko pobranych zgłoszeń.
+            </p>
+          )}
+      </div>
+      <button
+        type="button"
+        disabled={searchQuery === "" && sortOrder === "asc"}
+        className="[font-family:inherit] self-start mb-[16px] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+        onClick={() => {
+          setSearchQuery("");
+          setSortOrder("asc");
+        }}
+      >
+        Resetuj widok
+      </button>
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (
@@ -127,7 +152,7 @@ export function AuthenticatedHome(prop: {
           <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania</p>
         ) : (
           <TicketList
-            tickets={filteredTickets}
+            tickets={sortedTickets}
             onTicketClick={prop.onTicketClick}
           />
         ))}
