@@ -4,6 +4,7 @@ import { getCsrfToken } from "../get-csrf-token";
 import { TicketList } from "./TicketList";
 import { TicketSearch } from "../components/TicketSearch";
 import { TicketSort } from "../components/TicketSort";
+import { TicketSearchShortcuts } from "../components/TicketSearchShortcuts";
 
 export function AuthenticatedHome(prop: {
   onLogoutClick: () => void;
@@ -105,6 +106,12 @@ export function AuthenticatedHome(prop: {
         )}
       </h2>
       <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
+      <div className="mb-[16px] flex flex-row flex-wrap gap-2">
+        <TicketSearchShortcuts
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+        />
+      </div>
       <div className="mb-4 flex w-full flex-col gap-1.5">
         <TicketSort order={sortOrder} onOrderChange={setSortOrder} />
         {!prop.isLoadingTickets &&
@@ -133,7 +140,14 @@ export function AuthenticatedHome(prop: {
             {`Wyniki: ${filteredTickets.length} z ${prop.tickets.length} pobranych`}
           </p>
         )}
-
+      {!prop.isLoadingTickets &&
+        prop.ticketsError === "" &&
+        prop.tickets.length > 0 &&
+        filteredTickets.length === 0 && (
+          <p className="text-[14px] text-[#64748b] mt-0 mb-[16px]">
+            Niektóre zgłoszenia mogą znajdować się na innych stronach danych.
+          </p>
+        )}
       <button
         type="button"
         className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"

@@ -6,7 +6,7 @@ import { GuestHome } from "./components/GuestHome";
 import { AuthenticatedHome } from "./components/AuthenticatedHome";
 import { CheckingSession } from "./components/CheckingSession";
 import { RegisterScreen } from "./components/RegisterScreen";
-import { useEffect, startTransition } from "react";
+import { useEffect, startTransition, useState } from "react";
 import { ConfirmEmailScreen } from "./components/ConfirmEmailScreen";
 import { TicketDetailsScreen } from "./components/TicketDetailsScreen";
 import { useTicketDetails } from "./hooks/useTicketDetails";
@@ -73,7 +73,7 @@ function App() {
       !hasSessionError,
     selectedTicketId,
   );
-
+  const [archivePage, setArchivePage] = useState(1);
   const {
     tickets,
     ticketsError,
@@ -86,6 +86,8 @@ function App() {
       !isCheckingSession &&
       !hasSessionError,
     isArchiveRoute ? "archived" : "active",
+    isArchiveRoute ? archivePage : 1,
+    isArchiveRoute ? 5 : 50,
   );
   const { isLoggingOut, logoutMessage, handleLogoutClick } = useLogout(() => {
     startTransition(() => {
@@ -211,6 +213,11 @@ function App() {
             <ArchivedTicketsScreen
               tickets={tickets}
               ticketsError={ticketsError}
+              page={archivePage}
+              onPreviousPage={() =>
+                setArchivePage((previous) => Math.max(1, previous - 1))
+              }
+              onNextPage={() => setArchivePage((previous) => previous + 1)}
               isLoadingTickets={isLoadingTickets}
               onRefreshClick={refreshTickets}
               onTicketClick={(id) => {

@@ -4,6 +4,8 @@ import { useEffect } from "react";
 export function useTickets(
   isActive: boolean,
   listType: "archived" | "active" = "active",
+  page: number = 1,
+  pageSize: number = 50,
 ) {
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [ticketsError, setTicketsError] = useState("");
@@ -30,6 +32,7 @@ export function useTickets(
         if (listType === "archived") {
           endpoint = "/api/tickets/archived";
         }
+        endpoint = `${endpoint}?page=${page}&pageSize=${pageSize}`;
 
         const loadTicketsResponse = await fetch(endpoint, {
           credentials: "same-origin",
@@ -69,7 +72,7 @@ export function useTickets(
     return () => {
       ignore = true;
     };
-  }, [isActive, ticketsRefreshKey, listType]);
+  }, [isActive, ticketsRefreshKey, listType, page, pageSize]);
 
   return {
     tickets,
