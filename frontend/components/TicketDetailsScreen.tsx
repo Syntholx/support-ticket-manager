@@ -11,6 +11,10 @@ export function TicketDetailsScreen(props: {
   onCloseTicket: () => void;
   isClosingTicket: boolean;
   closeTicketMessage: string;
+  isSupport: boolean;
+  isStartingTicket: boolean;
+  startTicketMessage: string;
+  onStartTicket: () => void;
 }) {
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
@@ -18,7 +22,7 @@ export function TicketDetailsScreen(props: {
         type="button"
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] disabled:text-[#64748b] disabled:cursor-not-allowed"
         onClick={props.onBackClick}
-        disabled={props.isClosingTicket}
+        disabled={props.isClosingTicket || props.isStartingTicket}
       >
         Wróć
       </button>
@@ -49,17 +53,33 @@ export function TicketDetailsScreen(props: {
               Priorytet {props.ticketDetail.priority}/5
             </p>
             <p>{props.ticketDetail.description}</p>
+
+            {props.isSupport && props.ticketDetail.status === "Open" && (
+              <button
+                type="button"
+                disabled={props.isClosingTicket || props.isStartingTicket}
+                onClick={props.onStartTicket}
+                className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] mr-2 px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
+              >
+                {props.isStartingTicket
+                  ? "Rozpoczynanie..."
+                  : "Rozpocznij obsługę"}
+              </button>
+            )}
             {props.ticketDetail.status !== "Closed" && (
               <button
                 type="button"
                 className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
                 onClick={props.onCloseTicket}
-                disabled={props.isClosingTicket}
+                disabled={props.isClosingTicket || props.isStartingTicket}
               >
                 {props.isClosingTicket ? "Zamykanie..." : "Zamknij zgłoszenie"}
               </button>
             )}
             <p>{props.closeTicketMessage}</p>
+            {props.startTicketMessage !== "" && (
+              <p role="status">{props.startTicketMessage}</p>
+            )}
           </>
         )}
     </section>

@@ -29,6 +29,11 @@ if (!(app instanceof HTMLElement)) {
 }
 
 function App() {
+  const [activePage, setActivePage] = useState(1);
+  const activePageSize = 5;
+  const maxActivePage = 10000;
+  const maxArchivePage = 10000;
+  const archivePageSize = 5;
   const location = useLocation();
   const ticketReturnPath =
     location.state?.returnTo === "/tickets/archived"
@@ -55,6 +60,7 @@ function App() {
     sessionMessage,
     checkSession,
     setAuthenticated,
+    isSupport,
   } = useSession(location.pathname !== "/confirm-email");
   const {
     ticketDetail,
@@ -65,6 +71,9 @@ function App() {
     isClosingTicket,
     closeTicketMessage,
     handleCloseTicketClick,
+    isStartingTicket,
+    startTicketMessage,
+    handleStartTicketClick,
   } = useTicketDetails(
     isTicketDetailsRoute &&
       selectedTicketId !== null &&
@@ -86,18 +95,22 @@ function App() {
       !isCheckingSession &&
       !hasSessionError,
     isArchiveRoute ? "archived" : "active",
-    isArchiveRoute ? archivePage : 1,
-    isArchiveRoute ? 5 : 50,
+    isArchiveRoute ? archivePage : activePage,
+    isArchiveRoute ? archivePageSize : activePageSize,
   );
   const { isLoggingOut, logoutMessage, handleLogoutClick } = useLogout(() => {
     startTransition(() => {
       setAuthenticated(false);
+      setArchivePage(1);
+      setActivePage(1);
       navigate("/", { replace: true });
     });
   });
   useEffect(() => {
     if (detailsSessionExpired || ticketsSessionExpired) {
       setAuthenticated(false);
+      setArchivePage(1);
+      setActivePage(1);
       navigate("/login", { replace: true });
     }
   }, [ticketsSessionExpired, detailsSessionExpired, navigate]);
@@ -154,7 +167,7 @@ function App() {
             <LoginScreen
               onBackClick={() => navigate("/")}
               onLoginSuccess={() => {
-                setAuthenticated(true);
+                checkSession();
                 navigate("/tickets", { replace: true });
               }}
             />
@@ -175,6 +188,7 @@ function App() {
           element={
             <AuthenticatedHome
               tickets={tickets}
+              isSupport={isSupport}
               message={logoutMessage}
               onLogoutClick={handleLogoutClick}
               isLoggingOut={isLoggingOut}
@@ -182,6 +196,17 @@ function App() {
               ticketsError={ticketsError}
               onTicketCreated={refreshTickets}
               onRefreshTickets={refreshTickets}
+              page={activePage}
+              pageSize={activePageSize}
+              maxPage={maxActivePage}
+              onNextPage={() =>
+                setActivePage((previous) =>
+                  Math.min(maxActivePage, previous + 1),
+                )
+              }
+              onPreviousPage={() =>
+                setActivePage((previous) => Math.max(1, previous - 1))
+              }
               onArchiveClick={() => navigate("/tickets/archived")}
               onTicketClick={(id) => {
                 navigate(`/tickets/${id}`, {
@@ -195,6 +220,10 @@ function App() {
           path="/tickets/:ticketId"
           element={
             <TicketDetailsScreen
+              isSupport={isSupport}
+              isStartingTicket={isStartingTicket}
+              startTicketMessage={startTicketMessage}
+              onStartTicket={handleStartTicketClick}
               selectedTicketId={selectedTicketId}
               ticketDetail={ticketDetail}
               isLoadingTicketDetail={isLoadingTicketDetail}
@@ -212,12 +241,18 @@ function App() {
           element={
             <ArchivedTicketsScreen
               tickets={tickets}
+              pageSize={archivePageSize}
               ticketsError={ticketsError}
               page={archivePage}
+              maxPage={maxArchivePage}
               onPreviousPage={() =>
                 setArchivePage((previous) => Math.max(1, previous - 1))
               }
-              onNextPage={() => setArchivePage((previous) => previous + 1)}
+              onNextPage={() =>
+                setArchivePage((previous) =>
+                  Math.min(maxArchivePage, previous + 1),
+                )
+              }
               isLoadingTickets={isLoadingTickets}
               onRefreshClick={refreshTickets}
               onTicketClick={(id) => {

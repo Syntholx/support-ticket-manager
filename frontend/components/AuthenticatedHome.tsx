@@ -17,10 +17,17 @@ export function AuthenticatedHome(prop: {
   onRefreshTickets: () => void;
   onTicketClick: (id: number) => void;
   onArchiveClick: () => void;
+  page: number;
+  pageSize: number;
+  maxPage: number;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
+  isSupport: boolean;
 }) {
   const [createMessage, setCreateMessage] = useState("");
   const [isCreatingTicket, setCreatingTicket] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [createdTicketId, setCreatedTicketId] = useState<number | null>(null);
   const filteredTickets = prop.tickets.filter((ticket) =>
     ticket.title.toLowerCase().includes(searchQuery.trim().toLowerCase()),
   );
@@ -41,6 +48,7 @@ export function AuthenticatedHome(prop: {
     const createTicketRequest = { title: title, description: description };
     setCreateMessage("Przygotowuję zgłoszenie..");
     setCreatingTicket(true);
+    setCreatedTicketId(null);
     try {
       const formElement = event.currentTarget;
       const csrfToken = await getCsrfToken();
@@ -77,6 +85,32 @@ export function AuthenticatedHome(prop: {
       }
       prop.onTicketCreated();
       formElement.reset();
+      let createdData: unknown;
+
+      try {
+        createdData = await createResponse.json();
+      } catch {
+        setCreateMessage(
+          "Zgłoszenie utworzono, ale nie udało się odczytać odpowiedzi. Odśwież listę.",
+        );
+        return;
+      }
+
+      if (
+        typeof createdData !== "object" ||
+        createdData === null ||
+        !("id" in createdData) ||
+        typeof createdData.id !== "number" ||
+        !Number.isSafeInteger(createdData.id) ||
+        createdData.id <= 0
+      ) {
+        setCreateMessage(
+          "Zgłoszenie utworzono, ale nie udało się odczytać jego ID. Odśwież listę.",
+        );
+        return;
+      }
+
+      setCreatedTicketId(createdData.id);
       setCreateMessage("Zgłoszenie utworzone.");
     } catch (error) {
       setCreateMessage("Błąd API lub połączenia, sprawdź i spróbuj ponownie. ");
@@ -91,6 +125,10 @@ export function AuthenticatedHome(prop: {
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <h1>Panel użytkownika</h1>
+      <p className="text-[14px] text-[#64748b] mt-[0px] mb-[16px]">
+        {prop.isSupport ? "Uprawnienia: Support" : "Uprawnienia: Użytkownik"}
+      </p>
+
       <p>Witaj! Jesteś zalogowany.</p>
       <button
         type="button"
@@ -161,7 +199,11 @@ export function AuthenticatedHome(prop: {
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         (prop.tickets.length === 0 ? (
-          <p>Nie masz jeszcze aktywnych zgłoszeń</p>
+          <p>
+            {prop.page === 1
+              ? "Nie masz jeszcze aktywnych zgłoszeń"
+              : "Na tej stronie nie ma zgłoszeń, wróć do poprzedniej strony."}
+          </p>
         ) : filteredTickets.length === 0 ? (
           <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania</p>
         ) : (
@@ -170,6 +212,30 @@ export function AuthenticatedHome(prop: {
             onTicketClick={prop.onTicketClick}
           />
         ))}
+      <nav className="flex items-center gap-[8px] flex-wrap mt-[16px]">
+        <button
+          type="button"
+          className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+          onClick={prop.onPreviousPage}
+          disabled={prop.isLoadingTickets || prop.page <= 1}
+        >
+          Poprzednia
+        </button>
+        <p className="m-0">Strona {prop.page}</p>
+        <button
+          type="button"
+          className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+          onClick={prop.onNextPage}
+          disabled={
+            prop.isLoadingTickets ||
+            prop.ticketsError !== "" ||
+            prop.tickets.length < prop.pageSize ||
+            prop.page >= prop.maxPage
+          }
+        >
+          Następna
+        </button>
+      </nav>
       <h2>Nowe zgłoszenie</h2>
       <form onSubmit={handleCreateTicketSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
@@ -202,6 +268,19 @@ export function AuthenticatedHome(prop: {
           {isCreatingTicket ? "Tworzenie..." : "Utwórz zgłoszenie"}
         </button>
         {createMessage !== "" && <p role="status">{createMessage}</p>}
+        {createdTicketId !== null && (
+          <button
+            type="button"
+            className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b] mt-[8px]"
+            onClick={() => {
+              if (createdTicketId !== null) {
+                prop.onTicketClick(createdTicketId);
+              }
+            }}
+          >
+            Otwórz zgłoszenie #{createdTicketId}
+          </button>
+        )}
       </form>
       <p>{prop.message}</p>
       <button

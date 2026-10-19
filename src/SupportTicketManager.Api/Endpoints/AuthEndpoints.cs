@@ -67,7 +67,9 @@ public static class AuthEndpoints
         });
         app.MapGet("/api/auth/me", (ClaimsPrincipal user) => Results.Ok(new
         {
-            id = user.FindFirstValue(ClaimTypes.NameIdentifier), name = user.Identity?.Name
+            id = user.FindFirstValue(ClaimTypes.NameIdentifier),
+            name = user.Identity?.Name,
+            isSupport = user.IsInRole("Support")
         })).RequireAuthorization();
         app.MapPost("/api/auth/logout", async (SignInManager<ApplicationUser> signIn, UserManager<ApplicationUser> users, ClaimsPrincipal principal) =>
         {

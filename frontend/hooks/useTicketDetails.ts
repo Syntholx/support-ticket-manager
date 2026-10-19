@@ -14,6 +14,8 @@ export function useTicketDetails(
   const [hasSessionExpired, setSessionExpired] = useState(false);
   const [isClosingTicket, setClosingTicket] = useState(false);
   const [closeTicketMessage, setCloseTicketMessage] = useState("");
+  const [isStartingTicket, setStartingTicket] = useState(false);
+  const [startTicketMessage, setStartTicketMessage] = useState("");
 
   useEffect(() => {
     setSessionExpired(false);
@@ -21,6 +23,7 @@ export function useTicketDetails(
 
     setTicketDetail(null);
     setCloseTicketMessage("");
+    setStartTicketMessage("");
   }, [isActive, selectedTicketId]);
 
   useEffect(() => {
@@ -76,8 +79,67 @@ export function useTicketDetails(
   function refreshTicketDetail() {
     setTicketDetailRefreshKey((previous) => previous + 1);
   }
+  async function handleStartTicketClick() {
+    if (selectedTicketId === null || isClosingTicket || isStartingTicket)
+      return;
+    setStartingTicket(true);
+    setStartTicketMessage("Rozpoczynam obsługę...");
+    try {
+      const csrfToken = await getCsrfToken();
+      if (csrfToken === null) {
+        setStartTicketMessage(
+          "Nie udało się przygotować bezpiecznie obsługi zgłoszenia.",
+        );
+        return;
+      }
+      const responseStartTicket = await fetch(
+        `/api/tickets/${selectedTicketId}/start`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+          },
+        },
+      );
+      if (responseStartTicket.status === 401) {
+        setSessionExpired(true);
+        return;
+      }
+      if (responseStartTicket.status === 403) {
+        setStartTicketMessage("Nie masz uprawnień do rozpoczęcia obsługi");
+        return;
+      }
+      if (responseStartTicket.status === 404) {
+        setStartTicketMessage("Zgłoszenie nie istnieje lub jest niedostępne");
+        return;
+      }
+      if (responseStartTicket.status === 409) {
+        setStartTicketMessage(
+          "Status zgłoszenia się zmienił. Odświeżono szczegoły.",
+        );
+        refreshTicketDetail();
+        return;
+      }
+      if (!responseStartTicket.ok) {
+        setStartTicketMessage(
+          "Wystąpił problem z rozpoczęciem obsługi. Spróbuj ponownie.",
+        );
+        return;
+      }
+      setStartTicketMessage("Obsługa się rozpoczęła");
+      refreshTicketDetail();
+    } catch (error) {
+      setStartTicketMessage(
+        "Nie udało się rozpoczać obsługi zgłoszenia, Spróbuj ponownie.",
+      );
+    } finally {
+      setStartingTicket(false);
+    }
+  }
   async function handleCloseTicketClick() {
-    if (selectedTicketId === null) return;
+    if (selectedTicketId === null || isClosingTicket || isStartingTicket)
+      return;
     setClosingTicket(true);
     setCloseTicketMessage("Zamykam zgłoszenie...");
     try {
@@ -139,5 +201,8 @@ export function useTicketDetails(
     isClosingTicket,
     closeTicketMessage,
     handleCloseTicketClick,
+    isStartingTicket,
+    startTicketMessage,
+    handleStartTicketClick,
   };
 }

@@ -9,6 +9,9 @@ Osobne domeny wymagają osobnego projektu cookies/CORS/CSRF; nie AllowAnyOrigin.
 - GET /api/auth/csrf ustawia cookie i zwraca { token }. Każdy POST wymaga
   tego cookie oraz X-CSRF-TOKEN. Po login/logout pobierz nowy token dla nowej tożsamości.
   Brak/zły token: 400; autoryzacja nadal wcześniej zwraca 401/403.
+- GET /api/auth/me wymaga sesji i zwraca { id, name, isSupport }.
+  isSupport jest wartością logiczną wyliczaną z roli Support zalogowanej
+  tożsamości. Służy prezentacji UI; nie zastępuje autoryzacji operacji na serwerze.
 - POST /api/auth/register { email, password }: 201 oznacza niepotwierdzone konto
   i wysłaną wiadomość. Awaria wysyłki: 503; konto pozostaje, można ponowić wysyłkę.
 - POST /api/auth/confirm-email { userId, token }: 200/400. Login przed potwierdzeniem: 401.

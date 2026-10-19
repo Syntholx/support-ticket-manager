@@ -58,7 +58,8 @@ public class AuthSessionTests
             using HttpResponseMessage me = await client.GetAsync("/api/auth/me");
             Assert.Equal(HttpStatusCode.OK, me.StatusCode);
             JsonElement identity = await me.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal(2, identity.EnumerateObject().Count());
+            Assert.Equal(3, identity.EnumerateObject().Count());
+            Assert.False(identity.GetProperty("isSupport").GetBoolean());
             Assert.Equal(Email, identity.GetProperty("name").GetString());
             string? accountId;
             using (IServiceScope scope = factory.Services.CreateScope())
@@ -80,6 +81,28 @@ public class AuthSessionTests
             TicketDbContext finalDatabase = finalScope.ServiceProvider.GetRequiredService<TicketDbContext>();
             ApplicationUser remaining = Assert.Single(await finalDatabase.Users.AsNoTracking().ToListAsync());
             Assert.Equal(accountId, remaining.Id);
+        }
+        finally { await factory.DeleteDatabaseAsync(); }
+    }
+
+    [Fact]
+    public async Task Me_SupportAccount_ReturnsRoleFlagFromAuthenticatedIdentity()
+    {
+        using TicketDatabaseFactory factory = new TicketDatabaseFactory();
+        try
+        {
+            await factory.InitializeDatabaseAsync();
+            using HttpClient client = CreateClient(factory);
+            const string email = "support-session@example.com";
+            string id = await TicketTestAuthentication.RegisterSupportAndLoginAsync(factory, client, email);
+
+            using HttpResponseMessage me = await client.GetAsync("/api/auth/me");
+            Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+            JsonElement identity = await me.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal(3, identity.EnumerateObject().Count());
+            Assert.Equal(id, identity.GetProperty("id").GetString());
+            Assert.Equal(email, identity.GetProperty("name").GetString());
+            Assert.True(identity.GetProperty("isSupport").GetBoolean());
         }
         finally { await factory.DeleteDatabaseAsync(); }
     }

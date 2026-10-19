@@ -51,16 +51,6 @@ export function LoginScreen(props: {
         return;
       }
       setLoginMessage("Sprawdzam sesję...");
-      const meResponse = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "same-origin",
-      });
-      if (!meResponse.ok) {
-        setLoginMessage(
-          "Logowanie przyjęte, ale nie udało się potwierdzić sesji.",
-        );
-        return;
-      }
       props.onLoginSuccess();
     } catch (error) {
       setLoginMessage("Nie udało się połączyć z API TSM.");

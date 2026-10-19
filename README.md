@@ -188,7 +188,7 @@ Nieprawidłowy JSON może zostać odrzucony przez ASP.NET Core przed endpointem.
 | POST /api/auth/forgot-password     | email                                  | 202 / 400       |
 | POST /api/auth/reset-password      | email, token, password                 | 200 / 400       |
 | POST /api/auth/login               | email, password; cookie sesji          | 200 / 400 / 401 |
-| GET /api/auth/me                   | Bieżące konto                          | 200 / 401       |
+| GET /api/auth/me                   | Bieżące konto: id, name, isSupport      | 200 / 401       |
 | POST /api/auth/logout              | Wylogowanie                            | 200 / 401       |
 | GET /api/status                    | Nazwa, wersja, isRunning               | 200             |
 | GET /api/name                      | Nazwa aplikacji                        | 200             |

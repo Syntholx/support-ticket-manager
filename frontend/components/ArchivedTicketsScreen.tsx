@@ -13,7 +13,9 @@ export function ArchivedTicketsScreen(prop: {
   onBackClick: () => void;
   page: number;
   onPreviousPage: () => void;
+  pageSize: number;
   onNextPage: () => void;
+  maxPage: number;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredTickets = prop.tickets.filter((ticket) =>
@@ -133,7 +135,8 @@ export function ArchivedTicketsScreen(prop: {
           disabled={
             prop.isLoadingTickets ||
             prop.ticketsError !== "" ||
-            prop.tickets.length < 5
+            prop.tickets.length < prop.pageSize ||
+            prop.page >= prop.maxPage
           }
         >
           Następna
