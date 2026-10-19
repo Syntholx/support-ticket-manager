@@ -16,6 +16,10 @@ export function useTicketDetails(
   const [closeTicketMessage, setCloseTicketMessage] = useState("");
   const [isStartingTicket, setStartingTicket] = useState(false);
   const [startTicketMessage, setStartTicketMessage] = useState("");
+  const [isReopeningTicket, setReopeningTicket] = useState(false);
+  const [reopenTicketMessage, setReopenTicketMessage] = useState("");
+  const [isChangingPriority, setChangingPriority] = useState(false);
+  const [priorityMessage, setPriorityMessage] = useState("");
 
   useEffect(() => {
     setSessionExpired(false);
@@ -24,6 +28,8 @@ export function useTicketDetails(
     setTicketDetail(null);
     setCloseTicketMessage("");
     setStartTicketMessage("");
+    setReopenTicketMessage("");
+    setPriorityMessage("");
   }, [isActive, selectedTicketId]);
 
   useEffect(() => {
@@ -80,7 +86,13 @@ export function useTicketDetails(
     setTicketDetailRefreshKey((previous) => previous + 1);
   }
   async function handleStartTicketClick() {
-    if (selectedTicketId === null || isClosingTicket || isStartingTicket)
+    if (
+      selectedTicketId === null ||
+      isClosingTicket ||
+      isStartingTicket ||
+      isReopeningTicket ||
+      isChangingPriority
+    )
       return;
     setStartingTicket(true);
     setStartTicketMessage("Rozpoczynam obsługę...");
@@ -138,7 +150,13 @@ export function useTicketDetails(
     }
   }
   async function handleCloseTicketClick() {
-    if (selectedTicketId === null || isClosingTicket || isStartingTicket)
+    if (
+      selectedTicketId === null ||
+      isClosingTicket ||
+      isStartingTicket ||
+      isReopeningTicket ||
+      isChangingPriority
+    )
       return;
     setClosingTicket(true);
     setCloseTicketMessage("Zamykam zgłoszenie...");
@@ -191,7 +209,151 @@ export function useTicketDetails(
       setClosingTicket(false);
     }
   }
+  async function handleReopenTicketClick() {
+    if (
+      selectedTicketId === null ||
+      isClosingTicket ||
+      isStartingTicket ||
+      isReopeningTicket ||
+      isChangingPriority
+    )
+      return;
+    setReopeningTicket(true);
+    setReopenTicketMessage("Otwieram zgłoszenie ponownie...");
+    try {
+      const csrfToken = await getCsrfToken();
+      if (csrfToken === null) {
+        setReopenTicketMessage(
+          "Nie udało się przygotować bezpiecznie ponownego otwarcia zgłoszenia. Spróbuj ponownie.",
+        );
+        return;
+      }
+      const ticketReopenResponse = await fetch(
+        `/api/tickets/${selectedTicketId}/reopen`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+          },
+        },
+      );
+      if (ticketReopenResponse.status === 401) {
+        setSessionExpired(true);
+        return;
+      }
+      if (ticketReopenResponse.status === 403) {
+        setReopenTicketMessage(
+          "Nie masz uprawnień do ponownego otwarcia zgłoszenia.",
+        );
+        return;
+      }
+      if (ticketReopenResponse.status === 404) {
+        setReopenTicketMessage(
+          "Zgłoszenie nie istnieje lub nie masz do niego dostępu",
+        );
+        return;
+      }
+      if (ticketReopenResponse.status === 409) {
+        setReopenTicketMessage("Status się zmienił, odswieżono szczegoły.");
+        refreshTicketDetail();
+        return;
+      }
+      if (!ticketReopenResponse.ok) {
+        setReopenTicketMessage(
+          "Wystąpił problem z ponownym otwarciem zgłoszenia. Spróbuj ponownie.",
+        );
+        return;
+      }
+      setReopenTicketMessage("Sukces! Udało się ponownie otworzyć zgłoszenie.");
+      refreshTicketDetail();
+    } catch (error) {
+      setReopenTicketMessage(
+        "Nie udało się otworzyć ponownie zgłoszenia. Sprawdź połączenie z API i spróbuj ponownie.",
+      );
+      return;
+    } finally {
+      setReopeningTicket(false);
+    }
+  }
+  async function handleChangePriority(priority: number) {
+    if (
+      selectedTicketId === null ||
+      isClosingTicket ||
+      isStartingTicket ||
+      isReopeningTicket ||
+      isChangingPriority
+    )
+      return;
 
+    if (!Number.isInteger(priority) || priority < 1 || priority > 5) {
+      setPriorityMessage("Priorytet musi być liczbą całkowitą od 1 do 5.");
+      return;
+    }
+    setChangingPriority(true);
+    setPriorityMessage("Zmieniam priorytet...");
+    try {
+      const csrfToken = await getCsrfToken();
+      if (csrfToken === null) {
+        setPriorityMessage(
+          "Nie udało się przygotować bezpiecznie zmiany priorytetu. Spróbuj ponownie.",
+        );
+        return;
+      }
+      const changePriorityResponse = await fetch(
+        `/api/tickets/${selectedTicketId}/priority`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "X-CSRF-TOKEN": csrfToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ priority }),
+        },
+      );
+      if (changePriorityResponse.status === 400) {
+        setPriorityMessage(
+          "Nieprawidłowy priorytet, priorytet mieści się między 1 a 5.",
+        );
+        return;
+      }
+      if (changePriorityResponse.status === 401) {
+        setSessionExpired(true);
+        return;
+      }
+      if (changePriorityResponse.status === 403) {
+        setPriorityMessage(
+          "Nie masz uprawnień do zmiany priorytetu. Jeśli to błąd, skontaktuj się z administratorem strony.",
+        );
+        return;
+      }
+      if (changePriorityResponse.status === 404) {
+        setPriorityMessage("Zgłoszenie nie istnieje lub nie masz dostępu");
+        return;
+      }
+      if (changePriorityResponse.status === 409) {
+        setPriorityMessage("Wystąpił konflikt zapisu. Odświeżono szczegóły.");
+        refreshTicketDetail();
+        return;
+      }
+      if (!changePriorityResponse.ok) {
+        setPriorityMessage(
+          "Wystąpił problem ze zmianą priorytetu. Spróbuj ponownie.",
+        );
+        return;
+      }
+      setPriorityMessage("Sukces! Priorytet został zmieniony.");
+      refreshTicketDetail();
+    } catch (error) {
+      setPriorityMessage(
+        "Nie udało się zmienić priorytetu. Sprawdź połączenie z API i spróbuj ponownie.",
+      );
+      return;
+    } finally {
+      setChangingPriority(false);
+    }
+  }
   return {
     ticketDetail,
     isLoadingTicketDetail,
@@ -204,5 +366,11 @@ export function useTicketDetails(
     isStartingTicket,
     startTicketMessage,
     handleStartTicketClick,
+    isReopeningTicket,
+    reopenTicketMessage,
+    handleReopenTicketClick,
+    isChangingPriority,
+    priorityMessage,
+    handleChangePriority,
   };
 }

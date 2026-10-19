@@ -74,6 +74,12 @@ function App() {
     isStartingTicket,
     startTicketMessage,
     handleStartTicketClick,
+    isReopeningTicket,
+    reopenTicketMessage,
+    handleReopenTicketClick,
+    isChangingPriority,
+    priorityMessage,
+    handleChangePriority,
   } = useTicketDetails(
     isTicketDetailsRoute &&
       selectedTicketId !== null &&
@@ -220,7 +226,13 @@ function App() {
           path="/tickets/:ticketId"
           element={
             <TicketDetailsScreen
+              isChangingPriority={isChangingPriority}
+              priorityMessage={priorityMessage}
+              onChangePriority={handleChangePriority}
               isSupport={isSupport}
+              isReopenTicket={isReopeningTicket}
+              reopenTicketMessage={reopenTicketMessage}
+              onReopenTicket={handleReopenTicketClick}
               isStartingTicket={isStartingTicket}
               startTicketMessage={startTicketMessage}
               onStartTicket={handleStartTicketClick}
