@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCsrfToken } from "../get-csrf-token";
 export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
-  const params = new URLSearchParams(window.location.hash.slice(1));
-  const userId = params.get("userId");
-  const token = params.get("token");
+  const [confirmationLink] = useState(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    return {
+      userId: params.get("userId"),
+      token: params.get("token"),
+    };
+  });
+
+  useEffect(() => {
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + window.location.search,
+    );
+  }, []);
+
+  const { userId, token } = confirmationLink;
+
   const [confirmationMessage, setConfirmationMessage] = useState(
     userId && token
-      ? "Przygotowuję potwierdzenie e-mail..."
+      ? "Kliknij przycisk, aby potwierdzić adres e-mail"
       : "Link potwierdzający jest nieprawidłowy",
   );
   const [isConfirmed, setConfirmed] = useState(false);
   const [isConfirming, setConfirming] = useState(false);
 
   async function handleConfirmEmail() {
-    if (!userId || !token) return;
+    if (!userId || !token || isConfirming || isConfirmed) return;
     setConfirming(true);
     try {
       const csrfToken = await getCsrfToken();
@@ -35,7 +50,6 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
         credentials: "same-origin",
       });
       if (confirmEmailResponse.status === 200) {
-        window.history.replaceState(null, "", window.location.pathname);
         setConfirmed(true);
         setConfirmationMessage("Adres e-mail potwierdzony");
       } else if (confirmEmailResponse.status === 400) {
@@ -55,21 +69,28 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
   }
 
   return (
-    <section>
+    <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <h1>Potwierdzenie e-maila</h1>
       <p>{confirmationMessage}</p>
-      <button
-        type="button"
-        onClick={handleConfirmEmail}
-        disabled={!userId || !token || isConfirming || isConfirmed}
-      >
-        Potwierdź e-mail
-      </button>
-      {isConfirmed && (
-        <button type="button" onClick={props.onLoginClick}>
+      <div className="flex flex-wrap gap-2 ">
+        <button
+          type="button"
+          onClick={handleConfirmEmail}
+          disabled={!userId || !token || isConfirming || isConfirmed}
+          className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
+        >
+          {isConfirming ? "Potwierdzanie..." : "Potwierdź e-mail"}
+        </button>
+
+        <button
+          type="button"
+          disabled={isConfirming}
+          onClick={props.onLoginClick}
+          className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
+        >
           Przejdź do logowania
         </button>
-      )}
+      </div>
     </section>
   );
 }

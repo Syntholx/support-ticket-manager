@@ -3,6 +3,8 @@ import { getCsrfToken } from "../get-csrf-token";
 export function LoginScreen(props: {
   onBackClick: () => void;
   onLoginSuccess: () => void;
+  onForgotPasswordClick: () => void;
+  onResendConfirmationClick: () => void;
 }) {
   const [isLoggingIn, setLoggingIn] = useState(false);
   const [loginMessage, setLoginMessage] = useState(
@@ -101,6 +103,20 @@ export function LoginScreen(props: {
           {isLoggingIn ? "Logowanie..." : "Zaloguj się"}
         </button>
       </form>
+      <button
+        type="button"
+        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
+        onClick={props.onForgotPasswordClick}
+      >
+        Nie pamiętam hasła
+      </button>
+      <button
+        type="button"
+        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
+        onClick={props.onResendConfirmationClick}
+      >
+        Wyślij ponownie potwierdzenie e-mail
+      </button>
     </section>
   );
 }

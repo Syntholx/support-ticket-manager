@@ -12,6 +12,9 @@ import { TicketDetailsScreen } from "./components/TicketDetailsScreen";
 import { useTicketDetails } from "./hooks/useTicketDetails";
 import { useTickets } from "./hooks/useTickets";
 import { useSession } from "./hooks/useSession";
+import { ForgotPasswordScreen } from "./components/ForgotPasswordScreen";
+import { ResetPasswordScreen } from "./components/ResetPasswordScreen";
+import { ResendConfirmationScreen } from "./components/ResendConfirmationScreen";
 import {
   BrowserRouter,
   Route,
@@ -171,7 +174,9 @@ function App() {
           path="/login"
           element={
             <LoginScreen
+              onResendConfirmationClick={() => navigate("/resend-confirmation")}
               onBackClick={() => navigate("/")}
+              onForgotPasswordClick={() => navigate("/forgot-password")}
               onLoginSuccess={() => {
                 checkSession();
                 navigate("/tickets", { replace: true });
@@ -285,6 +290,25 @@ function App() {
             />
           }
         />
+        <Route
+          path="/forgot-password"
+          element={
+            <ForgotPasswordScreen onBackClick={() => navigate("/login")} />
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <ResetPasswordScreen onLoginClick={() => navigate("/login")} />
+          }
+        />
+        <Route
+          path="/resend-confirmation"
+          element={
+            <ResendConfirmationScreen onBackLogin={() => navigate("/login")} />
+          }
+        />
+
         <Route
           path="*"
           element={
