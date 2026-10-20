@@ -1,13 +1,15 @@
 # Support Ticket Manager
 
-Backend do obsługi zgłoszeń wsparcia napisany w C# i ASP.NET Core.
+Aplikacja webowa do obsługi zgłoszeń wsparcia: frontend React i TypeScript
+oraz API napisane w C# i ASP.NET Core.
 Użytkownik zgłasza problem i śledzi jego status, a pracownik wsparcia zarządza
 kolejką, ustala priorytety i prowadzi zgłoszenia od otwarcia do zamknięcia.
 
-**Rozwój po 1.0.0: zabezpieczenia i przygotowanie wdrożenia.**
-Nie ma publicznego serwera API. Dodano CSRF, limity, potwierdzanie e-mail/reset
-hasła, unieważnianie sesji, paginację i kontrolę równoczesnego zapisu.
-Przed uruchomieniem potrzebny jest odbiór środowiska — [instrukcja produkcyjna](docs/PRODUCTION.md).
+Projekt działa lokalnie; nie ma publicznego serwera API ani działającego demo online.
+Interfejs obejmuje obsługę konta, aktywne zgłoszenia, archiwum i operacje Support.
+Cookies sesyjne, CSRF, limity ruchu i kontrolę równoczesnego zapisu obsługuje backend.
+Publiczne wdrożenie jest osobnym zadaniem wymagającym odbioru środowiska —
+[instrukcja produkcyjna](docs/PRODUCTION.md).
 
 ## Co rozwiązuje projekt?
 
@@ -16,7 +18,21 @@ Każde zgłoszenie ma autora, opis, priorytet i status. Wsparcie widzi aktywną 
 według pilności, a zgłoszenia zamknięte trafiają do archiwum bez usuwania ich z bazy.
 
 Dane zgłoszeń i kont są przechowywane w SQL Server i pozostają po restarcie API.
-Interakcja odbywa się przez HTTP i JSON, np. za pomocą PowerShell lub klienta HTTP.
+Użytkownik korzysta z interfejsu w przeglądarce, który komunikuje się z API przez HTTP i JSON.
+
+## Funkcje interfejsu
+
+- Rejestracja, potwierdzanie e-maila, ponowna wysyłka potwierdzenia, logowanie i wylogowanie.
+- Zamówienie linku resetującego i ustawienie nowego hasła.
+- Lista aktywnych zgłoszeń i archiwum z osobną paginacją po 5 elementów.
+- Wyszukiwanie po tytule, skróty wyszukiwania, sortowanie ID rosnąco/malejąco i reset widoku.
+- Tworzenie zgłoszenia z możliwością natychmiastowego otwarcia jego szczegółów.
+- Szczegóły, zamykanie, a dla Support także rozpoczęcie obsługi, ponowne otwarcie i priorytet.
+- Komunikaty ładowania, błędów i pustych wyników oraz blokady kontrolek podczas operacji.
+
+Wyszukiwanie i sortowanie dotyczą wyłącznie pobranej strony danych, nie całej bazy.
+Domyślny widok klienta sortuje tę stronę według ID; kolejność serwera opisana niżej
+decyduje o tym, które zgłoszenia trafiają do danej strony.
 
 ## Funkcje i uprawnienia
 
@@ -63,12 +79,19 @@ przez ograniczenie CHECK. Status w C# jest enumem, a w JSON tekstem.
 
 ## Technologie i architektura
 
-C#, .NET 10, ASP.NET Core Minimal API, Entity Framework Core 10,
+Frontend: React, TypeScript, React Router, Tailwind CSS, Vite,
+Vitest, React Testing Library, user-event i jsdom.
+
+Backend: C#, .NET 10, ASP.NET Core Minimal API, Entity Framework Core 10,
 SQL Server, ASP.NET Core Identity, LINQ, xUnit i WebApplicationFactory.
 
-Przepływ: **klient HTTP → endpoint → serwis → model / EF Core → SQL Server**.
+Przepływ: **komponent React → fetch → endpoint → serwis → model / EF Core → SQL Server**.
 Po zakończeniu operacji endpoint dobiera odpowiedź HTTP.
 
+- `frontend/components` — ekrany i wspólne elementy interfejsu.
+- `frontend/hooks` — odczyt danych, sesja i operacje zgłoszeń.
+- `frontend/validation` — współdzielona logika walidacji.
+- `frontend/tests` — testy logiki i zachowania komponentów.
 - `src/SupportTicketManager.Core` — Ticket, TicketStatus i reguły zgłoszenia.
 - `src/SupportTicketManager.Api/Endpoints` — odbiór żądań, kontrola dostępu i odpowiedzi HTTP.
 - `src/SupportTicketManager.Api/Services` — operacje i asynchroniczny zapis/odczyt przez TicketDatabaseService.
@@ -93,6 +116,8 @@ nie są niezależną granicą autoryzacji dla innych aplikacji.
 - Lokalny login SQL z uprawnieniami potrzebnymi do migracji.
   Testy dodatkowo wymagają tworzenia i usuwania baz.
 - Zaufany deweloperski certyfikat HTTPS.
+- Node.js 24 i npm (wersja użyta do weryfikacji: Node.js 24.19.0).
+- Lokalny serwer SMTP, np. Mailpit, do potwierdzania kont i resetowania hasła.
 
 Repozytorium nie uruchamia kontenera SQL automatycznie i nie zawiera hasła bazy.
 Nie używaj serwera produkcyjnego ani ważnych danych do ćwiczeń/testów.
@@ -122,8 +147,21 @@ Polecenie z hasłem może trafić do historii terminala — można zamiast tego 
 lokalny plik User Secrets. User Secrets nie jest szyfrowanym sejfem produkcyjnym.
 `TrustServerCertificate=True` służy wyłącznie temu lokalnemu środowisku SQL.
 
-Skonfiguruj też SMTP i Email:FrontendBaseUrl według [instrukcji](docs/PRODUCTION.md).
-Testy używają poczty w pamięci; uruchomione API nie potwierdza kont automatycznie.
+Uruchom lokalny Mailpit z portem SMTP 1025 i panelem HTTP 8025 dostępnymi
+tylko lokalnie. Repozytorium nie uruchamia go automatycznie. Dla tego wariantu
+ustaw konfigurację API poza repozytorium:
+
+```powershell
+dotnet user-secrets set "Email:Host" "127.0.0.1" --project src/SupportTicketManager.Api
+dotnet user-secrets set "Email:Port" "1025" --project src/SupportTicketManager.Api
+dotnet user-secrets set "Email:From" "tsm@example.com" --project src/SupportTicketManager.Api
+dotnet user-secrets set "Email:FrontendBaseUrl" "https://localhost:5500" --project src/SupportTicketManager.Api
+```
+
+Panel poczty: **http://localhost:8025**. Wyjątek SMTP bez TLS i logowania działa
+wyłącznie w Development dla Host=127.0.0.1 i Port=1025; nie używaj go produkcyjnie.
+Testy backendu używają poczty w pamięci; uruchomione API nie potwierdza kont automatycznie.
+Konfiguracja rzeczywistego dostawcy SMTP: [instrukcja](docs/PRODUCTION.md).
 
 ### 3. Zastosuj migracje
 
@@ -148,6 +186,33 @@ nie sprawdza połączenia z bazą. Sam adres `/` nie ma strony startowej ani Swa
 Profil uruchamia także HTTP na porcie 5231, ale cookies są Secure:
 do rejestracji, logowania i wszystkich operacji używaj HTTPS.
 Nie wyłączaj sprawdzania certyfikatu w kliencie.
+
+### 5. Przygotuj certyfikat i uruchom frontend
+
+Konfiguracja Vite wymaga istniejącego certyfikatu HTTPS dla localhost w formacie
+PEM oraz odpowiadającego mu klucza prywatnego:
+
+- `%LOCALAPPDATA%\TSMDevCert\localhost.pem`
+- `%LOCALAPPDATA%\TSMDevCert\localhost.key`
+
+Przygotuj te pliki lokalnie i zapewnij zaufanie certyfikatowi w przeglądarce.
+Samo `dotnet dev-certs https --trust` nie eksportuje ich pod powyższe ścieżki.
+Nie publikuj klucza; ogranicz dostęp do katalogu. Obecna konfiguracja ścieżki
+certyfikatu jest przeznaczona dla Windows i wymaga LOCALAPPDATA.
+
+W drugim terminalu, z głównego katalogu repozytorium:
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Otwórz **https://localhost:5500**. API musi działać równolegle na porcie 7280;
+proxy Vite przekazuje tam `/api/`. Port 5500 jest stały i musi być wolny.
+Nie zmieniaj go bez dostosowania Email:FrontendBaseUrl. Używaj wszędzie localhost,
+aby nie mieszać pochodzenia stron i cookies. Na nowej bazie zarejestruj konto,
+otwórz mail w Mailpit, potwierdź adres i dopiero wtedy się zaloguj.
 
 ## Korzystanie z API
 
@@ -205,15 +270,45 @@ Trasy tylko dla Support zwracają **403 zwykłemu użytkownikowi**, także jeśl
 | POST /api/tickets/{id}/close    | Brak                                     | 200 / 404 / 409               |
 | POST /api/tickets/{id}/start    | Brak; Support                            | 200 / 404 / 409               |
 | POST /api/tickets/{id}/reopen   | Brak; Support                            | 200 / 404 / 409               |
-| POST /api/tickets/{id}/priority | {"priority":4}; Support                  | 200 / 400 / 404               |
+| POST /api/tickets/{id}/priority | {"priority":4}; Support                  | 200 / 400 / 404 / 409         |
 
 ID w trasie musi być liczbą całkowitą. Odpowiedzi operacji zakończonych sukcesem
 zawierają zgłoszenie. Błędy biznesowe mają zazwyczaj obiekt `{"message":"..."}`;
 401/403 i błędy frameworka nie muszą zawierać tego pola.
 
-## Testy
+## Testy i kompilacja
 
-Zestaw obejmuje **126 przypadków testowych**: reguły modelu, operacje API,
+### Frontend
+
+Polecenia uruchamiaj w katalogu `frontend` po `npm.cmd ci`:
+
+```powershell
+npm.cmd test
+npm.cmd run typecheck:tests
+node ./node_modules/typescript/bin/tsc --noEmit
+node ./node_modules/vite/bin/vite.js build
+```
+
+Pierwsze polecenie uruchamia testy raz. Osobna kontrola typów obejmuje testy
+i ich importy; główny tsconfig sprawdza aplikację od main.tsx. Build zapisuje
+klienta w ignorowanym katalogu `dist`. Ze względu na obecną konfigurację Vite
+także build wymaga lokalnych plików certyfikatu; testy mają oddzielny config.
+
+10 testów obejmuje porównywanie haseł oraz zachowanie formularzy resetu i resendu:
+walidację, brak danych linku, callback logowania, sukces, odpowiedź 400,
+błąd sieci i ponowienie, dane żądania oraz ogólną odpowiedź 202.
+Odpowiedzi fetch są symulowane; testy nie uruchamiają API, SQL ani Mailpit
+i nie dowodzą rzeczywistej wysyłki poczty lub zmiany hasła na serwerze.
+jsdom sprawdza DOM i interakcje, nie rzeczywisty układ graficzny przeglądarki.
+
+Ręcznie sprawdzono główne przepływy konta i zgłoszeń, role, błędy połączenia,
+Slow 3G, widok 375 px i klawiaturę. To nie pełny audyt dostępności ani zestaw E2E.
+Build może zgłaszać ostrzeżenia o przyszłym native config loader Vite oraz
+dyrektywie use client w zależności react-router; nie blokowały kompilacji.
+
+### Backend
+
+Zestaw obejmuje reguły modelu, operacje API,
 integrację z SQL, Identity, sesje, własność zgłoszeń i macierz uprawnień.
 Nowe scenariusze obejmują CSRF, limity, potwierdzanie e-mail, reset hasła,
 blokadę logowania, wygasłe tokeny, paginację, rowversion i walidację konfiguracji.
@@ -243,9 +338,16 @@ przeglądarki/transportu TLS. Testy HTTP korzystają z WebApplicationFactory.
 
 Dodano mechanizmy bezpieczeństwa opisane w [PRODUCTION.md](docs/PRODUCTION.md).
 Nie oznacza to zakończonego audytu ani gotowego środowiska produkcyjnego.
-Wymagane są rzeczywisty dostawca SMTP, TLS, sekrety, backup/restore, konfiguracja
-hostingu, nowe ekrany potwierdzenia/resetu oraz testy przeglądarkowe i obciążeniowe.
+Przed publicznym wdrożeniem wymagane są rzeczywisty dostawca SMTP, TLS, sekrety,
+backup/restore, konfiguracja hostingu oraz testy przeglądarkowe i obciążeniowe.
 Limity ruchu są per instancja; publiczny ruch wymaga też ochrony na bramie.
+
+Listy API nie zwracają totalCount ani hasNext. Pełna strona pozwala przejść dalej,
+więc kolejna może być pusta. Reset widoku czyści wyszukiwanie i sortowanie,
+nie numer strony. Numery stron nie są utrwalane po odświeżeniu przeglądarki.
+Przyciski są blokowane podczas operacji, ale nawigacja wstecz przeglądarki podczas
+POST nie ma pełnej ochrony cyklu życia żądania. F5 na ekranie resetu/potwierdzenia
+usuwa dane linku z pamięci; trzeba ponownie otworzyć wiadomość.
 
 Nie ma usuwania zgłoszeń, przypisywania konkretnego pracownika, załączników ani SLA.
 Rejestracja jest dostępna anonimowo. Nie ma zaplanowanego resetu publicznej bazy,
@@ -253,24 +355,13 @@ ponieważ publiczne demo z bazą nie zostało wdrożone.
 
 ## Interfejs i historia projektu
 
-Nowy klient edukacyjny znajduje się w `frontend/`, w tym samym repo co backend.
-Na 02.10.2026 jest to mały ekran React + TypeScript pobierający publiczny `/api/status`,
-z walidacją odpowiedzi, komunikatami ładowania/błędu i blokadą przycisku.
-W folderze `frontend` uruchom najpierw npm.cmd ci do instalacji pakietów Vite, następnie npm.cmd run dev do uruchomienia lokalnej wersji strony poprzez Vite, na porcie 5500.
-Natomiast by uruchomić API, uruchom je za pomocą dotnet run --project src/SupportTicketManager.Api --launch-profile https, bezpośrednio z głownego folderu repozytorium.
-React generuje nowy widok za pomocą komponentów.
-Klient ma widoki logowania i rejestracji. Rejestracja została sprawdzona z
-lokalnym Mailpit; potwierdzenie e-maila w React jest jeszcze w trakcie pracy,
-a ekrany obsługi zgłoszeń nie są gotowe.
-Vite działa pod `https://localhost:5500` i wymaga lokalnego certyfikatu
-developerskiego w `%LOCALAPPDATA%\TSMDevCert\localhost.pem` oraz klucza
-`localhost.key`. Pliki te pozostają poza repozytorium; prywatny klucz PEM
-jest przeznaczony wyłącznie do lokalnego testu i musi mieć ograniczony dostęp.
-Proxy Vite przekazuje `/api/` do API na `https://localhost:7280`.
-Pakiety node_modules i wynik dist są ignorowane w Git, natomiast pakiety node_modules trzeba odtworzyć za pomocą npm.cmd ci, ale dist nie jest potrzebny do pracy przez Vite, dist to ignorowany wynik budowania.
+Klient React i TypeScript znajduje się w `frontend/`, w tym samym repo co backend.
+Rozpoczął się od ekranu statusu API, a obecnie obejmuje przepływy opisane powyżej.
+`node_modules` odtwarza `npm.cmd ci`; `dist` jest wynikiem budowania i nie jest
+potrzebny podczas pracy przez serwer Vite. Oba katalogi są ignorowane w Git.
 `invalid-status.json` służy do ręcznych prób walidacji; po próbach może zawierać
 poprawne dane. Normalne działanie klienta korzysta z API, nie tego pliku.
-Dalsza rozbudowa w TS i React wraz z nauką backendu C#.
+Projekt służy obecnie nauce frontendu; istniejące API jest backendem ćwiczeniowym.
 
 Kod makiety oraz wcześniejszego lokalnego interfejsu zachowano w
 [repozytorium portfolio](https://github.com/Syntholx/portfolio/tree/main/tsm-demo).
@@ -282,7 +373,9 @@ W obecnej wersji pozostają Core, Api i Tests; stara konsola i listowe serwisy n
 
 ## Autorstwo
 
-Projekt powstał w ramach prowadzonej nauki C#/.NET. Autor implementował logikę
-i endpointy z przykładami oraz review mentora AI. Część testów, ich adaptację,
-interfejs i dokumentację przygotowano z pomocą AI.
+Projekt rozpoczął się w ramach prowadzonej nauki C#/.NET, następnie rozwijano
+klienta React i TypeScript. Autor implementował frontend z kontraktami, przykładami
+i review mentora AI. Backend oraz testy powstawały z pomocą AI; część testów
+backendowych i dokumentację przygotował asystent. Testy frontendu autor pisał
+w ramach prowadzonej nauki na przykładach i z korektami.
 Projekt nie jest przedstawiany jako wykonany całkowicie samodzielnie.

@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { getCsrfToken } from "../get-csrf-token";
+import { passwordsMatch } from "../validation/passwords";
 
 export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
   const [resetLink] = useState(() => {
@@ -32,7 +33,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
       return;
     }
 
-    if (password !== newPassword) {
+    if (!passwordsMatch(password, newPassword)) {
       setMessage("Podane hasła muszą być identyczne.");
       return;
     }
@@ -136,7 +137,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
           </button>
         </form>
       )}
-      {message !== "" && <p>{message}</p>}
+      <p role="status">{message}</p>
       <button
         type="button"
         disabled={isResetting}

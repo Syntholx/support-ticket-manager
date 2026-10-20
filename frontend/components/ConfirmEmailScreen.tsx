@@ -71,7 +71,7 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
       <h1>Potwierdzenie e-maila</h1>
-      <p>{confirmationMessage}</p>
+      <p role="status">{confirmationMessage}</p>
       <div className="flex flex-wrap gap-2 ">
         <button
           type="button"

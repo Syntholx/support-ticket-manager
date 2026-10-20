@@ -100,7 +100,7 @@ export function ForgotPasswordScreen(props: { onBackClick: () => void }) {
           {isSending ? "Wysyłanie..." : "Wyślij link resetujący"}
         </button>
       </form>
-      {message !== "" && <p role="status">{message}</p>}
+      <p role="status">{message}</p>
     </section>
   );
 }

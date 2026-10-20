@@ -86,7 +86,7 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
           {isSending ? "Wysyłanie..." : "Wyślij link potwierdzający ponownie"}
         </button>
       </form>
-      {message !== "" && <p>{message}</p>}
+      <p role="status">{message}</p>
 
       <button
         type="button"
