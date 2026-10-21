@@ -2,6 +2,7 @@ export type TicketSummary = {
   id: number;
   title: string;
   status: "Open" | "InProgress" | "Closed";
+  priority: number;
 };
 
 export type TicketDetail = {
@@ -29,6 +30,16 @@ export function parseTicket(data: unknown): TicketSummary {
   if (!("status" in data) || typeof data.status !== "string") {
     throw new Error("Brak status lub nieprawidłowy typ");
   }
+  if (!("priority" in data) || typeof data.priority !== "number") {
+    throw new Error("Brak priority lub nieprawidłowy typ");
+  }
+  if (data.priority < 1 || data.priority > 5) {
+    throw new Error("Priority musi mieścić się w przedziale 1 - 5");
+  }
+  if (!Number.isInteger(data.priority)) {
+    throw new Error("Priority nie jest liczbą całkowitą.");
+  }
+
   if (
     data.status !== "Open" &&
     data.status !== "InProgress" &&
@@ -41,6 +52,7 @@ export function parseTicket(data: unknown): TicketSummary {
     id: data.id,
     title: data.title,
     status: data.status,
+    priority: data.priority,
   };
 }
 export function parseTicketDetails(data: unknown): TicketDetail {

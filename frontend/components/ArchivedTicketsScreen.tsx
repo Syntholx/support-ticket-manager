@@ -36,6 +36,9 @@ export function ArchivedTicketsScreen(prop: {
         Wróć do aktywnych
       </button>
       <h1>Archiwum zgłoszeń</h1>
+      <p className="text-[14px] text-[#64748b]">
+        Priorytet opisuje zamknięte zgłoszenie i nie oznacza bieżącej pilności.
+      </p>
       <p>
         Zamknięte zgłoszenia
         {!prop.isLoadingTickets && prop.ticketsError === "" && (

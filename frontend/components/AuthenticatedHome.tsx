@@ -128,7 +128,6 @@ export function AuthenticatedHome(prop: {
       <p className="text-[14px] text-[#64748b] mt-[0px] mb-[16px]">
         {prop.isSupport ? "Uprawnienia: Support" : "Uprawnienia: Użytkownik"}
       </p>
-
       <p>Witaj! Jesteś zalogowany.</p>
       <button
         type="button"
@@ -137,160 +136,166 @@ export function AuthenticatedHome(prop: {
       >
         Archiwum zgłoszeń
       </button>
-      <h2>
-        Aktywne zgłoszenia
-        {!prop.isLoadingTickets && prop.ticketsError === "" && (
-          <>: {prop.tickets.length} </>
-        )}
-      </h2>
-      <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
-      <div className="mb-[16px] flex flex-row flex-wrap gap-2">
-        <TicketSearchShortcuts
-          query={searchQuery}
-          onQueryChange={setSearchQuery}
-        />
-      </div>
-      <div className="mb-4 flex w-full flex-col gap-1.5">
-        <TicketSort order={sortOrder} onOrderChange={setSortOrder} />
+      <section className="border border-[#dce5ef] rounded-[12px] p-4 border-solid mt-4">
+        <h2 className="mt-0">
+          Aktywne zgłoszenia
+          {!prop.isLoadingTickets && prop.ticketsError === "" && (
+            <>: {prop.tickets.length} </>
+          )}
+        </h2>
+        <TicketSearch query={searchQuery} onQueryChange={setSearchQuery} />
+        <div className="mb-[16px] flex flex-row flex-wrap gap-2">
+          <TicketSearchShortcuts
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+          />
+        </div>
+        <div className="mb-4 flex w-full flex-col gap-1.5">
+          <TicketSort order={sortOrder} onOrderChange={setSortOrder} />
+          {!prop.isLoadingTickets &&
+            prop.ticketsError === "" &&
+            prop.tickets.length > 0 && (
+              <p className="text-[14px] text-[#64748b] m-0">
+                Kolejność dotyczy tylko pobranych zgłoszeń.
+              </p>
+            )}
+        </div>
+        <button
+          type="button"
+          disabled={searchQuery === "" && sortOrder === "asc"}
+          className="[font-family:inherit] self-start mb-[16px] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+          onClick={() => {
+            setSearchQuery("");
+            setSortOrder("asc");
+          }}
+        >
+          Resetuj widok
+        </button>
         {!prop.isLoadingTickets &&
           prop.ticketsError === "" &&
-          prop.tickets.length > 0 && (
-            <p className="text-[14px] text-[#64748b] m-0">
-              Kolejność dotyczy tylko pobranych zgłoszeń.
+          searchQuery.trim() !== "" && (
+            <p className="text-[#64748b] mt-0 mb-[16px] text-[14px]">
+              {`Wyniki: ${filteredTickets.length} z ${prop.tickets.length} pobranych`}
             </p>
           )}
-      </div>
-      <button
-        type="button"
-        disabled={searchQuery === "" && sortOrder === "asc"}
-        className="[font-family:inherit] self-start mb-[16px] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
-        onClick={() => {
-          setSearchQuery("");
-          setSortOrder("asc");
-        }}
-      >
-        Resetuj widok
-      </button>
-      {!prop.isLoadingTickets &&
-        prop.ticketsError === "" &&
-        searchQuery.trim() !== "" && (
-          <p className="text-[#64748b] mt-0 mb-[16px] text-[14px]">
-            {`Wyniki: ${filteredTickets.length} z ${prop.tickets.length} pobranych`}
-          </p>
-        )}
-      {!prop.isLoadingTickets &&
-        prop.ticketsError === "" &&
-        prop.tickets.length > 0 &&
-        filteredTickets.length === 0 && (
-          <p className="text-[14px] text-[#64748b] mt-0 mb-[16px]">
-            Niektóre zgłoszenia mogą znajdować się na innych stronach danych.
-          </p>
-        )}
-      <button
-        type="button"
-        className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
-        onClick={prop.onRefreshTickets}
-        disabled={prop.isLoadingTickets}
-      >
-        {prop.isLoadingTickets ? "Odświeżanie..." : "Odśwież listę"}
-      </button>
-      {prop.ticketsError !== "" && <p>{prop.ticketsError}</p>}
-      {prop.isLoadingTickets && <p>Ładowanie zgłoszeń...</p>}
-      {!prop.isLoadingTickets &&
-        prop.ticketsError === "" &&
-        (prop.tickets.length === 0 ? (
-          <p>
-            {prop.page === 1
-              ? "Nie masz jeszcze aktywnych zgłoszeń"
-              : "Na tej stronie nie ma zgłoszeń, wróć do poprzedniej strony."}
-          </p>
-        ) : filteredTickets.length === 0 ? (
-          <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania</p>
-        ) : (
-          <TicketList
-            tickets={sortedTickets}
-            onTicketClick={prop.onTicketClick}
-          />
-        ))}
-      <nav className="flex items-center gap-[8px] flex-wrap mt-[16px]">
+        {!prop.isLoadingTickets &&
+          prop.ticketsError === "" &&
+          prop.tickets.length > 0 &&
+          filteredTickets.length === 0 && (
+            <p className="text-[14px] text-[#64748b] mt-0 mb-[16px]">
+              Niektóre zgłoszenia mogą znajdować się na innych stronach danych.
+            </p>
+          )}
         <button
           type="button"
           className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
-          onClick={prop.onPreviousPage}
-          disabled={prop.isLoadingTickets || prop.page <= 1}
+          onClick={prop.onRefreshTickets}
+          disabled={prop.isLoadingTickets}
         >
-          Poprzednia
+          {prop.isLoadingTickets ? "Odświeżanie..." : "Odśwież listę"}
         </button>
-        <p className="m-0">Strona {prop.page}</p>
-        <button
-          type="button"
-          className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
-          onClick={prop.onNextPage}
-          disabled={
-            prop.isLoadingTickets ||
-            prop.ticketsError !== "" ||
-            prop.tickets.length < prop.pageSize ||
-            prop.page >= prop.maxPage
-          }
-        >
-          Następna
-        </button>
-      </nav>
-      <h2>Nowe zgłoszenie</h2>
-      <form onSubmit={handleCreateTicketSubmit}>
-        <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="title">Podaj tytuł zgłoszenia</label>
-          <input
-            className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
-            id="title"
-            name="title"
-            required
-            maxLength={200}
-          ></input>
-        </div>
-        <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="description">Podaj opis problemu</label>
-
-          <textarea
-            className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
-            id="description"
-            name="description"
-            required
-            maxLength={5000}
-            rows={5}
-          ></textarea>
-        </div>
-        <button
-          type="submit"
-          className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
-          disabled={isCreatingTicket}
-        >
-          {isCreatingTicket ? "Tworzenie..." : "Utwórz zgłoszenie"}
-        </button>
-        {createMessage !== "" && <p role="status">{createMessage}</p>}
-        {createdTicketId !== null && (
+        {prop.ticketsError !== "" && <p>{prop.ticketsError}</p>}
+        {prop.isLoadingTickets && <p>Ładowanie zgłoszeń...</p>}
+        {!prop.isLoadingTickets &&
+          prop.ticketsError === "" &&
+          (prop.tickets.length === 0 ? (
+            <p>
+              {prop.page === 1
+                ? "Nie masz jeszcze aktywnych zgłoszeń"
+                : "Na tej stronie nie ma zgłoszeń, wróć do poprzedniej strony."}
+            </p>
+          ) : filteredTickets.length === 0 ? (
+            <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania</p>
+          ) : (
+            <TicketList
+              tickets={sortedTickets}
+              onTicketClick={prop.onTicketClick}
+            />
+          ))}
+        <nav className="flex items-center gap-[8px] flex-wrap mt-[16px]">
           <button
             type="button"
-            className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b] mt-[8px]"
-            onClick={() => {
-              if (createdTicketId !== null) {
-                prop.onTicketClick(createdTicketId);
-              }
-            }}
+            className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+            onClick={prop.onPreviousPage}
+            disabled={prop.isLoadingTickets || prop.page <= 1}
           >
-            Otwórz zgłoszenie #{createdTicketId}
+            Poprzednia
           </button>
-        )}
-      </form>
-      <p>{prop.message}</p>
-      <button
-        type="button"
-        className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#cbd5e1] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#334155] hover:bg-[#f1f5f9]"
-        onClick={prop.onLogoutClick}
-        disabled={prop.isLoggingOut}
-      >
-        Wyloguj się
-      </button>
+          <p className="m-0">Strona {prop.page}</p>
+          <button
+            type="button"
+            className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
+            onClick={prop.onNextPage}
+            disabled={
+              prop.isLoadingTickets ||
+              prop.ticketsError !== "" ||
+              prop.tickets.length < prop.pageSize ||
+              prop.page >= prop.maxPage
+            }
+          >
+            Następna
+          </button>
+        </nav>
+      </section>
+      <section className="border border-[#dce5ef] rounded-[12px] p-4 bg-[#f8fafc] mt-[24px] border-solid bg-white">
+        <h2 className="mt-0">Nowe zgłoszenie</h2>
+        <form onSubmit={handleCreateTicketSubmit}>
+          <div className="mb-4 flex w-full flex-col gap-1.5">
+            <label htmlFor="title">Podaj tytuł zgłoszenia</label>
+            <input
+              className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+              id="title"
+              name="title"
+              required
+              maxLength={200}
+            ></input>
+          </div>
+          <div className="mb-4 flex w-full flex-col gap-1.5">
+            <label htmlFor="description">Podaj opis problemu</label>
+
+            <textarea
+              className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
+              id="description"
+              name="description"
+              required
+              maxLength={5000}
+              rows={5}
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
+            disabled={isCreatingTicket}
+          >
+            {isCreatingTicket ? "Tworzenie..." : "Utwórz zgłoszenie"}
+          </button>
+          {createMessage !== "" && <p role="status">{createMessage}</p>}
+          {createdTicketId !== null && (
+            <button
+              type="button"
+              className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b] mt-[8px]"
+              onClick={() => {
+                if (createdTicketId !== null) {
+                  prop.onTicketClick(createdTicketId);
+                }
+              }}
+            >
+              Otwórz zgłoszenie #{createdTicketId}
+            </button>
+          )}
+        </form>
+      </section>
+      <section>
+        <p>{prop.message}</p>
+        <button
+          type="button"
+          className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#cbd5e1] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#334155] hover:bg-[#f1f5f9]"
+          onClick={prop.onLogoutClick}
+          disabled={prop.isLoggingOut}
+        >
+          Wyloguj się
+        </button>
+      </section>
     </section>
   );
 }

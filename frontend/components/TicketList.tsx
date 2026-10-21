@@ -1,4 +1,6 @@
-import { formatTicketStatus, TicketSummary } from "../ticket";
+import { TicketStatusBadge } from "../components/TicketStatusBadge";
+import { TicketSummary } from "../ticket";
+import { TicketPriorityBadge } from "../components/TicketPriorityBadge";
 export function TicketList(prop: {
   tickets: TicketSummary[];
   onTicketClick: (id: number) => void;
@@ -8,18 +10,23 @@ export function TicketList(prop: {
       {prop.tickets.map((ticket) => (
         <li
           key={ticket.id}
-          className="mb-3 flex w-full flex-wrap items-center gap-2 rounded-xl border border-solid border-[#dce5ef] bg-white p-3"
+          className="mb-3 flex w-full flex-col items-start gap-2 rounded-xl border border-solid border-[#dce5ef] bg-white p-3"
         >
+          <p className="m-0 text-[12px] text-[#64748b]">#{ticket.id}</p>
           <button
             type="button"
-            className="[font-family:inherit] leading-[inherit] inline-block min-h-[44px] max-w-full cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-[#eff6ff] px-3 py-2 text-left text-[14px] font-semibold whitespace-normal [word-break:break-word] text-[#1e40af] hover:bg-[#dbeafe]"
+            className="[font-family:inherit] leading-[inherit] inline-block min-h-[44px] max-w-full cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-[#eff6ff] px-3 py-2 text-left text-[16px] font-semibold whitespace-normal [word-break:break-word] text-[#1e40af] hover:bg-[#dbeafe]"
             onClick={() => prop.onTicketClick(ticket.id)}
           >
-            #{ticket.id} - {ticket.title}
+            {ticket.title}
           </button>
-          <span className="m-0 inline-block rounded-full bg-[#f1f5f9] px-2.5 py-1 text-[14px] font-semibold text-[#334155]">
-            Status: {formatTicketStatus(ticket.status)}
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <TicketStatusBadge status={ticket.status} />
+            <TicketPriorityBadge
+              status={ticket.status}
+              priority={ticket.priority}
+            />
+          </div>
         </li>
       ))}
     </ul>

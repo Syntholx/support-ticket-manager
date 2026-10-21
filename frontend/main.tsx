@@ -331,7 +331,7 @@ function App() {
   return (
     <div className="mx-auto my-10 w-full max-w-[760px] p-4">
       {renderCurrentScreen()}
-      <StatusPanel title="Status API" />
+      {import.meta.env.DEV && <StatusPanel title="Status API" />}
     </div>
   );
 }
