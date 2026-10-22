@@ -1,0 +1,98 @@
+name: tsm-demo
+
+x-api-environment: &api-environment
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8080
+  Demo__Enabled: "true"
+  AllowedHosts: tsm.szymon-michalek.dev
+  Security__KnownProxies__0: 172.30.20.2
+  ConnectionStrings__TicketDatabase: "Server=sql,1433;Database=SupportTicketManagerDemo;User ID=tsm_demo;Password=${TSM_DB_PASSWORD:?Set TSM_DB_PASSWORD};Encrypt=True;TrustServerCertificate=False"
+  DataProtection__KeyPath: /var/lib/tsm-keys
+  DataProtection__CertificatePath: /run/certificates/data-protection.pfx
+  DataProtection__CertificatePassword: ${DP_CERT_PASSWORD:?Set DP_CERT_PASSWORD}
+  Email__FrontendBaseUrl: https://tsm.szymon-michalek.dev
+
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    hostname: sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD:?Set SQL_SA_PASSWORD}
+      MSSQL_MEMORY_LIMIT_MB: "1536"
+    volumes:
+      - sql-data:/var/opt/mssql
+      - ./mssql.conf:/var/opt/mssql/mssql.conf:ro
+      - ./private/sql.crt:/run/certificates/sql.crt:ro
+      - ./private/sql.key:/run/certificates/sql.key:ro
+    networks:
+      database:
+        ipv4_address: 172.30.21.2
+    restart: unless-stopped
+    mem_limit: 3g
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    # Deliberately no ports: database is not exposed on the host.
+
+  api:
+    image: tsm-demo-api:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    environment: *api-environment
+    volumes:
+      - api-keys:/var/lib/tsm-keys
+      - ./private/ca.crt:/run/certificates/demo-ca.crt:ro
+      - ./private/data-protection.pfx:/run/certificates/data-protection.pfx:ro
+    networks:
+      proxy:
+        ipv4_address: 172.30.20.3
+      database:
+        ipv4_address: 172.30.21.3
+    depends_on: [sql]
+    restart: unless-stopped
+    mem_limit: 768m
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    # No public API port. Requests enter through Caddy only.
+
+  web:
+    image: tsm-demo-web:local
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      proxy:
+        ipv4_address: 172.30.20.2
+    depends_on: [api]
+    restart: unless-stopped
+    mem_limit: 256m
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+
+networks:
+  proxy:
+    ipam:
+      config: [{subnet: 172.30.20.0/24}]
+  database:
+    internal: true
+    ipam:
+      config: [{subnet: 172.30.21.0/24}]
+
+volumes:
+  sql-data:
+  api-keys:
+  caddy-data:
+  caddy-config:

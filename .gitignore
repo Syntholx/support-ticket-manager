@@ -17,3 +17,6 @@ appsettings.Production.json
 data-protection-keys/
 node_modules/
 frontend/dist/
+deploy/private/
+*.key
+*.bak

@@ -1,0 +1,11 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /source/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+ENV VITE_TSM_DEMO=true
+RUN npx tsc --noEmit && npx vite build
+
+FROM caddy:2-alpine
+COPY --from=build /source/frontend/dist/ /srv/
+COPY deploy/Caddyfile /etc/caddy/Caddyfile

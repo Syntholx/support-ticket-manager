@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore fictional TSM demo tickets (demo database only)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/tsm-demo/deploy
+ExecStart=/usr/bin/docker compose --env-file /opt/tsm-demo/deploy/.env -f /opt/tsm-demo/deploy/compose.yaml exec -T --user 1654:1654 api dotnet /app/SupportTicketManager.Api.dll --demo-action reset
+TimeoutStartSec=180
+UMask=0077

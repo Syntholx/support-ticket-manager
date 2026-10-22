@@ -62,7 +62,11 @@ public static class AuthEndpoints
         {
             if (!ValidCredentials(request.Email, request.Password))
                 return Results.BadRequest(new { message = "E-mail i hasło są wymagane (limity: 254 i 128 znaków)." });
-            var result = await signIn.PasswordSignInAsync(request.Email, request.Password, false, true);
+            bool demo = DemoMode.IsEnabled(app.Configuration);
+            if (demo && !DemoMode.IsDemoEmail(request.Email)) return Results.Unauthorized();
+            // Public shared demo accounts must not be locked for everyone by a visitor.
+            // Per-IP authentication rate limiting and CSRF remain enabled.
+            var result = await signIn.PasswordSignInAsync(request.Email, request.Password, false, !demo);
             return result.Succeeded ? Results.Ok(new { message = "Zalogowano." }) : Results.Unauthorized();
         });
         app.MapGet("/api/auth/me", (ClaimsPrincipal user) => Results.Ok(new
@@ -74,7 +78,7 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/logout", async (SignInManager<ApplicationUser> signIn, UserManager<ApplicationUser> users, ClaimsPrincipal principal) =>
         {
             var user = await users.GetUserAsync(principal);
-            if (user is not null && !(await users.UpdateSecurityStampAsync(user)).Succeeded)
+            if (!DemoMode.IsEnabled(app.Configuration) && user is not null && !(await users.UpdateSecurityStampAsync(user)).Succeeded)
                 return Results.Problem(statusCode: 503, title: "Nie udało się unieważnić sesji. Ponów operację.");
             await signIn.SignOutAsync();
             return Results.Ok(new { message = "Wylogowano" });

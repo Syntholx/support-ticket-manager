@@ -25,6 +25,8 @@ import {
   useMatch,
 } from "react-router";
 import { useLogout } from "./hooks/useLogout";
+import { isDemoMode } from "./demo";
+import { DemoNotice } from "./components/DemoNotice";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
@@ -129,6 +131,9 @@ function App() {
   }
 
   function renderCurrentScreen() {
+    if (isDemoMode && ["/", "/register", "/confirm-email", "/forgot-password", "/reset-password", "/resend-confirmation"].includes(location.pathname)) {
+      return <Navigate to={isAuthenticated ? "/tickets" : "/login"} replace />;
+    }
     if (isCheckingSession || hasSessionError) {
       return (
         <CheckingSession
@@ -330,6 +335,7 @@ function App() {
 
   return (
     <div className="mx-auto my-10 w-full max-w-[760px] p-4">
+      {isDemoMode && <DemoNotice />}
       {renderCurrentScreen()}
       {import.meta.env.DEV && <StatusPanel title="Status API" />}
     </div>

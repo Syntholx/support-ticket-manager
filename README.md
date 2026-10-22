@@ -5,10 +5,13 @@ oraz API napisane w C# i ASP.NET Core.
 Użytkownik zgłasza problem i śledzi jego status, a pracownik wsparcia zarządza
 kolejką, ustala priorytety i prowadzi zgłoszenia od otwarcia do zamknięcia.
 
-Projekt działa lokalnie; nie ma publicznego serwera API ani działającego demo online.
+[Publiczne demo](https://tsm.szymon-michalek.dev) działa na osobnym VPS przez HTTPS.
+Ma wspólne konta i fikcyjne dane przywracane codziennie; nie wpisuj danych osobowych.
+Instrukcja obsługi i ograniczenia: [wdrożenie demo](docs/DEMO.md).
+Pełna wersja lokalna zachowuje wszystkie funkcje kont opisane poniżej.
 Interfejs obejmuje obsługę konta, aktywne zgłoszenia, archiwum i operacje Support.
 Cookies sesyjne, CSRF, limity ruchu i kontrolę równoczesnego zapisu obsługuje backend.
-Publiczne wdrożenie jest osobnym zadaniem wymagającym odbioru środowiska —
+Wymagania wdrożenia pełnej wersji dla rzeczywistych użytkowników opisuje
 [instrukcja produkcyjna](docs/PRODUCTION.md).
 
 ## Co rozwiązuje projekt?
@@ -350,8 +353,9 @@ POST nie ma pełnej ochrony cyklu życia żądania. F5 na ekranie resetu/potwier
 usuwa dane linku z pamięci; trzeba ponownie otworzyć wiadomość.
 
 Nie ma usuwania zgłoszeń, przypisywania konkretnego pracownika, załączników ani SLA.
-Rejestracja jest dostępna anonimowo. Nie ma zaplanowanego resetu publicznej bazy,
-ponieważ publiczne demo z bazą nie zostało wdrożone.
+Rejestracja jest dostępna anonimowo w pełnej wersji lokalnej. Publiczne demo
+wyłącza rejestrację i odzyskiwanie kont po stronie API. Jego reset codziennie
+przywraca wyłącznie fikcyjne zgłoszenia, bez usuwania bazy i kont.
 
 ## Interfejs i historia projektu
 
@@ -363,10 +367,9 @@ potrzebny podczas pracy przez serwer Vite. Oba katalogi są ignorowane w Git.
 poprawne dane. Normalne działanie klienta korzysta z API, nie tego pliku.
 Projekt służy obecnie nauce frontendu; istniejące API jest backendem ćwiczeniowym.
 
-Kod makiety oraz wcześniejszego lokalnego interfejsu zachowano w
-[repozytorium portfolio](https://github.com/Syntholx/portfolio/tree/main/tsm-demo).
-Nie jest publikowany jako działające demo. Makieta używa danych przykładowych,
-a lokalny panel nie został dostosowany do aktualnego logowania i uprawnień API.
+Stara makieta i wcześniejszy panel lokalny zostały usunięte z aktualnej wersji
+portfolio; ich kod pozostaje w historii Git. Publiczne demo korzysta z klienta
+React z tego repozytorium, a portfolio zawiera opis projektu i zrzuty interfejsu.
 
 Historyczna konsola i kolejne etapy MVP są dostępne w tagach v0.1.0–v0.7.0.
 W obecnej wersji pozostają Core, Api i Tests; stara konsola i listowe serwisy nie są wymagane.

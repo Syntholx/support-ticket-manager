@@ -1,0 +1,28 @@
+{
+    email {$ACME_EMAIL}
+}
+
+tsm.szymon-michalek.dev {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    }
+    @api path /api /api/*
+    handle @api {
+        reverse_proxy api:8080
+    }
+    handle /assets/* {
+        root * /srv
+        file_server
+    }
+    handle {
+        root * /srv
+        header Cache-Control "no-cache"
+        try_files {path} /index.html
+        file_server
+    }
+}

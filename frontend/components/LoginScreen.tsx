@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { getCsrfToken } from "../get-csrf-token";
+import { isDemoMode } from "../demo";
 export function LoginScreen(props: {
   onBackClick: () => void;
   onLoginSuccess: () => void;
@@ -103,20 +104,24 @@ export function LoginScreen(props: {
           {isLoggingIn ? "Logowanie..." : "Zaloguj się"}
         </button>
       </form>
-      <button
-        type="button"
-        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
-        onClick={props.onForgotPasswordClick}
-      >
-        Nie pamiętam hasła
-      </button>
-      <button
-        type="button"
-        className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
-        onClick={props.onResendConfirmationClick}
-      >
-        Wyślij ponownie potwierdzenie e-mail
-      </button>
+      {!isDemoMode && (
+        <>
+          <button
+            type="button"
+            className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
+            onClick={props.onForgotPasswordClick}
+          >
+            Nie pamiętam hasła
+          </button>
+          <button
+            type="button"
+            className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
+            onClick={props.onResendConfirmationClick}
+          >
+            Wyślij ponownie potwierdzenie e-mail
+          </button>
+        </>
+      )}
     </section>
   );
 }

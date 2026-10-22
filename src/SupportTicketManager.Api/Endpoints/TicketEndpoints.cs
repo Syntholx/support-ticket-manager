@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Data;
+using Microsoft.EntityFrameworkCore;
 
 public static class TicketEndpoints
 {
@@ -53,7 +55,7 @@ public static class TicketEndpoints
             return Results.Ok(foundTicket);
 
         }).RequireAuthorization();
-        app.MapPost("/api/tickets", async (CreateTicketRequest request, TicketDatabaseService ticketService, ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        app.MapPost("/api/tickets", async (CreateTicketRequest request, TicketDatabaseService ticketService, TicketDbContext database, ClaimsPrincipal user, CancellationToken cancellationToken) =>
 
         {
             string? ownerId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -82,7 +84,17 @@ public static class TicketEndpoints
 
             if (request.Title.Length > Ticket.MaxTitleLength || request.Description.Length > Ticket.MaxDescriptionLength)
                 return Results.BadRequest(new { message = "Tytuł: maksymalnie 200 znaków; opis: 5000." });
+            // Bound storage in the public demo. Serialize count+insert against other creates/resets.
+            await using var capacityTransaction = DemoMode.IsEnabled(app.Configuration)
+                ? await database.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
+            if (capacityTransaction is not null)
+            {
+                await database.Database.ExecuteSqlRawAsync("SELECT COUNT_BIG(*) FROM dbo.Tickets WITH (TABLOCKX, HOLDLOCK)", cancellationToken);
+                if (await database.Tickets.CountAsync(cancellationToken) >= 500)
+                    return Results.Json(new { message = "Demo osiągnęło limit zgłoszeń. Spróbuj po przywróceniu danych." }, statusCode: 429);
+            }
             Ticket createdTicket = await ticketService.CreateTicketAsync(request.Title, request.Description, ownerId, cancellationToken);
+            if (capacityTransaction is not null) await capacityTransaction.CommitAsync(cancellationToken);
 
             return Results.Created(
                 $"/api/tickets/{createdTicket.Id}", createdTicket);

@@ -1,6 +1,9 @@
 # Bezpieczeństwo i wdrożenie TSM
 
-Kod przygotowywany do wdrożenia — nie deklaracja wykonanego audytu/uruchomionej produkcji.
+Publiczne demo działa od 22.10.2026; jego zakres i obsługę opisuje [DEMO.md](DEMO.md).
+Poniżej wymagania pełnej wersji dla rzeczywistych kont, nie deklaracja audytu
+ani zaliczenia wszystkich punktów checklisty. Demo wyłącza operacje e-mailowe,
+rejestrację i reset haseł, ma wspólne konta oraz codzienny reset fikcyjnych zgłoszeń.
 Wariant bazowy: jedna instancja API, SQL Server, frontend i /api pod jednym originem HTTPS.
 Osobne domeny wymagają osobnego projektu cookies/CORS/CSRF; nie AllowAnyOrigin.
 
@@ -20,7 +23,9 @@ Osobne domeny wymagają osobnego projektu cookies/CORS/CSRF; nie AllowAnyOrigin.
 - POST /api/auth/reset-password { email, token, password }: 200/400.
   Hasło: 12–128 znaków, minimum 4 różne, duża/mała litera, cyfra, znak specjalny.
   Linki ważne godzinę. Reset unieważnia poprzedni token i sesje przez security stamp.
-- Logout unieważnia wszystkie sesje konta. Absolutny czas sesji: 30 minut;
+- Logout pełnej wersji unieważnia wszystkie sesje konta; w publicznym demo
+  usuwa sesję bieżącego klienta, bez wylogowywania innych odwiedzających.
+  Absolutny czas sesji: 30 minut;
   security stamp sprawdzany przy każdym żądaniu. Cookies starej wersji wymagają ponownego loginu.
 - Tytuł do 200, opis do 5000 znaków UTF-16, ograniczenia także w SQL.
 - Listy: ?page=1&pageSize=50. page 1–10000, pageSize 1–100; wynik nadal tablicą.
@@ -32,7 +37,8 @@ Linki prowadzą do frontendu /confirm-email lub /reset-password. Parametry są p
 więc nie trafiają w URL żądania HTTP. UI odczytuje fragment, usuwa go z paska przez
 history.replaceState, pobiera CSRF i wysyła POST po potwierdzeniu użytkownika.
 Nie loguj tokenów ani nie ładuj analityki na tych ekranach. Sam GET linku nic nie zmienia.
-Ekrany te trzeba zbudować i przetestować w frontend/; obecnie klient ma tylko status API.
+Ekrany istnieją w frontend/ i były sprawdzane lokalnie z Mailpit. W publicznym
+demo są niedostępne, a operacje kont blokuje również API.
 
 ## Limity i dostępność
 
@@ -42,7 +48,9 @@ Limity pamięciowe resetują się po restarcie, nie są współdzielone; skalowa
 wspólnego limitera na bramie/WAF. To nie zastępuje ochrony DDoS.
 E-mail: raz na 5 minut/konto/typ, atomowa blokada w SQL, zwalniana przy błędzie wysyłki.
 Brak trwałej kolejki SMTP: ponowienie przez endpoint, monitoring awarii i limity dostawcy.
-Identity: blokada konta na 15 minut po 5 błędnych hasłach.
+Identity pełnej wersji: blokada konta na 15 minut po 5 błędnych hasłach.
+Wspólne konta demo nie mają blokady konta; zachowano CSRF i limity żądań,
+aby jedna osoba nie mogła zablokować konta wszystkim odwiedzającym.
 Body do 32 KiB, także bez Content-Length; timeout żądania 30 s, SMTP 15 s.
 Proxy również musi ograniczać body, połączenia i czas odczytu. SQL respektuje anulowanie żądania.
 
@@ -63,7 +71,10 @@ Proxy również musi ograniczać body, połączenia i czas odczytu. SQL respektu
 | Email__FrontendBaseUrl | Publiczny HTTPS frontendu, bez query/fragmentu |
 
 Production odmawia startu z niebezpiecznym SQL TLS, wildcard hostem, brakiem
-trwałych kluczy/certyfikatu lub SMTP. Nie używaj Development do ominięcia kontroli.
+trwałych kluczy/certyfikatu lub SMTP. Wyjątek dla Demo:Enabled dotyczy SMTP:
+zamiast transportu poczty rejestrowana jest usługa odmawiająca wysyłki,
+a operacje kont są blokowane. SQL TLS, hosty i klucze nadal są wymagane.
+Nie używaj Development do ominięcia kontroli.
 HTTP w Production jest odrzucane. Proxy przekazuje X-Forwarded-Proto/For; ufamy
 tylko skonfigurowanym IP i jednemu hopowi. Port backendu za proxy nie może być publiczny.
 Nie używaj konta SQL sa: runtime ma tylko niezbędne DML, migracje osobne konto.
@@ -93,8 +104,9 @@ zaplanowanego unieważnienia sesji/linków — nie podmieniaj PFX w ciemno.
    Kontrola dostępu i retencji logów. /api/status to liveness, nie test bazy.
 8. Regularny restore drill, aktualizacje runtime/pakietów i skan zależności.
 
-Pozostają wybór hostingu/domeny, SMTP (SPF/DKIM/DMARC), sekrety, frontend,
-odbiór staging i proces uprawnień. Nie ma publicznego wdrożenia ani automatycznego kasowania bazy.
+Dla pełnej wersji pozostają m.in. produkcyjny SMTP (SPF/DKIM/DMARC),
+proces uprawnień, monitoring i odbiór pełnej checklisty. Publiczne demo
+ma osobną bazę i reset zgłoszeń, nie automatyczne kasowanie bazy.
 
 ## Weryfikacja lokalna — 18.09.2026
 

@@ -27,14 +27,21 @@ public static class AccountEmailRegistration
                 && uri.Scheme == "https" && string.IsNullOrEmpty(uri.UserInfo)
                 && string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment), "Email:FrontendBaseUrl must be an absolute HTTPS URL without credentials, query or fragment.");
         if (!environment.IsDevelopment())
-            options.Validate(value => !string.IsNullOrWhiteSpace(value.Host)
+            options.Validate(value => DemoMode.IsEnabled(configuration) || (!string.IsNullOrWhiteSpace(value.Host)
                 && value.Port is 465 or 587 && !string.IsNullOrWhiteSpace(value.Username)
                 && !string.IsNullOrWhiteSpace(value.Password)
                 && Uri.TryCreate(value.FrontendBaseUrl, UriKind.Absolute, out var frontend) && !frontend.IsLoopback
-                && MailboxAddress.TryParse(value.From, out _), "Production requires authenticated TLS SMTP configuration.");
+                && MailboxAddress.TryParse(value.From, out _)), "Production requires authenticated TLS SMTP configuration.");
         options.ValidateOnStart();
-        services.AddScoped<IAccountEmail, SmtpAccountEmail>();
+        services.AddScoped<IAccountEmail>(provider => DemoMode.IsEnabled(provider.GetRequiredService<IConfiguration>())
+            ? new DisabledDemoEmail() : ActivatorUtilities.CreateInstance<SmtpAccountEmail>(provider));
     }
+}
+
+public sealed class DisabledDemoEmail : IAccountEmail
+{
+    public Task SendAsync(string email, string subject, string link, CancellationToken cancellationToken) =>
+        throw new InvalidOperationException("Email delivery is disabled in public demo mode.");
 }
 
 public sealed class SmtpAccountEmail(IOptions<AccountEmailOptions> options, IHostEnvironment environment) : IAccountEmail

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
+if (DemoMode.IsEnabled(builder.Configuration)) DemoMode.ValidateDatabase(builder.Configuration);
 builder.AddApiSecurity();
 builder.Services.ConfigureHttpJsonOptions(options =>
 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -84,6 +85,12 @@ builder.Services.AddAuthorization(options =>
     });
 });
 var app = builder.Build();
+if (DemoMode.IsEnabled(app.Configuration)) DemoMode.ValidateDatabase(app.Configuration);
+if (args.Length == 2 && args[0] == "--demo-action")
+{
+    await DemoDatabase.RunAsync(app, args[1]);
+    return;
+}
 app.UseApiSecurityHeaders();
 if (args.Contains("--grant-support"))
 {
@@ -134,6 +141,7 @@ app.UseRequestTimeouts();
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
+app.UseDemoRestrictions();
 app.UseApiRequestProtection();
 app.MapGet("api/status", () => new
 {

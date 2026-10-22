@@ -1,0 +1,13 @@
+.git
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/*.pfx
+**/*.p12
+**/*.key
+**/*.pem
+deploy/private
+TestResults
