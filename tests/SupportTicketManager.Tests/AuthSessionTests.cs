@@ -73,7 +73,7 @@ public class AuthSessionTests
             using HttpResponseMessage logout = await client.PostAsync("/api/auth/logout", null);
             Assert.Equal(HttpStatusCode.OK, logout.StatusCode);
             JsonElement logoutBody = await logout.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal("Wylogowano", logoutBody.GetProperty("message").GetString());
+            Assert.Equal("Signed out", logoutBody.GetProperty("message").GetString());
             using HttpResponseMessage after = await client.GetAsync("/api/auth/me");
             Assert.Equal(HttpStatusCode.Unauthorized, after.StatusCode);
             Assert.Null(after.Headers.Location);

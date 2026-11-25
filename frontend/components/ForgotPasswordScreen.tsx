@@ -12,16 +12,16 @@ export function ForgotPasswordScreen(props: { onBackClick: () => void }) {
     const email = formData.get("email");
     if (typeof email !== "string") return;
     if (email.trim() === "") {
-      setMessage("Podaj adres e-mail");
+      setMessage("Enter your email address");
       return;
     }
     setSending(true);
-    setMessage("Wysyłam prośbę o reset hasła...");
+    setMessage("Requesting a password reset…");
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setMessage(
-          "Nie udało się bezpiecznie przygotować resetowania hasła. Spróbuj ponownie.",
+          "Could not prepare a secure password reset request. Try again.",
         );
         return;
       }
@@ -36,26 +36,26 @@ export function ForgotPasswordScreen(props: { onBackClick: () => void }) {
       });
       if (resetPasswordResponse.status === 202) {
         setMessage(
-          "Jeśli konto wymaga tej operacji, otrzymasz wiadomość z dalszymi instrukcjami.",
+          "If your account requires this action, you will receive an email with further instructions.",
         );
         return;
       }
       if (resetPasswordResponse.status === 400) {
-        setMessage("Sprawdź podany adres e-mail");
+        setMessage("Check your email address");
         return;
       }
       if (resetPasswordResponse.status === 429) {
-        setMessage("Zbyt wiele prób. Spróbuj ponownie później.");
+        setMessage("Too many attempts. Please try again later.");
         return;
       }
 
       setMessage(
-        "Nie udało się przyjąć prośby o resetowanie hasła. Spróbuj ponownie później.",
+        "Could not accept the password reset request. Please try again later.",
       );
       return;
     } catch (error) {
       setMessage(
-        "Wystąpił problem z połączeniem. Sprawdź połączenie i spróbuj ponownie.",
+        "Connection error. Check your connection and try again.",
       );
       return;
     } finally {
@@ -71,16 +71,16 @@ export function ForgotPasswordScreen(props: { onBackClick: () => void }) {
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] disabled:text-[#64748b] disabled:cursor-not-allowed"
         onClick={props.onBackClick}
       >
-        Wróć
+        Back
       </button>
-      <h1>Nie pamiętam hasła</h1>
+      <h1>Forgot password</h1>
       <p>
-        Podaj adres e-mail. Jeśli konto wymaga tej operacji, otrzymasz wiadomość
-        z dalszymi instrukcjami.
+        Enter your email address. If your account requires this action, we will email you
+        further instructions.
       </p>
       <form onSubmit={handleSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="email">Podaj adres e-mail.</label>
+          <label htmlFor="email">Enter your email address.</label>
           <input
             disabled={isSending}
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
@@ -97,7 +97,7 @@ export function ForgotPasswordScreen(props: { onBackClick: () => void }) {
           disabled={isSending}
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
         >
-          {isSending ? "Wysyłanie..." : "Wyślij link resetujący"}
+          {isSending ? "Sending…" : "Send reset link"}
         </button>
       </form>
       <p role="status">{message}</p>

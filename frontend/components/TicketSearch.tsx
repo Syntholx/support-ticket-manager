@@ -4,7 +4,7 @@ export function TicketSearch(props: {
 }) {
   return (
     <div className="mb-4 flex w-full flex-col gap-1.5">
-      <label htmlFor="search-Query">Szukaj po tytule</label>
+      <label htmlFor="search-Query">Search by title</label>
       <input
         type="search"
         id="search-Query"
@@ -24,7 +24,7 @@ export function TicketSearch(props: {
         disabled={props.query === ""}
         onClick={() => props.onQueryChange("")}
       >
-        Wyczyść
+        Clear
       </button>
     </div>
   );

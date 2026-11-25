@@ -13,7 +13,7 @@ export function TicketPriorityBadge(props: {
                     : getPriorityClasses(props.priority)
                 }`}
     >
-      {props.status === "Closed" ? "Priorytet zgłoszenia" : "Priorytet"}:{" "}
+      {props.status === "Closed" ? "Ticket priority" : "Priority"}:{" "}
       {props.priority}/5
     </span>
   );

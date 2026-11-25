@@ -15,29 +15,29 @@ export type TicketDetail = {
 
 export function parseTicket(data: unknown): TicketSummary {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Odpowiedź API nie jest obiektem");
+    throw new Error("The API response is not an object");
   }
   if (!("id" in data) || typeof data.id !== "number") {
-    throw new Error("Brak id lub nieprawidłowy typ");
+    throw new Error("Missing or invalid ID");
   }
 
   if (!("title" in data) || typeof data.title !== "string") {
-    throw new Error("Brak title lub nieprawidłowy typ");
+    throw new Error("Missing or invalid title");
   }
   if (!data.title.trim()) {
-    throw new Error("Title zgłoszenia nie może być puste");
+    throw new Error("Ticket title cannot be empty");
   }
   if (!("status" in data) || typeof data.status !== "string") {
-    throw new Error("Brak status lub nieprawidłowy typ");
+    throw new Error("Missing or invalid status");
   }
   if (!("priority" in data) || typeof data.priority !== "number") {
-    throw new Error("Brak priority lub nieprawidłowy typ");
+    throw new Error("Missing or invalid priority");
   }
   if (data.priority < 1 || data.priority > 5) {
-    throw new Error("Priority musi mieścić się w przedziale 1 - 5");
+    throw new Error("Priority must be between 1 and 5");
   }
   if (!Number.isInteger(data.priority)) {
-    throw new Error("Priority nie jest liczbą całkowitą.");
+    throw new Error("Priority is not an integer.");
   }
 
   if (
@@ -45,7 +45,7 @@ export function parseTicket(data: unknown): TicketSummary {
     data.status !== "InProgress" &&
     data.status !== "Closed"
   ) {
-    throw new Error("Status nie zawiera dopuszczalnych statusów.");
+    throw new Error("Invalid ticket status.");
   }
 
   return {
@@ -57,38 +57,38 @@ export function parseTicket(data: unknown): TicketSummary {
 }
 export function parseTicketDetails(data: unknown): TicketDetail {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Odpowiedź API nie jest obiektem");
+    throw new Error("The API response is not an object");
   }
   if (!("status" in data) || typeof data.status !== "string") {
-    throw new Error("Brak status lub nieprawidłowy typ");
+    throw new Error("Missing or invalid status");
   }
   if (
     data.status !== "Open" &&
     data.status !== "InProgress" &&
     data.status !== "Closed"
   ) {
-    throw new Error("Status nie zawiera dopuszczalnych statusów.");
+    throw new Error("Invalid ticket status.");
   }
   if (!("priority" in data) || typeof data.priority !== "number") {
-    throw new Error("Brak priority lub nieprawidłowy typ");
+    throw new Error("Missing or invalid priority");
   }
   if (data.priority < 1 || data.priority > 5) {
-    throw new Error("Priority musi mieścić się w przedziale 1 - 5");
+    throw new Error("Priority must be between 1 and 5");
   }
   if (!Number.isInteger(data.priority)) {
-    throw new Error("Priority nie jest liczbą całkowitą.");
+    throw new Error("Priority is not an integer.");
   }
   if (!("id" in data) || typeof data.id !== "number") {
-    throw new Error("Brak id lub nieprawidłowy typ");
+    throw new Error("Missing or invalid ID");
   }
   if (!("title" in data) || typeof data.title !== "string") {
-    throw new Error("Brak title lub nieprawidłowy typ");
+    throw new Error("Missing or invalid title");
   }
   if (!("description" in data) || typeof data.description !== "string") {
-    throw new Error("Brak description lub nieprawidłowy typ");
+    throw new Error("Missing or invalid description");
   }
   if (!data.title.trim() || !data.description.trim()) {
-    throw new Error("Title lub opis nie może być puste");
+    throw new Error("Title and description are required");
   }
 
   return {
@@ -104,10 +104,10 @@ export function formatTicketStatus(
   status: "Open" | "InProgress" | "Closed",
 ): string {
   if (status === "Open") {
-    return "Otwarte";
+    return "Open";
   }
   if (status === "InProgress") {
-    return "W trakcie";
+    return "In progress";
   }
-  return "Zamknięte";
+  return "Closed";
 }

@@ -32,7 +32,7 @@ public class AuthApiTests
             // Only the public message is allowed, not user/password/hash fields.
             JsonProperty property = Assert.Single(body.EnumerateObject().ToArray());
             Assert.Equal("message", property.Name);
-            Assert.Equal("Konto zostało utworzone. Potwierdź adres e-mail.", property.Value.GetString());
+            Assert.Equal("Account created. Confirm your email address.", property.Value.GetString());
 
             using IServiceScope scope = factory.Services.CreateScope();
             TicketDbContext database = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
@@ -70,7 +70,7 @@ public class AuthApiTests
             using HttpResponseMessage secondResponse = await client.PostAsJsonAsync("/api/auth/register", request);
             Assert.Equal(HttpStatusCode.BadRequest, secondResponse.StatusCode);
             JsonElement body = await secondResponse.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal("Nie udało się utworzyć konta", body.GetProperty("message").GetString());
+            Assert.Equal("Could not create the account", body.GetProperty("message").GetString());
 
             using IServiceScope scope = factory.Services.CreateScope();
             TicketDbContext database = scope.ServiceProvider.GetRequiredService<TicketDbContext>();
@@ -96,7 +96,7 @@ public class AuthApiTests
             using HttpResponseMessage response = await client.PostAsJsonAsync("/api/auth/register", new { email, password });
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal("Nie udało się utworzyć konta", body.GetProperty("message").GetString());
+            Assert.Equal("Could not create the account", body.GetProperty("message").GetString());
 
             using IServiceScope scope = factory.Services.CreateScope();
             TicketDbContext database = scope.ServiceProvider.GetRequiredService<TicketDbContext>();

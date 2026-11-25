@@ -21,8 +21,8 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
 
   const [confirmationMessage, setConfirmationMessage] = useState(
     userId && token
-      ? "Kliknij przycisk, aby potwierdzić adres e-mail"
-      : "Link potwierdzający jest nieprawidłowy",
+      ? "Select the button to confirm your email address"
+      : "Invalid confirmation link",
   );
   const [isConfirmed, setConfirmed] = useState(false);
   const [isConfirming, setConfirming] = useState(false);
@@ -34,7 +34,7 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setConfirmationMessage(
-          "Nie udało się bezpiecznie wysłać potwierdzenia e-mail",
+          "Could not securely submit your email confirmation",
         );
         return;
       }
@@ -51,17 +51,17 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
       });
       if (confirmEmailResponse.status === 200) {
         setConfirmed(true);
-        setConfirmationMessage("Adres e-mail potwierdzony");
+        setConfirmationMessage("Email address confirmed");
       } else if (confirmEmailResponse.status === 400) {
-        setConfirmationMessage("Link jest nieprawidłowy lub wygasł.");
+        setConfirmationMessage("This link is invalid or has expired.");
       } else {
         setConfirmationMessage(
-          "Nie udało się potwierdzić adresu e-mail. Spróbuj ponownie.",
+          "Could not confirm your email. Try again.",
         );
       }
     } catch (error) {
       setConfirmationMessage(
-        "Nie udało się potwierdzić adresu e-mail, możliwy błąd API, sprawdź połączenie.",
+        "Could not confirm your email. Check your connection.",
       );
     } finally {
       setConfirming(false);
@@ -70,7 +70,7 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
 
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <h1>Potwierdzenie e-maila</h1>
+      <h1>Email confirmation</h1>
       <p role="status">{confirmationMessage}</p>
       <div className="flex flex-wrap gap-2 ">
         <button
@@ -79,7 +79,7 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
           disabled={!userId || !token || isConfirming || isConfirmed}
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
         >
-          {isConfirming ? "Potwierdzanie..." : "Potwierdź e-mail"}
+          {isConfirming ? "Confirming…" : "Confirm email"}
         </button>
 
         <button
@@ -88,7 +88,7 @@ export function ConfirmEmailScreen(props: { onLoginClick: () => void }) {
           onClick={props.onLoginClick}
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
         >
-          Przejdź do logowania
+          Go to sign-in
         </button>
       </div>
     </section>

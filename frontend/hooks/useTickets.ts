@@ -44,13 +44,13 @@ export function useTickets(
           return;
         }
         if (!loadTicketsResponse.ok) {
-          setTicketsError("Nie udało się pobrać zgłoszeń");
+          setTicketsError("Could not load tickets");
           return;
         }
         const ticketsData: unknown = await loadTicketsResponse.json();
         if (ignore) return;
         if (!Array.isArray(ticketsData)) {
-          setTicketsError("Api zwróciło nieprawidłową listę zgłoszeń");
+          setTicketsError("The API returned an invalid ticket list");
           return;
         }
         const parsedTickets = ticketsData.map(parseTicket);
@@ -58,7 +58,7 @@ export function useTickets(
       } catch (error) {
         if (!ignore) {
           setTicketsError(
-            "Nie udało się pobrać lub odczytać zgłoszeń, sprawdź połączenie i spróbuj ponownie.",
+            "Could not load or read tickets. Check your connection and try again.",
           );
           return;
         }

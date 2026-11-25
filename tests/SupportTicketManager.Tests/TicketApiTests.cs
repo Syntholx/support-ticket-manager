@@ -277,7 +277,7 @@ public class TicketApiTests
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
 
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Nie znaleziono zgłoszenia", message);
+            Assert.Equal("Ticket not found", message);
         }
         finally
         {
@@ -300,7 +300,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Zgłoszenie jest już zamknięte", message);
+            Assert.Equal("Ticket is already closed", message);
         }
         finally
         {
@@ -353,7 +353,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Zgłoszenie nie jest zamknięte", message);
+            Assert.Equal("Ticket is not closed", message);
         }
         finally
         {
@@ -380,7 +380,7 @@ public class TicketApiTests
 
             string? message = ticketJson.GetProperty("message").GetString();
 
-            Assert.Equal("Zgłoszenie nie jest zamknięte", message);
+            Assert.Equal("Ticket is not closed", message);
         }
         finally
         {
@@ -407,7 +407,7 @@ public class TicketApiTests
 
             string? message = ticketJson.GetProperty("message").GetString();
 
-            Assert.Equal("Nie znaleziono zgłoszenia", message);
+            Assert.Equal("Ticket not found", message);
         }
         finally
         {
@@ -463,7 +463,7 @@ public class TicketApiTests
 
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Nie można rozpocząć obsługi zgłoszenia", message);
+            Assert.Equal("Cannot start work on this ticket", message);
         }
         finally
         {
@@ -488,7 +488,7 @@ public class TicketApiTests
 
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Nie można rozpocząć obsługi zgłoszenia", message);
+            Assert.Equal("Cannot start work on this ticket", message);
         }
         finally
         {
@@ -513,7 +513,7 @@ public class TicketApiTests
 
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Nie znaleziono zgłoszenia", message);
+            Assert.Equal("Ticket not found", message);
         }
         finally
         {
@@ -567,7 +567,7 @@ public class TicketApiTests
             );
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
+            Assert.Equal("Priority must be between 1 and 5", message);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             using HttpResponseMessage getResponse = await client.GetAsync($"/api/tickets/{seed.OpenId}");
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -597,7 +597,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             JsonElement ticketJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticketJson.GetProperty("message").GetString();
-            Assert.Equal("Nie znaleziono zgłoszenia", message);
+            Assert.Equal("Ticket not found", message);
         }
         finally
         {
@@ -620,7 +620,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
+            Assert.Equal("Priority must be between 1 and 5", message);
             using HttpResponseMessage getResponse = await client.GetAsync($"/api/tickets/{seed.OpenId}");
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
             JsonElement ticketJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -648,7 +648,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Priorytet musi być od 1 do 5", message);
+            Assert.Equal("Priority must be between 1 and 5", message);
             using HttpResponseMessage getResponse = await client.GetAsync($"/api/tickets/{seed.OpenId}");
             Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
             JsonElement ticketJson = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -829,7 +829,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Opis nie może być pusty", message);
+            Assert.Equal("Description cannot be empty", message);
 
             await AssertSeedUnchangedAsync(client, seed);
         }
@@ -859,7 +859,7 @@ public class TicketApiTests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             JsonElement errorJson = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = errorJson.GetProperty("message").GetString();
-            Assert.Equal("Opis nie może być pusty", message);
+            Assert.Equal("Description cannot be empty", message);
 
             await AssertSeedUnchangedAsync(client, seed);
         }
@@ -941,7 +941,7 @@ public class TicketApiTests
             scope.ServiceProvider.GetRequiredService<TicketDbContext>();
 
         Ticket open = new Ticket(0, "Problem z logowaniem",
-            "Użytkownik nie może wejść do panelu", 3, TicketStatus.Open);
+            "User nie może wejść do panelu", 3, TicketStatus.Open);
         Ticket closed = new Ticket(0, "Błąd płatności",
             "Płatność wymaga sprawdzenia", 5, TicketStatus.Closed);
         Ticket inProgress = new Ticket(0, "Problem z wysyłką",

@@ -5,7 +5,7 @@ export function CheckingSession(props: {
 }) {
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <h1>Stan sesji</h1>
+      <h1>Session status</h1>
       <p role="status">{props.message}</p>
       {props.hasSessionError && (
         <button
@@ -13,7 +13,7 @@ export function CheckingSession(props: {
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white"
           onClick={props.onRetryClick}
         >
-          Spróbuj ponownie
+          Try again
         </button>
       )}
     </section>

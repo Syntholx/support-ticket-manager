@@ -69,21 +69,21 @@ public static class DemoDatabase
     public static Ticket[] CreateTickets(string userId, string supportId)
     {
         var data = new (string Title, int Priority, TicketStatus Status)[] {
-            ("Brak dostępu do panelu po zalogowaniu", 5, TicketStatus.InProgress),
-            ("Błąd zapisu formularza zgłoszenia", 4, TicketStatus.Open),
-            ("Nie można pobrać faktury PDF", 4, TicketStatus.InProgress),
-            ("Powiadomienie e-mail nie dociera", 3, TicketStatus.Open),
-            ("Nieprawidłowa data w historii zamówienia", 2, TicketStatus.InProgress),
-            ("Długi tytuł wychodzi poza kartę na telefonie", 2, TicketStatus.Open),
-            ("Prośba o dodanie podpowiedzi w formularzu", 1, TicketStatus.Open),
-            ("Przywrócenie dostępu do konta", 5, TicketStatus.Closed),
-            ("Naprawa wyszukiwania zgłoszeń", 3, TicketStatus.Closed),
-            ("Poprawa odstępów przycisków na telefonie", 2, TicketStatus.Closed),
-            ("Aktualizacja opisu potwierdzenia e-mail", 1, TicketStatus.Closed),
-            ("Usunięcie błędu sortowania listy", 4, TicketStatus.Closed),
+            ("Cannot access the dashboard after signing in", 5, TicketStatus.InProgress),
+            ("Error saving the ticket form", 4, TicketStatus.Open),
+            ("Cannot download the PDF invoice", 4, TicketStatus.InProgress),
+            ("Notification email missing", 3, TicketStatus.Open),
+            ("Incorrect date in order history", 2, TicketStatus.InProgress),
+            ("Long title overflows the card on mobile", 2, TicketStatus.Open),
+            ("Request for a form hint", 1, TicketStatus.Open),
+            ("Restore account access", 5, TicketStatus.Closed),
+            ("Fix ticket search", 3, TicketStatus.Closed),
+            ("Improve button spacing on mobile", 2, TicketStatus.Closed),
+            ("Update the email confirmation text", 1, TicketStatus.Closed),
+            ("Fix list sorting", 4, TicketStatus.Closed),
         };
         return data.Select((item, index) => new Ticket(0, item.Title,
-            "Fikcyjne zgłoszenie demonstracyjne.\nOpisuje przykładowy problem i oczekiwany rezultat. Nie zawiera danych prawdziwych osób.",
+            "Fictional demo ticket.\nIt describes a sample issue and expected outcome. No real personal data is included.",
             item.Priority, item.Status, index == 6 ? supportId : userId)).ToArray();
     }
 }

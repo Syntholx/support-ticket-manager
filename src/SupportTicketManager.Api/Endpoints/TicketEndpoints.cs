@@ -48,7 +48,7 @@ public static class TicketEndpoints
             {
                 return Results.NotFound(new
                 {
-                    message = $"Nie znaleziono zgłoszenia o ID: {id}"
+                    message = $"No ticket found with ID: {id}"
                 });
             }
 
@@ -68,14 +68,14 @@ public static class TicketEndpoints
             {
                 return Results.BadRequest(new
                 {
-                    message = "Tytuł nie może być pusty"
+                    message = "Title cannot be empty"
                 });
             }
             if (string.IsNullOrWhiteSpace(request.Description))
             {
                 return Results.BadRequest(new
                 {
-                    message = "Opis nie może być pusty"
+                    message = "Description cannot be empty"
                 });
             }
 
@@ -83,7 +83,7 @@ public static class TicketEndpoints
 
 
             if (request.Title.Length > Ticket.MaxTitleLength || request.Description.Length > Ticket.MaxDescriptionLength)
-                return Results.BadRequest(new { message = "Tytuł: maksymalnie 200 znaków; opis: 5000." });
+                return Results.BadRequest(new { message = "Maximum length: 200 characters for the title and 5000 for the description." });
             // Bound storage in the public demo. Serialize count+insert against other creates/resets.
             await using var capacityTransaction = DemoMode.IsEnabled(app.Configuration)
                 ? await database.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
@@ -91,7 +91,7 @@ public static class TicketEndpoints
             {
                 await database.Database.ExecuteSqlRawAsync("SELECT COUNT_BIG(*) FROM dbo.Tickets WITH (TABLOCKX, HOLDLOCK)", cancellationToken);
                 if (await database.Tickets.CountAsync(cancellationToken) >= 500)
-                    return Results.Json(new { message = "Demo osiągnęło limit zgłoszeń. Spróbuj po przywróceniu danych." }, statusCode: 429);
+                    return Results.Json(new { message = "Demo ticket limit reached. Try again after the next data reset." }, statusCode: 429);
             }
             Ticket createdTicket = await ticketService.CreateTicketAsync(request.Title, request.Description, ownerId, cancellationToken);
             if (capacityTransaction is not null) await capacityTransaction.CommitAsync(cancellationToken);
@@ -114,7 +114,7 @@ public static class TicketEndpoints
             {
                 return Results.NotFound(new
                 {
-                    message = "Nie znaleziono zgłoszenia"
+                    message = "Ticket not found"
                 });
             }
 
@@ -122,7 +122,7 @@ public static class TicketEndpoints
             {
                 return Results.Conflict(new
                 {
-                    message = "Zgłoszenie jest już zamknięte"
+                    message = "Ticket is already closed"
                 });
             }
             return Results.Ok(result.Ticket);
@@ -134,7 +134,7 @@ public static class TicketEndpoints
             {
                 return Results.NotFound(new
                 {
-                    message = "Nie znaleziono zgłoszenia"
+                    message = "Ticket not found"
                 });
             }
 
@@ -142,7 +142,7 @@ public static class TicketEndpoints
             {
                 return Results.Conflict(new
                 {
-                    message = "Zgłoszenie nie jest zamknięte"
+                    message = "Ticket is not closed"
                 });
 
             }
@@ -157,7 +157,7 @@ public static class TicketEndpoints
             {
                 return Results.NotFound(new
                 {
-                    message = "Nie znaleziono zgłoszenia"
+                    message = "Ticket not found"
                 });
             }
 
@@ -165,7 +165,7 @@ public static class TicketEndpoints
             {
                 return Results.Conflict(new
                 {
-                    message = "Nie można rozpocząć obsługi zgłoszenia"
+                    message = "Cannot start work on this ticket"
                 });
             }
             return Results.Ok(result.Ticket);
@@ -178,14 +178,14 @@ public static class TicketEndpoints
             {
                 return Results.NotFound(new
                 {
-                    message = "Nie znaleziono zgłoszenia"
+                    message = "Ticket not found"
                 });
             }
             if (result.Status == TicketOperationStatus.InvalidPriority)
             {
                 return Results.BadRequest(new
                 {
-                    message = "Priorytet musi być od 1 do 5"
+                    message = "Priority must be between 1 and 5"
                 });
             }
             return Results.Ok(result.Ticket);

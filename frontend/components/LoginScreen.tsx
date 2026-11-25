@@ -9,7 +9,7 @@ export function LoginScreen(props: {
 }) {
   const [isLoggingIn, setLoggingIn] = useState(false);
   const [loginMessage, setLoginMessage] = useState(
-    "Wpisz e-mail i hasło, aby się zalogować.",
+    "Enter your email and password to sign in.",
   );
   async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,12 +24,12 @@ export function LoginScreen(props: {
     }
     const loginRequest = { email: email, password: password };
     const requestBody = JSON.stringify(loginRequest);
-    setLoginMessage("Przygotowuję bezpieczne logowanie...");
+    setLoginMessage("Preparing secure sign-in…");
     setLoggingIn(true);
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
-        setLoginMessage("Nie udało się bezpiecznie przygotować logowania.");
+        setLoginMessage("Could not prepare secure sign-in.");
         return;
       }
       const loginResponse = await fetch("/api/auth/login", {
@@ -43,20 +43,20 @@ export function LoginScreen(props: {
       });
       if (loginResponse.status === 401) {
         setLoginMessage(
-          "Nie udało się zalogować, sprawdź dane lub stan konta.",
+          "Could not sign in. Check your credentials and account status.",
         );
         return;
       }
       if (!loginResponse.ok) {
         setLoginMessage(
-          "Logowanie nie powiodło się, spróbuj ponownie później.",
+          "Sign-in failed. Try again later.",
         );
         return;
       }
-      setLoginMessage("Sprawdzam sesję...");
+      setLoginMessage("Checking session…");
       props.onLoginSuccess();
     } catch (error) {
-      setLoginMessage("Nie udało się połączyć z API TSM.");
+      setLoginMessage("Could not connect to the TSM API.");
     } finally {
       setLoggingIn(false);
     }
@@ -69,13 +69,13 @@ export function LoginScreen(props: {
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
         onClick={props.onBackClick}
       >
-        Wróć
+        Back
       </button>
-      <h1>Logowanie</h1>
+      <h1>Sign in</h1>
       <p>{loginMessage}</p>
       <form onSubmit={handleLoginSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="email">Podaj adres e-mail</label>
+          <label htmlFor="email">Enter your email address</label>
           <input
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="email"
@@ -86,7 +86,7 @@ export function LoginScreen(props: {
           ></input>
         </div>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="password">Podaj hasło</label>
+          <label htmlFor="password">Enter your password</label>
           <input
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="password"
@@ -101,7 +101,7 @@ export function LoginScreen(props: {
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
           disabled={isLoggingIn}
         >
-          {isLoggingIn ? "Logowanie..." : "Zaloguj się"}
+          {isLoggingIn ? "Sign in..." : "Sign in"}
         </button>
       </form>
       {!isDemoMode && (
@@ -111,14 +111,14 @@ export function LoginScreen(props: {
             className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
             onClick={props.onForgotPasswordClick}
           >
-            Nie pamiętam hasła
+            Forgot password
           </button>
           <button
             type="button"
             className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px]"
             onClick={props.onResendConfirmationClick}
           >
-            Wyślij ponownie potwierdzenie e-mail
+            Resend confirmation email
           </button>
         </>
       )}

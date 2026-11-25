@@ -9,7 +9,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("pokazuje błąd dla różnych haseł", async () => {
+test("pokazuje error dla różnych haseł", async () => {
   const user = userEvent.setup();
   window.history.replaceState(
     null,
@@ -20,25 +20,25 @@ test("pokazuje błąd dla różnych haseł", async () => {
   vi.stubGlobal("fetch", fetchMock);
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
   await user.type(
-    screen.getByLabelText("Podaj nowe hasło"),
+    screen.getByLabelText("Enter your new password"),
     "PierwszeHaslo123!",
   );
   await user.type(
-    screen.getByLabelText("Powtórz nowe hasło"),
+    screen.getByLabelText("Confirm new password"),
     "DrugieHaslo123",
   );
-  await user.click(screen.getByRole("button", { name: "Zmień hasło" }));
-  expect(screen.getByText("Podane hasła muszą być identyczne.")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Change password" }));
+  expect(screen.getByText("The passwords must match.")).toBeTruthy();
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
 test("bez danych linku nie pokazuje formularza", () => {
   window.history.replaceState(null, "", "/reset-password");
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
-  expect(screen.queryByLabelText("Podaj nowe hasło")).toBeNull();
+  expect(screen.queryByLabelText("Enter your new password")).toBeNull();
   expect(
     screen.getByText(
-      "Link resetujący jest nieprawidłowy lub brakuje jego danych. Zamów nową wiadomość.",
+      "The reset link is invalid or incomplete. Request a new email.",
     ),
   ).toBeTruthy();
 });
@@ -49,7 +49,7 @@ test("sprawdzamy callback logowania, czy jest wywoływany", async () => {
   window.history.replaceState(null, "", "reset-password");
   render(<ResetPasswordScreen onLoginClick={onLoginClick} />);
   await user.click(
-    screen.getByRole("button", { name: "Przejdź do logowania" }),
+    screen.getByRole("button", { name: "Go to sign-in" }),
   );
   expect(onLoginClick).toHaveBeenCalledTimes(1);
 });
@@ -74,17 +74,17 @@ test("po sukcesie resetu ukrywa formularz", async () => {
     "/reset-password#email=test%40example.com&token=testowy-token",
   );
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
-  expect(screen.getByLabelText("Podaj nowe hasło")).toBeTruthy();
-  await user.type(screen.getByLabelText("Podaj nowe hasło"), "DrugieHaslo123!");
+  expect(screen.getByLabelText("Enter your new password")).toBeTruthy();
+  await user.type(screen.getByLabelText("Enter your new password"), "DrugieHaslo123!");
   await user.type(
-    screen.getByLabelText("Powtórz nowe hasło"),
+    screen.getByLabelText("Confirm new password"),
     "DrugieHaslo123!",
   );
-  await user.click(screen.getByRole("button", { name: "Zmień hasło" }));
+  await user.click(screen.getByRole("button", { name: "Change password" }));
   expect(
-    await screen.findByText("Hasło zostało zmienione. Możesz się zalogować."),
+    await screen.findByText("Password changed. You can now sign in."),
   ).toBeTruthy();
-  expect(screen.queryByLabelText("Podaj nowe hasło")).toBeNull();
+  expect(screen.queryByLabelText("Enter your new password")).toBeNull();
   expect(fetchMock).toHaveBeenCalledTimes(2);
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
@@ -104,7 +104,7 @@ test("po sukcesie resetu ukrywa formularz", async () => {
     }),
   );
 });
-test("po odpowiedzi 400 pokazuje błąd i zachowuje formularz", async () => {
+test("po odpowiedzi 400 pokazuje error i zachowuje formularz", async () => {
   const fetchMock = vi.fn();
   fetchMock.mockResolvedValueOnce(
     new Response(JSON.stringify({ token: "testowy-csrf" }), {
@@ -123,21 +123,21 @@ test("po odpowiedzi 400 pokazuje błąd i zachowuje formularz", async () => {
     "/reset-password#email=test%40example.com&token=testowy-token",
   );
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
-  await user.type(screen.getByLabelText("Podaj nowe hasło"), "DrugieHaslo123!");
+  await user.type(screen.getByLabelText("Enter your new password"), "DrugieHaslo123!");
   await user.type(
-    screen.getByLabelText("Powtórz nowe hasło"),
+    screen.getByLabelText("Confirm new password"),
     "DrugieHaslo123!",
   );
-  await user.click(screen.getByRole("button", { name: "Zmień hasło" }));
+  await user.click(screen.getByRole("button", { name: "Change password" }));
   expect(
     await screen.findByText(
-      "Nie udało się zmienić hasła. Link może być nieprawidłowy lub wygasły albo hasło nie spełnia wymagań",
+      "Could not change the password. The link may be invalid or expired, or the password may not meet the requirements",
     ),
   ).toBeTruthy();
-  expect(screen.getByLabelText("Podaj nowe hasło")).toBeTruthy();
+  expect(screen.getByLabelText("Enter your new password")).toBeTruthy();
   expect(fetchMock).toHaveBeenCalledTimes(2);
   const submitButton = screen.getByRole<HTMLButtonElement>("button", {
-    name: "Zmień hasło",
+    name: "Change password",
   });
   expect(submitButton.disabled).toBe(false);
 });
@@ -161,20 +161,20 @@ test("po błędzie połączenia, zachowuje formularz i pozwala ponowić", async 
     "/reset-password#email=test%40example.com&token=testowy-token",
   );
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
-  await user.type(screen.getByLabelText("Podaj nowe hasło"), "DrugieHaslo123!");
+  await user.type(screen.getByLabelText("Enter your new password"), "DrugieHaslo123!");
   await user.type(
-    screen.getByLabelText("Powtórz nowe hasło"),
+    screen.getByLabelText("Confirm new password"),
     "DrugieHaslo123!",
   );
-  await user.click(screen.getByRole("button", { name: "Zmień hasło" }));
-  expect(await screen.findByLabelText("Podaj nowe hasło")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Change password" }));
+  expect(await screen.findByLabelText("Enter your new password")).toBeTruthy();
   expect(
     await screen.findByText(
-      "Nie udało się połączyć z serwerem. Spróbuj ponownie.",
+      "Could not connect to the server. Try again.",
     ),
   ).toBeTruthy();
   const submitButton = screen.getByRole<HTMLButtonElement>("button", {
-    name: "Zmień hasło",
+    name: "Change password",
   });
   expect(submitButton.disabled).toBe(false);
   expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -187,10 +187,10 @@ test("po błędzie połączenia, zachowuje formularz i pozwala ponowić", async 
 
   fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
 
-  await user.click(screen.getByRole("button", { name: "Zmień hasło" }));
+  await user.click(screen.getByRole("button", { name: "Change password" }));
   expect(
-    await screen.findByText("Hasło zostało zmienione. Możesz się zalogować."),
+    await screen.findByText("Password changed. You can now sign in."),
   ).toBeTruthy();
-  expect(screen.queryByLabelText("Podaj nowe hasło")).toBeNull();
+  expect(screen.queryByLabelText("Enter your new password")).toBeNull();
   expect(fetchMock).toHaveBeenCalledTimes(4);
 });

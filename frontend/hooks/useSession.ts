@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 export function useSession(shouldCheckOnMount: boolean) {
   const [hasSessionError, setSessionError] = useState(false);
-  const [sessionMessage, setSessionMessage] = useState("Sprawdzam sesję...");
+  const [sessionMessage, setSessionMessage] = useState("Checking session…");
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [isCheckingSession, setCheckingSession] = useState(shouldCheckOnMount);
   const [isSupport, setSupport] = useState(false);
@@ -11,7 +11,7 @@ export function useSession(shouldCheckOnMount: boolean) {
     setCheckingSession(true);
     setSupport(false);
     setSessionError(false);
-    setSessionMessage("Sprawdzam sesję...");
+    setSessionMessage("Checking session…");
     try {
       const meResponse = await fetch("/api/auth/me", {
         method: "GET",
@@ -25,7 +25,7 @@ export function useSession(shouldCheckOnMount: boolean) {
           !("isSupport" in sessionData) ||
           typeof sessionData.isSupport !== "boolean"
         ) {
-          throw new Error("Nieprawidłowa odpowiedź sesji");
+          throw new Error("Invalid session response");
         }
         setSupport(sessionData.isSupport);
         setAuthenticated(true);
@@ -34,13 +34,13 @@ export function useSession(shouldCheckOnMount: boolean) {
       } else {
         setSessionError(true);
         setSessionMessage(
-          "Nie udało się sprawdzić sesji. Sprawdź API i odswież stronę.",
+          "Could not check your session. Check the API and refresh the page.",
         );
       }
     } catch {
       setSessionError(true);
       setSessionMessage(
-        "Nie udało się sprawdzić sesji. Sprawdź API i odswież stronę.",
+        "Could not check your session. Check the API and refresh the page.",
       );
     } finally {
       setCheckingSession(false);

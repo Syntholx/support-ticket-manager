@@ -11,7 +11,7 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
     const email = formData.get("email");
     if (typeof email !== "string") return;
     if (email.trim() === "") {
-      setMessage("Podaj adres e-mail");
+      setMessage("Enter your email address");
       return;
     }
     setIsSending(true);
@@ -20,7 +20,7 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setMessage(
-          "Nie udało się bezpiecznie wysłać żądania. Spróbuj ponownie.",
+          "Could not send the request securely. Try again.",
         );
         return;
       }
@@ -38,22 +38,22 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
       );
       if (resendConfirmationResponse.status === 202) {
         setMessage(
-          "Jeśli konto wymaga potwierdzenia, otrzymasz wiadomość z dalszymi instrukcjami.",
+          "If your account needs confirmation, you will receive an email with further instructions.",
         );
         return;
       }
       if (resendConfirmationResponse.status === 400) {
-        setMessage("Sprawdź podany adres e-mail");
+        setMessage("Check your email address");
         return;
       }
       if (resendConfirmationResponse.status === 429) {
-        setMessage("Zbyt wiele prób. Spróbuj ponownie później");
+        setMessage("Too many attempts. Please try again later");
         return;
       }
-      setMessage("Nie udało się przyjąć prośby. Spróbuj ponownie później.");
+      setMessage("Could not accept the request. Try again later.");
       return;
     } catch (error) {
-      setMessage("Nie udało się połączyć z serwerem. Spróbuj ponownie.");
+      setMessage("Could not connect to the server. Try again.");
       return;
     } finally {
       setIsSending(false);
@@ -61,12 +61,12 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
   }
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <h1>Wyślij ponownie potwierdzenie</h1>
-      <p>Podaj adres e-mail użyty podczas rejestracji</p>
+      <h1>Resend confirmation</h1>
+      <p>Enter the email address you registered with</p>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="email">Adres e-mail</label>
+          <label htmlFor="email">Email address</label>
           <input
             disabled={isSending}
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
@@ -83,7 +83,7 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
           disabled={isSending}
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
         >
-          {isSending ? "Wysyłanie..." : "Wyślij link potwierdzający ponownie"}
+          {isSending ? "Sending…" : "Resend confirmation link"}
         </button>
       </form>
       <p role="status">{message}</p>
@@ -94,7 +94,7 @@ export function ResendConfirmationScreen(props: { onBackLogin: () => void }) {
         onClick={props.onBackLogin}
         className="cursor-pointer mt-[16px] border-none bg-transparent font-semibold text-[#1d4ed8] disabled:text-[#64748b] disabled:cursor-not-allowed"
       >
-        Wróć do logowania
+        Back to sign-in
       </button>
     </section>
   );

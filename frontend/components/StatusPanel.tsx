@@ -1,26 +1,26 @@
 import { useState } from "react";
 import { parseApiStatus } from "../api-status.js";
 export function StatusPanel(props: { title: string }) {
-  const [message, setMessage] = useState("Nie sprawdzono połączenia z TSM");
+  const [message, setMessage] = useState("TSM connection not checked");
   const [isLoading, setIsLoading] = useState(false);
   async function handleCheckConnection() {
     try {
-      setMessage("Łaczenie z API TSM....");
+      setMessage("Connecting to the TSM API…");
       setIsLoading(true);
       const response = await fetch("api/status");
       if (!response.ok) {
-        setMessage("API zwróciło błąd");
+        setMessage("The API returned an error");
         return;
       }
       const data: unknown = await response.json();
       const { name, version, isRunning } = parseApiStatus(data);
       if (isRunning === true) {
-        setMessage(`${name} — wersja ${version} — API działa poprawnie`);
+        setMessage(`${name} — version ${version} — API is online`);
       } else {
-        setMessage(`${name} — wersja ${version} — API zgłasza, że nie działa.`);
+        setMessage(`${name} — version ${version} — API is offline.`);
       }
     } catch (error) {
-      setMessage("Nie udało się połączyć");
+      setMessage("Could not connect");
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +35,7 @@ export function StatusPanel(props: { title: string }) {
         onClick={handleCheckConnection}
         disabled={isLoading}
       >
-        {isLoading ? "Sprawdzanie..." : "Sprawdź połączenie z TSM"}
+        {isLoading ? "Checking…" : "Check TSM connection"}
       </button>
     </section>
   );

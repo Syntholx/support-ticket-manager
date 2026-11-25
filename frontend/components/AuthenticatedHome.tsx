@@ -41,12 +41,12 @@ export function AuthenticatedHome(prop: {
     }
     if (!title.trim() || !description.trim()) {
       setCreateMessage(
-        "Tytuł i opis nie mogą składać się wyłącznie ze spacji.",
+        "Title and description cannot contain only spaces.",
       );
       return;
     }
     const createTicketRequest = { title: title, description: description };
-    setCreateMessage("Przygotowuję zgłoszenie..");
+    setCreateMessage("Preparing ticket…");
     setCreatingTicket(true);
     setCreatedTicketId(null);
     try {
@@ -54,7 +54,7 @@ export function AuthenticatedHome(prop: {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setCreateMessage(
-          "Nie udało się przygotować bezpiecznego utworzenia nowego zgłoszenia",
+          "Could not prepare a secure request to create the ticket.",
         );
         return;
       }
@@ -69,18 +69,18 @@ export function AuthenticatedHome(prop: {
       });
       if (createResponse.status === 401) {
         setCreateMessage(
-          "Sesja wygasła, odswież stronę i zaloguj się ponownie",
+          "Session expired. Refresh the page and sign in again.",
         );
         return;
       }
       if (createResponse.status === 400) {
         setCreateMessage(
-          "Zgłoszenie zostało odrzucone. Sprawdź tytuł i opis, a jeśli problem się powtarza, odswież stronę.",
+          "Ticket rejected. Check the title and description. If the problem persists, refresh the page.",
         );
         return;
       }
       if (createResponse.status !== 201) {
-        setCreateMessage("Nie udało się utworzyć zgłoszenia");
+        setCreateMessage("Could not create the ticket");
         return;
       }
       prop.onTicketCreated();
@@ -91,7 +91,7 @@ export function AuthenticatedHome(prop: {
         createdData = await createResponse.json();
       } catch {
         setCreateMessage(
-          "Zgłoszenie utworzono, ale nie udało się odczytać odpowiedzi. Odśwież listę.",
+          "Ticket created, but the response could not be read. Refresh the list.",
         );
         return;
       }
@@ -105,15 +105,15 @@ export function AuthenticatedHome(prop: {
         createdData.id <= 0
       ) {
         setCreateMessage(
-          "Zgłoszenie utworzono, ale nie udało się odczytać jego ID. Odśwież listę.",
+          "Ticket created, but its ID could not be read. Refresh the list.",
         );
         return;
       }
 
       setCreatedTicketId(createdData.id);
-      setCreateMessage("Zgłoszenie utworzone.");
+      setCreateMessage("Ticket created.");
     } catch (error) {
-      setCreateMessage("Błąd API lub połączenia, sprawdź i spróbuj ponownie. ");
+      setCreateMessage("Connection error. Check your connection and try again. ");
     } finally {
       setCreatingTicket(false);
     }
@@ -124,21 +124,21 @@ export function AuthenticatedHome(prop: {
   );
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <h1>Panel użytkownika</h1>
+      <h1>Dashboard</h1>
       <p className="text-[14px] text-[#64748b] mt-[0px] mb-[16px]">
-        {prop.isSupport ? "Uprawnienia: Support" : "Uprawnienia: Użytkownik"}
+        {prop.isSupport ? "Role: Support" : "Role: User"}
       </p>
-      <p>Witaj! Jesteś zalogowany.</p>
+      <p>Welcome! You are signed in.</p>
       <button
         type="button"
         className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
         onClick={prop.onArchiveClick}
       >
-        Archiwum zgłoszeń
+        Ticket archive
       </button>
       <section className="border border-[#dce5ef] rounded-[12px] p-4 border-solid mt-4">
         <h2 className="mt-0">
-          Aktywne zgłoszenia
+          Active tickets
           {!prop.isLoadingTickets && prop.ticketsError === "" && (
             <>: {prop.tickets.length} </>
           )}
@@ -156,7 +156,7 @@ export function AuthenticatedHome(prop: {
             prop.ticketsError === "" &&
             prop.tickets.length > 0 && (
               <p className="text-[14px] text-[#64748b] m-0">
-                Kolejność dotyczy tylko pobranych zgłoszeń.
+                Sorting applies to the tickets loaded on this page.
               </p>
             )}
         </div>
@@ -169,13 +169,13 @@ export function AuthenticatedHome(prop: {
             setSortOrder("asc");
           }}
         >
-          Resetuj widok
+          Reset filters
         </button>
         {!prop.isLoadingTickets &&
           prop.ticketsError === "" &&
           searchQuery.trim() !== "" && (
             <p className="text-[#64748b] mt-0 mb-[16px] text-[14px]">
-              {`Wyniki: ${filteredTickets.length} z ${prop.tickets.length} pobranych`}
+              {`Results: ${filteredTickets.length} of ${prop.tickets.length} loaded`}
             </p>
           )}
         {!prop.isLoadingTickets &&
@@ -183,7 +183,7 @@ export function AuthenticatedHome(prop: {
           prop.tickets.length > 0 &&
           filteredTickets.length === 0 && (
             <p className="text-[14px] text-[#64748b] mt-0 mb-[16px]">
-              Niektóre zgłoszenia mogą znajdować się na innych stronach danych.
+              Other pages may contain more tickets.
             </p>
           )}
         <button
@@ -192,20 +192,20 @@ export function AuthenticatedHome(prop: {
           onClick={prop.onRefreshTickets}
           disabled={prop.isLoadingTickets}
         >
-          {prop.isLoadingTickets ? "Odświeżanie..." : "Odśwież listę"}
+          {prop.isLoadingTickets ? "Refreshing…" : "Refresh list"}
         </button>
         {prop.ticketsError !== "" && <p>{prop.ticketsError}</p>}
-        {prop.isLoadingTickets && <p>Ładowanie zgłoszeń...</p>}
+        {prop.isLoadingTickets && <p>Loading tickets…</p>}
         {!prop.isLoadingTickets &&
           prop.ticketsError === "" &&
           (prop.tickets.length === 0 ? (
             <p>
               {prop.page === 1
-                ? "Nie masz jeszcze aktywnych zgłoszeń"
-                : "Na tej stronie nie ma zgłoszeń, wróć do poprzedniej strony."}
+                ? "You have no active tickets yet"
+                : "No tickets on this page. Go back to the previous page."}
             </p>
           ) : filteredTickets.length === 0 ? (
-            <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania</p>
+            <p>No tickets match your search</p>
           ) : (
             <TicketList
               tickets={sortedTickets}
@@ -219,9 +219,9 @@ export function AuthenticatedHome(prop: {
             onClick={prop.onPreviousPage}
             disabled={prop.isLoadingTickets || prop.page <= 1}
           >
-            Poprzednia
+            Previous
           </button>
-          <p className="m-0">Strona {prop.page}</p>
+          <p className="m-0">Page {prop.page}</p>
           <button
             type="button"
             className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
@@ -233,15 +233,15 @@ export function AuthenticatedHome(prop: {
               prop.page >= prop.maxPage
             }
           >
-            Następna
+            Next
           </button>
         </nav>
       </section>
       <section className="border border-[#dce5ef] rounded-[12px] p-4 bg-[#f8fafc] mt-[24px] border-solid bg-white">
-        <h2 className="mt-0">Nowe zgłoszenie</h2>
+        <h2 className="mt-0">New ticket</h2>
         <form onSubmit={handleCreateTicketSubmit}>
           <div className="mb-4 flex w-full flex-col gap-1.5">
-            <label htmlFor="title">Podaj tytuł zgłoszenia</label>
+            <label htmlFor="title">Enter a ticket title</label>
             <input
               className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
               id="title"
@@ -251,7 +251,7 @@ export function AuthenticatedHome(prop: {
             ></input>
           </div>
           <div className="mb-4 flex w-full flex-col gap-1.5">
-            <label htmlFor="description">Podaj opis problemu</label>
+            <label htmlFor="description">Describe the issue</label>
 
             <textarea
               className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
@@ -267,7 +267,7 @@ export function AuthenticatedHome(prop: {
             className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
             disabled={isCreatingTicket}
           >
-            {isCreatingTicket ? "Tworzenie..." : "Utwórz zgłoszenie"}
+            {isCreatingTicket ? "Creating…" : "Create ticket"}
           </button>
           {createMessage !== "" && <p role="status">{createMessage}</p>}
           {createdTicketId !== null && (
@@ -280,7 +280,7 @@ export function AuthenticatedHome(prop: {
                 }
               }}
             >
-              Otwórz zgłoszenie #{createdTicketId}
+              Open ticket #{createdTicketId}
             </button>
           )}
         </form>
@@ -293,7 +293,7 @@ export function AuthenticatedHome(prop: {
           onClick={prop.onLogoutClick}
           disabled={prop.isLoggingOut}
         >
-          Wyloguj się
+          Sign out
         </button>
       </section>
     </section>

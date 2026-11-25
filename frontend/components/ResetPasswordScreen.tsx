@@ -34,7 +34,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
     }
 
     if (!passwordsMatch(password, newPassword)) {
-      setMessage("Podane hasła muszą być identyczne.");
+      setMessage("The passwords must match.");
       return;
     }
 
@@ -44,7 +44,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
-        setMessage("Nie udało się przygotować żądania. Spróbuj ponownie.");
+        setMessage("Could not prepare the request. Try again.");
         return;
       }
       const resetPasswordResponse = await fetch(`/api/auth/reset-password`, {
@@ -62,42 +62,42 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
       });
       if (resetPasswordResponse.status === 200) {
         setResetSuccess(true);
-        setMessage("Hasło zostało zmienione. Możesz się zalogować.");
+        setMessage("Password changed. You can now sign in.");
         return;
       }
       if (resetPasswordResponse.status === 400) {
         setMessage(
-          "Nie udało się zmienić hasła. Link może być nieprawidłowy lub wygasły albo hasło nie spełnia wymagań",
+          "Could not change the password. The link may be invalid or expired, or the password may not meet the requirements",
         );
         return;
       }
       if (resetPasswordResponse.status === 429) {
-        setMessage("Zbyt wiele prób. Spróbuj ponownie później.");
+        setMessage("Too many attempts. Please try again later.");
         return;
       }
-      setMessage("Nie udało się zmienić hasła. Spróbuj ponownie później");
+      setMessage("Could not change your password. Try again later");
       return;
     } catch (error) {
-      setMessage("Nie udało się połączyć z serwerem. Spróbuj ponownie.");
+      setMessage("Could not connect to the server. Try again.");
     } finally {
       setIsResetting(false);
     }
   }
   return (
     <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-      <h1>Ustaw nowe hasło</h1>
-      <p>Podaj nowe hasło do swojego konta.</p>
+      <h1>Set a new password</h1>
+      <p>Enter a new password for your account.</p>
       {!hasResetLink && (
         <p>
-          Link resetujący jest nieprawidłowy lub brakuje jego danych. Zamów nową
-          wiadomość.
+          The reset link is invalid or incomplete. Request a new
+          email.
         </p>
       )}
 
       {hasResetLink && !isResetSuccess && (
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col mb-[16px] gap-[6px]">
-            <label htmlFor="password">Podaj nowe hasło</label>
+            <label htmlFor="password">Enter your new password</label>
 
             <input
               disabled={isResetting}
@@ -111,11 +111,11 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
               autoComplete="new-password"
             ></input>
             <p className="text-[14px] text-[#64748b] m-0">
-              12-128 znaków, duża i mała litera, cyfra oraz znak specjalny.
+              12–128 characters, including an uppercase letter, a lowercase letter, a digit and a special character.
             </p>
           </div>
           <div className="flex flex-col mb-[16px] gap-[6px]">
-            <label htmlFor="confirm-password">Powtórz nowe hasło</label>
+            <label htmlFor="confirm-password">Confirm new password</label>
             <input
               disabled={isResetting}
               className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
@@ -133,7 +133,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
             type="submit"
             className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
           >
-            {isResetting ? "Zmienianie hasła..." : "Zmień hasło"}
+            {isResetting ? "Changing password…" : "Change password"}
           </button>
         </form>
       )}
@@ -144,7 +144,7 @@ export function ResetPasswordScreen(props: { onLoginClick: () => void }) {
         onClick={props.onLoginClick}
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8] mt-[16px] disabled:text-[#64748b] disabled:cursor-not-allowed"
       >
-        Przejdź do logowania
+        Go to sign-in
       </button>
     </section>
   );

@@ -26,21 +26,21 @@ test("po 202 pokazuje komunikat i zachowuje formularz", async () => {
   window.history.replaceState(null, "", "/resend-confirmation");
   render(<ResendConfirmationScreen onBackLogin={() => {}} />);
   await user.type(
-    screen.getByLabelText("Adres e-mail"),
+    screen.getByLabelText("Email address"),
     "testowanie@example.com",
   );
   await user.click(
-    screen.getByRole("button", { name: "Wyślij link potwierdzający ponownie" }),
+    screen.getByRole("button", { name: "Resend confirmation link" }),
   );
   expect(
     await screen.findByText(
-      "Jeśli konto wymaga potwierdzenia, otrzymasz wiadomość z dalszymi instrukcjami.",
+      "If your account needs confirmation, you will receive an email with further instructions.",
     ),
   ).toBeTruthy();
   const submitButton = screen.getByRole<HTMLButtonElement>("button", {
-    name: "Wyślij link potwierdzający ponownie",
+    name: "Resend confirmation link",
   });
-  expect(screen.getByLabelText("Adres e-mail")).toBeTruthy();
+  expect(screen.getByLabelText("Email address")).toBeTruthy();
   expect(submitButton.disabled).toBe(false);
   expect(fetchMock).toHaveBeenCalledTimes(2);
 });

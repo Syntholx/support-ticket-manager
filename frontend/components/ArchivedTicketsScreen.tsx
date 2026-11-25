@@ -33,14 +33,14 @@ export function ArchivedTicketsScreen(prop: {
         onClick={prop.onBackClick}
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
       >
-        Wróć do aktywnych
+        Back to active tickets
       </button>
-      <h1>Archiwum zgłoszeń</h1>
+      <h1>Ticket archive</h1>
       <p className="text-[14px] text-[#64748b]">
-        Priorytet opisuje zamknięte zgłoszenie i nie oznacza bieżącej pilności.
+        Priority reflects the closed ticket’s original priority.
       </p>
       <p>
-        Zamknięte zgłoszenia
+        Closed tickets
         {!prop.isLoadingTickets && prop.ticketsError === "" && (
           <>: {prop.tickets.length}</>
         )}
@@ -58,7 +58,7 @@ export function ArchivedTicketsScreen(prop: {
           prop.ticketsError === "" &&
           prop.tickets.length > 0 && (
             <p className="text-[14px] text-[#64748b] m-0">
-              Kolejność dotyczy tylko pobranych zgłoszeń.
+              Sorting applies to the tickets loaded on this page.
             </p>
           )}
       </div>
@@ -71,13 +71,13 @@ export function ArchivedTicketsScreen(prop: {
           setSortOrder("asc");
         }}
       >
-        Resetuj widok
+        Reset filters
       </button>
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         searchQuery.trim() !== "" && (
           <p className="text-[#64748b] mt-0 mb-[16px] text-[14px]">
-            {`Wyniki:   ${filteredTickets.length}   z   ${prop.tickets.length} pobranych`}
+            {`Results: ${filteredTickets.length} of ${prop.tickets.length} loaded`}
           </p>
         )}
       {!prop.isLoadingTickets &&
@@ -85,7 +85,7 @@ export function ArchivedTicketsScreen(prop: {
         prop.tickets.length > 0 &&
         filteredTickets.length === 0 && (
           <p className="text-[14px] text-[#64748b] mt-0 mb-[16px]">
-            Niektóre zgłoszenia mogą znajdować się na innych stronach danych.
+            Other pages may contain more tickets.
           </p>
         )}
 
@@ -95,26 +95,26 @@ export function ArchivedTicketsScreen(prop: {
         className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
         disabled={prop.isLoadingTickets}
       >
-        {prop.isLoadingTickets ? "Odświeżanie..." : "Odśwież listę"}
+        {prop.isLoadingTickets ? "Refreshing…" : "Refresh list"}
       </button>
       {prop.ticketsError !== "" && <p>{prop.ticketsError}</p>}
       {!prop.isLoadingTickets && prop.ticketsError !== "" && (
         <p className="text-[#64748b] text-[14px] mt-[8px] mb-[16px]">
-          Odświeżanie zakończone błędem. Spróbuj ponownie.
+          Could not refresh. Please try again.
         </p>
       )}
 
-      {prop.isLoadingTickets && <p>Ładowanie archiwum...</p>}
+      {prop.isLoadingTickets && <p>Loading archive…</p>}
       {!prop.isLoadingTickets &&
         prop.ticketsError === "" &&
         (prop.tickets.length === 0 ? (
           <p>
             {prop.page === 1
-              ? "Nie masz jeszcze zamkniętych zgłoszeń"
-              : "Na tej stronie nie ma zgłoszeń. Wróć do poprzedniej strony"}
+              ? "You have no closed tickets yet"
+              : "No tickets on this page. Go back to the previous page."}
           </p>
         ) : filteredTickets.length === 0 ? (
-          <p>Nie znaleziono zgłoszeń pasujących do wyszukiwania.</p>
+          <p>No tickets match your search.</p>
         ) : (
           <TicketList
             tickets={sortedTickets}
@@ -128,9 +128,9 @@ export function ArchivedTicketsScreen(prop: {
           onClick={prop.onPreviousPage}
           disabled={prop.isLoadingTickets || prop.page <= 1}
         >
-          Poprzednia
+          Previous
         </button>
-        <p className="m-0">Strona {prop.page}</p>
+        <p className="m-0">Page {prop.page}</p>
         <button
           type="button"
           className="[font-family:inherit] leading-[inherit] min-h-[44px] cursor-pointer rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe] disabled:cursor-not-allowed disabled:border-[#cbd5e1] disabled:bg-[#f1f5f9] disabled:text-[#64748b]"
@@ -142,7 +142,7 @@ export function ArchivedTicketsScreen(prop: {
             prop.page >= prop.maxPage
           }
         >
-          Następna
+          Next
         </button>
       </nav>
     </section>

@@ -2,7 +2,7 @@ import { useState, FormEvent } from "react";
 import { getCsrfToken } from "../get-csrf-token";
 export function RegisterScreen(props: { onBackClick: () => void }) {
   const [registerMessage, setRegisterMessage] = useState(
-    "Wpisz e-mail i hasło, aby utworzyć konto.",
+    "Enter your email and password to create an account.",
   );
   const [isRegistering, setRegistering] = useState(false);
   async function handleRegisterSubmit(event: FormEvent<HTMLFormElement>) {
@@ -18,13 +18,13 @@ export function RegisterScreen(props: { onBackClick: () => void }) {
     }
     const registerRequest = { email: email, password: password };
     const registerRequestBody = JSON.stringify(registerRequest);
-    setRegisterMessage("Przygotowujemy bezpieczną rejestrację.");
+    setRegisterMessage("Preparing secure registration.");
     setRegistering(true);
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setRegisterMessage(
-          "Nie udało się przygotować bezpiecznie rejestracji.",
+          "Could not prepare secure registration.",
         );
         return;
       }
@@ -39,17 +39,17 @@ export function RegisterScreen(props: { onBackClick: () => void }) {
       });
       if (registerResponse.status === 201) {
         setRegisterMessage(
-          "Konto utworzone. Sprawdź wiadomość w Mailpit i potwierdź e-mail.",
+          "Account created. Check Mailpit and confirm your email.",
         );
       } else if (registerResponse.status === 503) {
         setRegisterMessage(
-          "Konto utworzone, ale nie udało się wysłać mail-a potwierdzającego.",
+          "Account created, but the confirmation email could not be sent.",
         );
       } else {
-        setRegisterMessage("Nie udało się utworzyć konta.");
+        setRegisterMessage("Could not create the account.");
       }
     } catch (error) {
-      setRegisterMessage("Nie udało się połączyć z API TSM.");
+      setRegisterMessage("Could not connect to the TSM API.");
     } finally {
       setRegistering(false);
     }
@@ -62,13 +62,13 @@ export function RegisterScreen(props: { onBackClick: () => void }) {
         className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
         onClick={props.onBackClick}
       >
-        Wróć
+        Back
       </button>
-      <h1>Rejestracja</h1>
+      <h1>Register</h1>
       <p role="status">{registerMessage}</p>
       <form onSubmit={handleRegisterSubmit}>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="email">Podaj adres e-mail</label>
+          <label htmlFor="email">Enter your email address</label>
           <input
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="email"
@@ -79,7 +79,7 @@ export function RegisterScreen(props: { onBackClick: () => void }) {
           ></input>
         </div>
         <div className="mb-4 flex w-full flex-col gap-1.5">
-          <label htmlFor="password">Podaj hasło</label>
+          <label htmlFor="password">Enter your password</label>
           <input
             className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
             type="password"
@@ -94,7 +94,7 @@ export function RegisterScreen(props: { onBackClick: () => void }) {
           className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
           disabled={isRegistering}
         >
-          {isRegistering ? "Rejestracja..." : "Załóż konto"}
+          {isRegistering ? "Register..." : "Create account"}
         </button>
       </form>
     </section>

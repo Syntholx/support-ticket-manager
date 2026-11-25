@@ -122,7 +122,7 @@ public class TicketDatabaseApiTests
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             JsonElement ticket = await response.Content.ReadFromJsonAsync<JsonElement>();
             string? message = ticket.GetProperty("message").GetString();
-            Assert.Equal("Nie znaleziono zgłoszenia o ID: 99", message);
+            Assert.Equal("No ticket found with ID: 99", message);
 
         }
         finally

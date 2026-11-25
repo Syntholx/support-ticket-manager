@@ -24,18 +24,18 @@ public class Ticket
         Id = id;
         if (string.IsNullOrWhiteSpace(title))
         {
-            throw new ArgumentException("Tytuł nie może być pusty", nameof(title));
+            throw new ArgumentException("Title cannot be empty", nameof(title));
         }
         Title = title;
         if (title.Length > MaxTitleLength)
-            throw new ArgumentException("Tytuł jest za długi", nameof(title));
+            throw new ArgumentException("Title is too long", nameof(title));
         if (string.IsNullOrWhiteSpace(description))
         {
-            throw new ArgumentException("Opis nie może być pusty.", nameof(description));
+            throw new ArgumentException("Description cannot be empty.", nameof(description));
         }
         Description = description;
         if (description.Length > MaxDescriptionLength)
-            throw new ArgumentException("Opis jest za długi", nameof(description));
+            throw new ArgumentException("Description is too long", nameof(description));
         if (priority < 1 || priority > 5)
         {
             throw new ArgumentOutOfRangeException(nameof(priority));
@@ -43,7 +43,7 @@ public class Ticket
         Priority = priority;
         if (status != TicketStatus.Open && status != TicketStatus.InProgress && status != TicketStatus.Closed)
         {
-            throw new ArgumentException("Status musi być jednym z: Open, InProgress, Closed", nameof(status));
+            throw new ArgumentException("Status must be one of: Open, InProgress, Closed", nameof(status));
         }
         Status = status;
         OwnerId = ownerId;

@@ -47,13 +47,13 @@ export function TicketDetailsScreen(props: {
           props.isChangingPriority
         }
       >
-        Wróć
+        Back
       </button>
       <p className="text-[12px] text-[#64748b] mt-[16px] mb-[8px]">
-        Zgłoszenie #{props.selectedTicketId}
+        Ticket #{props.selectedTicketId}
       </p>
-      {showFallbackHeading && <h1>Szczegóły zgłoszenia</h1>}
-      {props.isLoadingTicketDetail && <p>Ładowanie szczegółów...</p>}
+      {showFallbackHeading && <h1>Ticket details</h1>}
+      {props.isLoadingTicketDetail && <p>Loading details…</p>}
 
       {!props.isLoadingTicketDetail && props.ticketDetailError !== "" && (
         <>
@@ -63,7 +63,7 @@ export function TicketDetailsScreen(props: {
             className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8] px-4 py-2.5 font-semibold text-white"
             onClick={props.onRetryClick}
           >
-            Spróbuj ponownie
+            Try again
           </button>
         </>
       )}
@@ -83,7 +83,7 @@ export function TicketDetailsScreen(props: {
             </div>
             <section className="mb-[24px] break-words">
               <h2 className="text-[18px] mt-0 mb-[12px] font-semibold">
-                Opis problemu
+                Issue description
               </h2>
               <p className="whitespace-pre-wrap break-words">
                 {props.ticketDetail.description}
@@ -92,11 +92,11 @@ export function TicketDetailsScreen(props: {
             {(props.isSupport || props.ticketDetail.status !== "Closed") && (
               <section className="border-0 border-t border-solid border-[#dce5ef] pt-5">
                 <h2 className="text-[18px] mt-0 mb-[12px] font-semibold">
-                  Operacje zgłoszenia
+                  Ticket actions
                 </h2>
                 {props.isSupport && (
                   <div className="w-full flex flex-col gap-1.5 mb-[16px]">
-                    <label htmlFor="change-priority">Nowy priorytet</label>
+                    <label htmlFor="change-priority">New priority</label>
                     <select
                       id="change-priority"
                       disabled={
@@ -111,11 +111,11 @@ export function TicketDetailsScreen(props: {
                       }
                       className="[font-family:inherit] leading-[inherit] text-[length:inherit] [font-weight:inherit] min-h-[44px] rounded-[10px] border border-solid border-[#b7c7e4] bg-white px-3 py-2.5"
                     >
-                      <option value="1">Priorytet: 1</option>
-                      <option value="2">Priorytet: 2</option>
-                      <option value="3">Priorytet: 3</option>
-                      <option value="4">Priorytet: 4</option>
-                      <option value="5">Priorytet: 5</option>
+                      <option value="1">Priority: 1</option>
+                      <option value="2">Priority: 2</option>
+                      <option value="3">Priority: 3</option>
+                      <option value="4">Priority: 4</option>
+                      <option value="5">Priority: 5</option>
                     </select>
                     <button
                       type="button"
@@ -133,8 +133,8 @@ export function TicketDetailsScreen(props: {
                       }
                     >
                       {props.isChangingPriority
-                        ? "Zapisywanie..."
-                        : "Zapisz priorytet"}
+                        ? "Saving…"
+                        : "Save priority"}
                     </button>
                     {props.priorityMessage !== "" && (
                       <p role="status" className="m-0">
@@ -158,8 +158,8 @@ export function TicketDetailsScreen(props: {
                         className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8]  px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
                       >
                         {props.isReopenTicket
-                          ? "Otwieranie..."
-                          : "Otwórz ponownie zgłoszenie"}
+                          ? "Reopening…"
+                          : "Reopen ticket"}
                       </button>
                     )}
 
@@ -176,8 +176,8 @@ export function TicketDetailsScreen(props: {
                       className="min-h-[44px] rounded-[10px] border-none bg-[#1d4ed8]  px-4 py-2.5 font-semibold text-white disabled:bg-[#f1f5f9] disabled:text-[#64748b] disabled:cursor-not-allowed"
                     >
                       {props.isStartingTicket
-                        ? "Rozpoczynanie..."
-                        : "Rozpocznij obsługę"}
+                        ? "Starting…"
+                        : "Start work"}
                     </button>
                   )}
 
@@ -194,8 +194,8 @@ export function TicketDetailsScreen(props: {
                       }
                     >
                       {props.isClosingTicket
-                        ? "Zamykanie..."
-                        : "Zamknij zgłoszenie"}
+                        ? "Closing…"
+                        : "Close ticket"}
                     </button>
                   )}
                 </div>

@@ -30,7 +30,7 @@ import { DemoNotice } from "./components/DemoNotice";
 
 const app = document.getElementById("app");
 if (!(app instanceof HTMLElement)) {
-  throw new Error("Nie znaleziono elementu");
+  throw new Error("Element not found");
 }
 
 function App() {
@@ -161,14 +161,14 @@ function App() {
     if (isTicketDetailsRoute && selectedTicketId === null) {
       return (
         <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-          <h1>Nieprawidłowy numer zgłoszenia</h1>
+          <h1>Invalid ticket number</h1>
           <button
             type="button"
             className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
             onClick={() => navigate("/tickets")}
           >
             {" "}
-            Wróć do listy
+            Back to list
           </button>
         </section>
       );
@@ -318,13 +318,13 @@ function App() {
           path="*"
           element={
             <section className="rounded-2xl border border-solid border-[#dce5ef] bg-white p-7 [&>h1]:mt-0">
-              <h1>Nie znaleziono strony</h1>
+              <h1>Page not found</h1>
               <button
                 type="button"
                 className="cursor-pointer border-none bg-transparent font-semibold text-[#1d4ed8]"
                 onClick={() => navigate("/")}
               >
-                Wróć na stronę główną
+                Back to home
               </button>
             </section>
           }
@@ -337,7 +337,7 @@ function App() {
     <div className="mx-auto my-10 w-full max-w-[760px] p-4">
       {isDemoMode && <DemoNotice />}
       {renderCurrentScreen()}
-      {import.meta.env.DEV && <StatusPanel title="Status API" />}
+      {import.meta.env.DEV && <StatusPanel title="API status" />}
     </div>
   );
 }

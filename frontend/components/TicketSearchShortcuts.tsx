@@ -3,10 +3,10 @@ export function TicketSearchShortcuts(props: {
   onQueryChange: (value: string) => void;
 }) {
   const shortcuts = [
-    { label: "Szukaj testów", query: "test" },
-    { label: "Szukaj błędów", query: "błąd" },
-    { label: "Szukaj logowania", query: "logowanie" },
-    { label: "Szukaj płatności", query: "płatność" },
+    { label: "Find tests", query: "test" },
+    { label: "Find errors", query: "error" },
+    { label: "Find sign-in issues", query: "sign" },
+    { label: "Find payments", query: "payment" },
   ];
   return (
     <>

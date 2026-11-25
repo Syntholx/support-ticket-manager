@@ -34,7 +34,7 @@ public static class DemoMode
                 && context.Request.Path != "/api/auth/logout"
                 && context.Request.Path != "/api/auth/me")
             {
-                await Results.Json(new { message = "Ta operacja konta jest wyłączona w publicznym demo." }, statusCode: 403)
+                await Results.Json(new { message = "This account operation is disabled in the public demo." }, statusCode: 403)
                     .ExecuteAsync(context);
                 return;
             }

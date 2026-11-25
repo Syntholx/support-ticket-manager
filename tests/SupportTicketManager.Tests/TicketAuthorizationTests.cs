@@ -116,7 +116,7 @@ public class TicketAuthorizationTests
             else
             {
                 Assert.Equal("message", Assert.Single(body.EnumerateObject().ToArray()).Name);
-                Assert.Equal($"Nie znaleziono zgłoszenia o ID: {ticket.Id}", body.GetProperty("message").GetString());
+                Assert.Equal($"No ticket found with ID: {ticket.Id}", body.GetProperty("message").GetString());
             }
         }
         using HttpResponseMessage missing = await sandbox.Client(actor).GetAsync("/api/tickets/2147483647");

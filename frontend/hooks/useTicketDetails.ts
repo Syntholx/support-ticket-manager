@@ -53,13 +53,13 @@ export function useTicketDetails(
         }
         if (ticketDetailResponse.status === 404) {
           setTicketDetailError(
-            "Zgłoszenie nie istnieje lub nie masz do niego dostępu.",
+            "Ticket not found or access denied.",
           );
           return;
         }
         if (!ticketDetailResponse.ok) {
           setTicketDetailError(
-            "Nie udało się pobrać szczegółów zgłoszenia, sprawdź połączenie i spróbuj ponownie.",
+            "Could not load ticket details. Check your connection and try again.",
           );
           return;
         }
@@ -68,7 +68,7 @@ export function useTicketDetails(
         setTicketDetail(parseTicketDetails(ticketDetailsData));
       } catch (error) {
         if (!ignore) {
-          setTicketDetailError("Błąd połączenia lub odczytu danych");
+          setTicketDetailError("Could not connect or read the response");
         }
       } finally {
         if (!ignore) {
@@ -95,12 +95,12 @@ export function useTicketDetails(
     )
       return;
     setStartingTicket(true);
-    setStartTicketMessage("Rozpoczynam obsługę...");
+    setStartTicketMessage("Starting work…");
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setStartTicketMessage(
-          "Nie udało się przygotować bezpiecznie obsługi zgłoszenia.",
+          "Could not prepare the request to start work.",
         );
         return;
       }
@@ -119,31 +119,31 @@ export function useTicketDetails(
         return;
       }
       if (responseStartTicket.status === 403) {
-        setStartTicketMessage("Nie masz uprawnień do rozpoczęcia obsługi");
+        setStartTicketMessage("You do not have permission to start work on this ticket");
         return;
       }
       if (responseStartTicket.status === 404) {
-        setStartTicketMessage("Zgłoszenie nie istnieje lub jest niedostępne");
+        setStartTicketMessage("Ticket not found or unavailable");
         return;
       }
       if (responseStartTicket.status === 409) {
         setStartTicketMessage(
-          "Status zgłoszenia się zmienił. Odświeżono szczegoły.",
+          "Ticket status changed. Details refreshed.",
         );
         refreshTicketDetail();
         return;
       }
       if (!responseStartTicket.ok) {
         setStartTicketMessage(
-          "Wystąpił problem z rozpoczęciem obsługi. Spróbuj ponownie.",
+          "Could not start work. Try again.",
         );
         return;
       }
-      setStartTicketMessage("Obsługa się rozpoczęła");
+      setStartTicketMessage("Work started");
       refreshTicketDetail();
     } catch (error) {
       setStartTicketMessage(
-        "Nie udało się rozpoczać obsługi zgłoszenia, Spróbuj ponownie.",
+        "Could not start work on the ticket. Try again.",
       );
     } finally {
       setStartingTicket(false);
@@ -159,12 +159,12 @@ export function useTicketDetails(
     )
       return;
     setClosingTicket(true);
-    setCloseTicketMessage("Zamykam zgłoszenie...");
+    setCloseTicketMessage("Closing ticket…");
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setCloseTicketMessage(
-          "Nie udało się przygotować bezpiecznego zamknięcia zgłoszenia.",
+          "Could not prepare the request to close the ticket.",
         );
         return;
       }
@@ -183,27 +183,27 @@ export function useTicketDetails(
         return;
       }
       if (responseCloseTicket.status === 409) {
-        setCloseTicketMessage("Zgłoszenie jest już zamknięte");
+        setCloseTicketMessage("Ticket is already closed");
         refreshTicketDetail();
         return;
       }
       if (responseCloseTicket.status === 404) {
         setCloseTicketMessage(
-          "Zgłoszenie nie istnieje lub nie masz do niego dostępu",
+          "Ticket not found or access denied",
         );
         return;
       }
       if (!responseCloseTicket.ok) {
         setCloseTicketMessage(
-          "Wystąpił problem z zamknięciem zgłoszenia. Spróbuj ponownie.",
+          "Could not close the ticket. Try again.",
         );
         return;
       }
-      setCloseTicketMessage("Zgłoszenie zamknięte");
+      setCloseTicketMessage("Ticket closed");
       refreshTicketDetail();
     } catch (error) {
       setCloseTicketMessage(
-        "Nie udało się zamknąć zgłoszenia. Spróbuj ponownie.",
+        "Could not close the ticket. Try again.",
       );
     } finally {
       setClosingTicket(false);
@@ -219,12 +219,12 @@ export function useTicketDetails(
     )
       return;
     setReopeningTicket(true);
-    setReopenTicketMessage("Otwieram zgłoszenie ponownie...");
+    setReopenTicketMessage("Reopening ticket…");
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setReopenTicketMessage(
-          "Nie udało się przygotować bezpiecznie ponownego otwarcia zgłoszenia. Spróbuj ponownie.",
+          "Could not prepare the request to reopen the ticket. Try again.",
         );
         return;
       }
@@ -244,32 +244,32 @@ export function useTicketDetails(
       }
       if (ticketReopenResponse.status === 403) {
         setReopenTicketMessage(
-          "Nie masz uprawnień do ponownego otwarcia zgłoszenia.",
+          "You do not have permission to reopen this ticket.",
         );
         return;
       }
       if (ticketReopenResponse.status === 404) {
         setReopenTicketMessage(
-          "Zgłoszenie nie istnieje lub nie masz do niego dostępu",
+          "Ticket not found or access denied",
         );
         return;
       }
       if (ticketReopenResponse.status === 409) {
-        setReopenTicketMessage("Status się zmienił, odswieżono szczegoły.");
+        setReopenTicketMessage("Status changed. Details refreshed.");
         refreshTicketDetail();
         return;
       }
       if (!ticketReopenResponse.ok) {
         setReopenTicketMessage(
-          "Wystąpił problem z ponownym otwarciem zgłoszenia. Spróbuj ponownie.",
+          "Could not reopen the ticket. Try again.",
         );
         return;
       }
-      setReopenTicketMessage("Sukces! Udało się ponownie otworzyć zgłoszenie.");
+      setReopenTicketMessage("Ticket reopened.");
       refreshTicketDetail();
     } catch (error) {
       setReopenTicketMessage(
-        "Nie udało się otworzyć ponownie zgłoszenia. Sprawdź połączenie z API i spróbuj ponownie.",
+        "Could not reopen the ticket. Check your connection and try again.",
       );
       return;
     } finally {
@@ -287,16 +287,16 @@ export function useTicketDetails(
       return;
 
     if (!Number.isInteger(priority) || priority < 1 || priority > 5) {
-      setPriorityMessage("Priorytet musi być liczbą całkowitą od 1 do 5.");
+      setPriorityMessage("Priority must be an integer between 1 and 5.");
       return;
     }
     setChangingPriority(true);
-    setPriorityMessage("Zmieniam priorytet...");
+    setPriorityMessage("Updating priority…");
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
         setPriorityMessage(
-          "Nie udało się przygotować bezpiecznie zmiany priorytetu. Spróbuj ponownie.",
+          "Could not prepare the priority update. Try again.",
         );
         return;
       }
@@ -314,7 +314,7 @@ export function useTicketDetails(
       );
       if (changePriorityResponse.status === 400) {
         setPriorityMessage(
-          "Nieprawidłowy priorytet, priorytet mieści się między 1 a 5.",
+          "Invalid priority. Choose a value from 1 to 5.",
         );
         return;
       }
@@ -324,30 +324,30 @@ export function useTicketDetails(
       }
       if (changePriorityResponse.status === 403) {
         setPriorityMessage(
-          "Nie masz uprawnień do zmiany priorytetu. Jeśli to błąd, skontaktuj się z administratorem strony.",
+          "You do not have permission to change priority. Contact the administrator if needed.",
         );
         return;
       }
       if (changePriorityResponse.status === 404) {
-        setPriorityMessage("Zgłoszenie nie istnieje lub nie masz dostępu");
+        setPriorityMessage("Ticket not found or access denied");
         return;
       }
       if (changePriorityResponse.status === 409) {
-        setPriorityMessage("Wystąpił konflikt zapisu. Odświeżono szczegóły.");
+        setPriorityMessage("The ticket changed. Details refreshed.");
         refreshTicketDetail();
         return;
       }
       if (!changePriorityResponse.ok) {
         setPriorityMessage(
-          "Wystąpił problem ze zmianą priorytetu. Spróbuj ponownie.",
+          "Could not change the priority. Try again.",
         );
         return;
       }
-      setPriorityMessage("Sukces! Priorytet został zmieniony.");
+      setPriorityMessage("Priority updated.");
       refreshTicketDetail();
     } catch (error) {
       setPriorityMessage(
-        "Nie udało się zmienić priorytetu. Sprawdź połączenie z API i spróbuj ponownie.",
+        "Could not change the priority. Check your connection and try again.",
       );
       return;
     } finally {

@@ -5,12 +5,12 @@ export function useLogout(onLogoutSuccess: () => void) {
   const [logoutMessage, setLogoutMessage] = useState("");
   const [isLoggingOut, setLoggingOut] = useState(false);
   async function handleLogoutClick() {
-    setLogoutMessage("Przygotowuję wylogowanie...");
+    setLogoutMessage("Signing out…");
     setLoggingOut(true);
     try {
       const csrfToken = await getCsrfToken();
       if (csrfToken === null) {
-        setLogoutMessage("Nie udało się przygotować bezpiecznego wylogowania.");
+        setLogoutMessage("Could not prepare secure sign-out.");
         return;
       }
       const logoutResponse = await fetch("/api/auth/logout", {
@@ -22,7 +22,7 @@ export function useLogout(onLogoutSuccess: () => void) {
       });
       if (!logoutResponse.ok) {
         setLogoutMessage(
-          "Wystąpił problem z wylogowaniem, sprawdź połączenie i spróbuj ponownie.",
+          "Could not sign out. Check your connection and try again.",
         );
         return;
       }
@@ -30,7 +30,7 @@ export function useLogout(onLogoutSuccess: () => void) {
       onLogoutSuccess();
     } catch (error) {
       setLogoutMessage(
-        "Błąd API lub sieci, sprawdź połączenie i spróbuj ponownie.",
+        "API or network error. Check your connection and try again.",
       );
     } finally {
       setLoggingOut(false);

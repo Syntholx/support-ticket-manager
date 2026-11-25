@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 public static class AuthEndpoints
 {
-    private const string GenericEmailMessage = "Jeśli konto wymaga tej operacji, wysłano wiadomość e-mail.";
+    private const string GenericEmailMessage = "If your account requires this action, an email has been sent.";
     private static bool ValidCredentials(string? email, string? password) =>
         !string.IsNullOrWhiteSpace(email) && email.Length <= 254
         && !string.IsNullOrWhiteSpace(password) && password.Length <= 128;
@@ -22,23 +22,23 @@ public static class AuthEndpoints
             IAccountEmail sender, IOptions<AccountEmailOptions> emailOptions, HttpContext context) =>
         {
             if (!ValidCredentials(request.Email, request.Password))
-                return Results.BadRequest(new { message = "Nieprawidłowy e-mail lub hasło." });
+                return Results.BadRequest(new { message = "Invalid email or password." });
             var user = new ApplicationUser { UserName = request.Email, Email = request.Email };
             var result = await users.CreateAsync(user, request.Password);
-            if (!result.Succeeded) return Results.BadRequest(new { message = "Nie udało się utworzyć konta" });
+            if (!result.Succeeded) return Results.BadRequest(new { message = "Could not create the account" });
             if (!await SendTokenAsync(user, false, users, sender, emailOptions.Value, context))
-                return Results.Problem(statusCode: 503, title: "Konto utworzone, ale wysyłka nie powiodła się. Ponów potwierdzenie e-mail.");
-            return Results.Json(new { message = "Konto zostało utworzone. Potwierdź adres e-mail." }, statusCode: 201);
+                return Results.Problem(statusCode: 503, title: "Account created, but email delivery failed. Request a new confirmation email.");
+            return Results.Json(new { message = "Account created. Confirm your email address." }, statusCode: 201);
         });
 
         app.MapPost("/api/auth/confirm-email", async (ConfirmEmailRequest request, UserManager<ApplicationUser> users) =>
         {
             if (string.IsNullOrWhiteSpace(request.UserId) || request.UserId.Length > 450 || !TryDecode(request.Token, out var token))
-                return Results.BadRequest(new { message = "Nieprawidłowy lub wygasły link." });
+                return Results.BadRequest(new { message = "Invalid or expired link." });
             var user = await users.FindByIdAsync(request.UserId);
             if (user is null || user.EmailConfirmed || !(await users.ConfirmEmailAsync(user, token)).Succeeded)
-                return Results.BadRequest(new { message = "Nieprawidłowy lub wygasły link." });
-            return Results.Ok(new { message = "Adres e-mail potwierdzony." });
+                return Results.BadRequest(new { message = "Invalid or expired link." });
+            return Results.Ok(new { message = "Email address confirmed." });
         });
 
         app.MapPost("/api/auth/resend-confirmation", async (EmailRequest request, UserManager<ApplicationUser> users,
@@ -51,17 +51,17 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/reset-password", async (ResetPasswordRequest request, UserManager<ApplicationUser> users) =>
         {
             if (!ValidCredentials(request.Email, request.Password) || !TryDecode(request.Token, out var token))
-                return Results.BadRequest(new { message = "Nieprawidłowe dane lub wygasły link." });
+                return Results.BadRequest(new { message = "Invalid details or expired link." });
             var user = await users.FindByEmailAsync(request.Email);
             if (user is null || !user.EmailConfirmed || !(await users.ResetPasswordAsync(user, token, request.Password)).Succeeded)
-                return Results.BadRequest(new { message = "Nieprawidłowe dane lub wygasły link." });
-            return Results.Ok(new { message = "Hasło zmienione. Zaloguj się ponownie." });
+                return Results.BadRequest(new { message = "Invalid details or expired link." });
+            return Results.Ok(new { message = "Password changed. Sign in again." });
         });
 
         app.MapPost("/api/auth/login", async (LoginRequest request, SignInManager<ApplicationUser> signIn) =>
         {
             if (!ValidCredentials(request.Email, request.Password))
-                return Results.BadRequest(new { message = "E-mail i hasło są wymagane (limity: 254 i 128 znaków)." });
+                return Results.BadRequest(new { message = "Email and password are required (maximum lengths: 254 and 128 characters)." });
             bool demo = DemoMode.IsEnabled(app.Configuration);
             if (demo && !DemoMode.IsDemoEmail(request.Email)) return Results.Unauthorized();
             // Public shared demo accounts must not be locked for everyone by a visitor.
@@ -79,9 +79,9 @@ public static class AuthEndpoints
         {
             var user = await users.GetUserAsync(principal);
             if (!DemoMode.IsEnabled(app.Configuration) && user is not null && !(await users.UpdateSecurityStampAsync(user)).Succeeded)
-                return Results.Problem(statusCode: 503, title: "Nie udało się unieważnić sesji. Ponów operację.");
+                return Results.Problem(statusCode: 503, title: "Could not invalidate the session. Please try again.");
             await signIn.SignOutAsync();
-            return Results.Ok(new { message = "Wylogowano" });
+            return Results.Ok(new { message = "Signed out" });
         }).RequireAuthorization();
     }
 
@@ -89,7 +89,7 @@ public static class AuthEndpoints
         UserManager<ApplicationUser> users, IAccountEmail sender, AccountEmailOptions options, HttpContext context)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || request.Email.Length > 254)
-            return Results.BadRequest(new { message = "Nieprawidłowy e-mail." });
+            return Results.BadRequest(new { message = "Invalid email address." });
         var user = await users.FindByEmailAsync(request.Email);
         if (user is not null && user.EmailConfirmed == reset)
             await SendTokenAsync(user, reset, users, sender, options, context);
@@ -122,7 +122,7 @@ public static class AuthEndpoints
         string link = $"{options.FrontendBaseUrl.TrimEnd('/')}/{route}#{identity}&token={encoded}";
         try
         {
-            await sender.SendAsync(user.Email!, reset ? "TSM: reset hasła" : "TSM: potwierdź e-mail", link, context.RequestAborted);
+            await sender.SendAsync(user.Email!, reset ? "TSM: reset your password" : "TSM: confirm your email", link, context.RequestAborted);
             return true;
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { throw; }

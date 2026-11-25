@@ -58,7 +58,7 @@ public sealed class SmtpAccountEmail(IOptions<AccountEmailOptions> options, IHos
         message.From.Add(MailboxAddress.Parse(settings.From));
         message.To.Add(MailboxAddress.Parse(email));
         message.Subject = subject;
-        message.Body = new TextPart("plain") { Text = $"{subject}\n\n{link}\n\nLink jest ważny przez godzinę. Jeśli nie wysłano tej prośby, zignoruj wiadomość." };
+        message.Body = new TextPart("plain") { Text = $"{subject}\n\n{link}\n\nThe link is valid for one hour. If you did not request this, ignore this email." };
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(15));
         cancellationToken = deadline.Token;

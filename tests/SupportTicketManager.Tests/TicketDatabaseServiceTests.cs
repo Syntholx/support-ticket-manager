@@ -25,13 +25,13 @@ public class TicketDatabaseServiceTests
                 scope.ServiceProvider.GetRequiredService<TicketDatabaseService>();
 
             Ticket openTicket =
-                new Ticket(0, "Otwarte", "Czeka na obsługę", 2, TicketStatus.Open);
+                new Ticket(0, "Open", "Czeka na obsługę", 2, TicketStatus.Open);
 
             Ticket closedTicket =
-                new Ticket(0, "Zamknięte", "Obsługa zakończona", 5, TicketStatus.Closed);
+                new Ticket(0, "Closed", "Obsługa zakończona", 5, TicketStatus.Closed);
 
             Ticket inProgressTicket =
-                new Ticket(0, "W trakcie", "Trwa obsługa", 4, TicketStatus.InProgress);
+                new Ticket(0, "In progress", "Trwa obsługa", 4, TicketStatus.InProgress);
 
             dbContext.Tickets.Add(openTicket);
             dbContext.Tickets.Add(closedTicket);
