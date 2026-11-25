@@ -9,7 +9,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("pokazuje error dla różnych haseł", async () => {
+test("shows an error when passwords differ", async () => {
   const user = userEvent.setup();
   window.history.replaceState(
     null,
@@ -32,7 +32,7 @@ test("pokazuje error dla różnych haseł", async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-test("bez danych linku nie pokazuje formularza", () => {
+test("hides the form when reset link data is missing", () => {
   window.history.replaceState(null, "", "/reset-password");
   render(<ResetPasswordScreen onLoginClick={() => {}} />);
   expect(screen.queryByLabelText("Enter your new password")).toBeNull();
@@ -43,7 +43,7 @@ test("bez danych linku nie pokazuje formularza", () => {
   ).toBeTruthy();
 });
 
-test("sprawdzamy callback logowania, czy jest wywoływany", async () => {
+test("calls the sign-in callback", async () => {
   const onLoginClick = vi.fn();
   const user = userEvent.setup();
   window.history.replaceState(null, "", "reset-password");
@@ -54,7 +54,7 @@ test("sprawdzamy callback logowania, czy jest wywoływany", async () => {
   expect(onLoginClick).toHaveBeenCalledTimes(1);
 });
 
-test("po sukcesie resetu ukrywa formularz", async () => {
+test("hides the form after a successful reset", async () => {
   const fetchMock = vi.fn();
 
   fetchMock.mockResolvedValueOnce(
@@ -104,7 +104,7 @@ test("po sukcesie resetu ukrywa formularz", async () => {
     }),
   );
 });
-test("po odpowiedzi 400 pokazuje error i zachowuje formularz", async () => {
+test("shows an error and keeps the form after HTTP 400", async () => {
   const fetchMock = vi.fn();
   fetchMock.mockResolvedValueOnce(
     new Response(JSON.stringify({ token: "testowy-csrf" }), {
@@ -142,7 +142,7 @@ test("po odpowiedzi 400 pokazuje error i zachowuje formularz", async () => {
   expect(submitButton.disabled).toBe(false);
 });
 
-test("po błędzie połączenia, zachowuje formularz i pozwala ponowić", async () => {
+test("keeps the form and allows retry after a connection error", async () => {
   const fetchMock = vi.fn();
 
   fetchMock.mockResolvedValueOnce(

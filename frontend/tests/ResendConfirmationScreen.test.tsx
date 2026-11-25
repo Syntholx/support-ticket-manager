@@ -9,7 +9,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("po 202 pokazuje komunikat i zachowuje formularz", async () => {
+test("shows a message and keeps the form after HTTP 202", async () => {
   const fetchMock = vi.fn();
   fetchMock.mockResolvedValueOnce(
     new Response(JSON.stringify({ token: "testowy-csrf" }), {
